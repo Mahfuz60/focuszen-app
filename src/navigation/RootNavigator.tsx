@@ -1,0 +1,49 @@
+import React from 'react';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { MainTabs } from './MainTabs';
+import { DailyPlannerScreen } from '../screens/DailyPlannerScreen';
+import { RoutineBuilderScreen } from '../screens/RoutineBuilderScreen';
+import { QuickStartScreen } from '../screens/QuickStartScreen';
+import { GoalsMissionScreen } from '../screens/GoalsMissionScreen';
+import { NameSetupScreen } from '../screens/NameSetupScreen';
+import { RootStackParamList } from '../types/navigation';
+import { useAppTheme } from '../hooks/useAppTheme';
+import { useProfileStore } from '../stores/useProfileStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export function RootNavigator() {
+  const { mode, colors } = useAppTheme();
+  const profileName = useProfileStore((state) => state.profile.displayName);
+  const onboardingCompleted = useSettingsStore((state) => state.privacy.onboardingCompleted);
+  const needsNameSetup = !onboardingCompleted || !profileName.trim() || profileName === 'FocusZen User';
+
+  const navigationTheme =
+    mode === 'dark'
+      ? {
+          ...DarkTheme,
+          colors: { ...DarkTheme.colors, background: colors.background, card: colors.surface, text: colors.textPrimary, border: colors.border, primary: colors.focus },
+        }
+      : {
+          ...DefaultTheme,
+          colors: { ...DefaultTheme.colors, background: colors.background, card: colors.surface, text: colors.textPrimary, border: colors.border, primary: colors.focus },
+        };
+
+  return (
+    <NavigationContainer theme={navigationTheme}>
+      <Stack.Navigator
+        initialRouteName={needsNameSetup ? 'NameSetup' : 'MainTabs'}
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="NameSetup" component={NameSetupScreen} />
+        <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen name="DailyPlanner" component={DailyPlannerScreen} />
+        <Stack.Screen name="RoutineBuilder" component={RoutineBuilderScreen} />
+        <Stack.Screen name="QuickStart" component={QuickStartScreen} />
+        <Stack.Screen name="GoalsMission" component={GoalsMissionScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

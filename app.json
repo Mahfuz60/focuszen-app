@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "FocusZen",
+    "slug": "focuszen-smart-focus-life-system",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#eef6ea"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
