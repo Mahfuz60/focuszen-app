@@ -7,6 +7,7 @@ import { RoutineBuilderScreen } from '../screens/RoutineBuilderScreen';
 import { QuickStartScreen } from '../screens/QuickStartScreen';
 import { GoalsMissionScreen } from '../screens/GoalsMissionScreen';
 import { NameSetupScreen } from '../screens/NameSetupScreen';
+import { PermissionsSetupScreen } from '../screens/PermissionsSetupScreen';
 import { RootStackParamList } from '../types/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useProfileStore } from '../stores/useProfileStore';
@@ -17,8 +18,16 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export function RootNavigator() {
   const { mode, colors } = useAppTheme();
   const profileName = useProfileStore((state) => state.profile.displayName);
-  const onboardingCompleted = useSettingsStore((state) => state.privacy.onboardingCompleted);
-  const needsNameSetup = !onboardingCompleted || !profileName.trim() || profileName === 'FocusZen User';
+  const privacy = useSettingsStore((state) => state.privacy);
+  const needsNameSetup = !privacy.onboardingCompleted || !profileName.trim() || profileName === 'FocusZen User';
+  const needsPermissionsSetup = !privacy.permissionsSetupCompleted;
+
+  let initialRouteName: keyof RootStackParamList = 'MainTabs';
+  if (needsNameSetup) {
+    initialRouteName = 'NameSetup';
+  } else if (needsPermissionsSetup) {
+    initialRouteName = 'PermissionsSetup';
+  }
 
   const navigationTheme =
     mode === 'dark'
@@ -34,10 +43,11 @@ export function RootNavigator() {
   return (
     <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
-        initialRouteName={needsNameSetup ? 'NameSetup' : 'MainTabs'}
+        initialRouteName={initialRouteName}
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="NameSetup" component={NameSetupScreen} />
+        <Stack.Screen name="PermissionsSetup" component={PermissionsSetupScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="DailyPlanner" component={DailyPlannerScreen} />
         <Stack.Screen name="RoutineBuilder" component={RoutineBuilderScreen} />

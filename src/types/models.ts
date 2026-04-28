@@ -218,6 +218,7 @@ export type InsightSummary = {
 export type PrivacyPreferences = {
   notificationsEnabled: boolean;
   onboardingCompleted: boolean;
+  permissionsSetupCompleted?: boolean;
   exportIncludesHistory: boolean;
 };
 

@@ -72,7 +72,7 @@ export function NameSetupScreen() {
   const trimmedName = name.trim();
   const disabled = trimmedName.length < 2;
   const preview = useMemo(
-    () => (trimmedName ? trimmedName.split(/\s+/)[0] : 'You'),
+    () => (trimmedName ? trimmedName : 'You'),
     [trimmedName]
   );
 
@@ -83,7 +83,7 @@ export function NameSetupScreen() {
 
     setDisplayName(trimmedName);
     completeOnboarding();
-    navigation.replace('MainTabs');
+    navigation.replace('PermissionsSetup');
   }
 
   return (

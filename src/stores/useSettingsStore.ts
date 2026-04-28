@@ -11,6 +11,7 @@ type SettingsState = {
   setThemeMode: (themeMode: ThemeMode) => void;
   setPurifyLanguage: (purifyLanguage: AppLanguage) => void;
   completeOnboarding: () => void;
+  completePermissionsSetup: () => void;
   toggleStrictMode: () => void;
   toggleNotifications: () => void;
   replayOnboarding: () => void;
@@ -29,6 +30,10 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           privacy: { ...state.privacy, onboardingCompleted: true },
         })),
+      completePermissionsSetup: () =>
+        set((state) => ({
+          privacy: { ...state.privacy, permissionsSetupCompleted: true },
+        })),
       toggleStrictMode: () =>
         set((state) => ({
           settings: { ...state.settings, strictModeEnabled: !state.settings.strictModeEnabled },
@@ -39,7 +44,7 @@ export const useSettingsStore = create<SettingsState>()(
         })),
       replayOnboarding: () =>
         set((state) => ({
-          privacy: { ...state.privacy, onboardingCompleted: false },
+          privacy: { ...state.privacy, onboardingCompleted: false, permissionsSetupCompleted: false },
         })),
     }),
     {

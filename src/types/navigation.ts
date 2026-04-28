@@ -1,5 +1,6 @@
 export type RootStackParamList = {
   NameSetup: undefined;
+  PermissionsSetup: undefined;
   MainTabs: undefined;
   DailyPlanner: undefined;
   RoutineBuilder: undefined;
