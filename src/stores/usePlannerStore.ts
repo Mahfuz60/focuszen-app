@@ -25,13 +25,13 @@ export const usePlannerStore = create<PlannerState>()(
       addTask: (task) => set((state) => ({ tasks: [task, ...state.tasks] })),
       updateTask: (taskId, updates) =>
         set((state) => ({
-          tasks: state.tasks.map((task) =>
+          tasks: (state.tasks || []).map((task) =>
             task.id === taskId ? { ...task, ...updates } : task
           ),
         })),
       toggleTaskCompleted: (taskId) =>
         set((state) => ({
-          tasks: state.tasks.map((task) =>
+          tasks: (state.tasks || []).map((task) =>
             task.id === taskId ? { ...task, completed: !task.completed } : task
           ),
         })),
@@ -41,7 +41,7 @@ export const usePlannerStore = create<PlannerState>()(
         })),
       markTaskInProgressFromFocus: (taskId) =>
         set((state) => ({
-          tasks: state.tasks.map((task) =>
+          tasks: (state.tasks || []).map((task) =>
             task.id === taskId ? { ...task, completed: true } : task
           ),
         })),

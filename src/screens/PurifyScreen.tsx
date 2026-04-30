@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Circle, Defs, RadialGradient, Stop, LinearGradient } from 'react-native-svg';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import {
@@ -7,18 +8,22 @@ import {
   Pressable,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
-import { ProgressRing } from '../components/ProgressRing';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { usePurifyStore } from '../stores/usePurifyStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { spacing } from '../theme/tokens';
+import {
+  createPurifyStyles as createStyles,
+  darkPalette,
+  lightPalette,
+  ScreenPalette,
+} from '../styles/PurifyScreen.styles';
 import {
   buildPurifyStatus,
   getNextPurifyMilestone,
@@ -32,55 +37,9 @@ import {
   getPurifyScreenCopy,
 } from '../utils/purify';
 
-const darkPalette = {
-  backgroundTop: '#0f111a',
-  backgroundBottom: '#181124',
-  screenGlow: 'rgba(0, 255, 170, 0.25)',
-  screenGlowSoft: 'rgba(255, 51, 153, 0.2)',
-  screenGlowAccent: 'rgba(51, 153, 255, 0.25)',
-  surface: 'rgba(255, 255, 255, 0.08)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.05)',
-  stroke: 'rgba(255, 255, 255, 0.15)',
-  text: '#ffffff',
-  textMuted: '#b0b8c4',
-  textSoft: '#8f9bb3',
-  purpleTrack: 'rgba(255, 255, 255, 0.06)',
-  purple: '#d946ef',
-  purpleGlow: 'rgba(217, 70, 239, 0.25)',
-  green: '#00ff9d',
-  iconAccent: '#ef4444',
-  shadow: 'rgba(0, 0, 0, 0.5)',
-  activeToggleBg: 'rgba(255,255,255,0.12)',
-};
 
-const lightPalette = {
-  backgroundTop: '#e8f5e9',
-  backgroundBottom: '#f3e5f5',
-  screenGlow: 'rgba(0, 200, 83, 0.15)',
-  screenGlowSoft: 'rgba(170, 0, 255, 0.12)',
-  screenGlowAccent: 'rgba(41, 98, 255, 0.15)',
-  surface: 'rgba(255, 255, 255, 0.8)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.6)',
-  stroke: 'rgba(255, 255, 255, 0.9)',
-  text: '#0f172a',
-  textMuted: '#475569',
-  textSoft: '#94a3b8',
-  purpleTrack: 'rgba(0, 0, 0, 0.04)',
-  purple: '#8b5cf6',
-  purpleGlow: 'rgba(139, 92, 246, 0.2)',
-  green: '#10b981',
-  iconAccent: '#dc2626',
-  shadow: 'rgba(0, 0, 0, 0.06)',
-  activeToggleBg: '#ffffff',
-};
 
-type ScreenPalette = typeof darkPalette & {
-  screenGlow: string;
-  screenGlowSoft: string;
-  screenGlowAccent: string;
-};
 
-const REFERENCE_TITLE = 'Self-Purified';
 
 function formatMilestoneLabel(days: number, language: 'en' | 'bn') {
   if (language === 'bn') {
@@ -108,15 +67,8 @@ export function PurifyScreen() {
 
   const [nowIso, setNowIso] = useState(() => new Date().toISOString());
   const currentHour = useMemo(() => new Date(nowIso).getHours(), [nowIso]);
-  const palette = useMemo<ScreenPalette>(
-    () =>
-      mode === 'dark'
-        ? {
-            ...darkPalette,
-          }
-        : {
-            ...lightPalette,
-          },
+  const palette = useMemo(
+    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
     [mode]
   );
   const styles = useMemo(() => createStyles(palette), [palette]);
@@ -185,7 +137,8 @@ export function PurifyScreen() {
     : purifyLanguage === 'bn'
       ? 'সর্বোচ্চ মাইলস্টোন পূর্ণ'
       : 'Highest milestone reached';
-  const ringProgress = status.active ? getPurifyRingProgress(status.currentStreakDays) : 0;
+  const elapsedSeconds = purify.startedAt ? Math.max(0, Math.floor((new Date(nowIso).getTime() - new Date(purify.startedAt).getTime()) / 1000)) : 0;
+  const ringProgress = status.active ? Math.max(0.01, (elapsedSeconds % 86400) / 86400) : 0;
   const ringTimerLabel = status.active
     ? status.elapsedLabel
     : '00:00:00';
@@ -238,316 +191,130 @@ export function PurifyScreen() {
       <AnimatedThemeBackdrop
         colors={[palette.backgroundTop, palette.backgroundBottom]}
         mode={mode}
-        primaryGlow={palette.purpleGlow}
-        secondaryGlow={mode === 'dark' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(59, 130, 246, 0.08)'}
-        accentGlow={mode === 'dark' ? 'rgba(217, 70, 239, 0.1)' : 'rgba(168, 85, 247, 0.08)'}
+        primaryGlow={palette.screenGlow}
+        secondaryGlow={palette.screenGlowSoft}
+        accentGlow={palette.screenGlowAccent}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}
         >
           <View style={styles.topBar}>
-          <Pressable onPress={handleBack} style={styles.topIconButton}>
-            <Ionicons name="arrow-back" size={18} color={palette.text} />
-          </Pressable>
-
-          <Text style={styles.topTitle}>Purify</Text>
-
-          <View style={styles.toggleShell}>
-            <Pressable
-              onPress={() => setPurifyLanguage('en')}
-              style={[
-                styles.toggleOption,
-                purifyLanguage === 'en' ? styles.toggleOptionActive : null,
-              ]}
-            >
-              <Text style={styles.toggleText}>{copy.languageToggleEn}</Text>
+            <Pressable onPress={handleBack} style={styles.topIconButton}>
+              <Ionicons name="arrow-back" size={24} color={palette.text} />
             </Pressable>
+            <View style={styles.toggleShell}>
+              <Pressable
+                onPress={() => setPurifyLanguage('en')}
+                style={[styles.toggleOption, purifyLanguage === 'en' && styles.toggleOptionActive]}
+              >
+                <Text style={styles.toggleText}>EN</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setPurifyLanguage('bn')}
+                style={[styles.toggleOption, purifyLanguage === 'bn' && styles.toggleOptionActive]}
+              >
+                <Text style={styles.toggleText}>BN</Text>
+              </Pressable>
+            </View>
+          </View>
 
+          <View style={styles.headerBlock}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.screenTitle}>Self-Purified</Text>
+              <Text style={styles.screenSubtitle}>Build self-discipline. Step away from harmful habits.</Text>
+            </View>
+            
             <Pressable
-              onPress={() => setPurifyLanguage('bn')}
-              style={[
-                styles.toggleOption,
-                purifyLanguage === 'bn' ? styles.toggleOptionActive : null,
-              ]}
+              onPress={status.active ? confirmReset : handleStart}
+              style={[styles.topRightPowerBtn, { backgroundColor: 'rgba(213, 0, 249, 0.1)', padding: 12, borderRadius: 24 }]}
             >
-              <Text style={styles.toggleText}>{copy.languageToggleBn}</Text>
+              <Ionicons name="power" size={24} color="#d500f9" />
             </Pressable>
           </View>
-        </View>
 
-        <View style={styles.headerBlock}>
-          <Text style={styles.screenTitle}>
-            {purifyLanguage === 'en' ? REFERENCE_TITLE : copy.title}
-          </Text>
-          <Text style={styles.screenSubtitle}>{copy.subtitle}</Text>
-        </View>
-
-        <View style={styles.ringSection}>
+          <View style={styles.ringSection}>
           <Svg
-            pointerEvents="none"
-            width={340}
-            height={340}
-            style={styles.ringAtmosphere}
+            width={320}
+            height={320}
+            viewBox="0 0 320 320"
+            style={styles.rainbowSvg}
           >
             <Defs>
-              <RadialGradient id="purifyRingGlow" cx="50%" cy="50%" r="50%">
-                <Stop offset="0%" stopColor={palette.purple} stopOpacity={mode === 'dark' ? 0.25 : 0.06} />
-                <Stop offset="50%" stopColor={palette.purple} stopOpacity={mode === 'dark' ? 0.12 : 0.02} />
-                <Stop offset="76%" stopColor={palette.purple} stopOpacity={mode === 'dark' ? 0.04 : 0.005} />
-                <Stop offset="100%" stopColor={palette.purple} stopOpacity="0" />
+              <LinearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <Stop offset="0%" stopColor="#38bdf8" />
+                <Stop offset="25%" stopColor="#00ff9d" />
+                <Stop offset="50%" stopColor="#fbbf24" />
+                <Stop offset="75%" stopColor="#f43f5e" />
+                <Stop offset="100%" stopColor="#d946ef" />
+              </LinearGradient>
+              <RadialGradient id="ringBackGlow" cx="50%" cy="50%" r="50%">
+                <Stop offset="0%" stopColor="#d946ef" stopOpacity="0.2" />
+                <Stop offset="100%" stopColor="#0f111a" stopOpacity="0" />
               </RadialGradient>
             </Defs>
-            <Circle cx="170" cy="170" r="160" fill="url(#purifyRingGlow)" />
+            
+            <Circle cx="160" cy="160" r="140" fill="url(#ringBackGlow)" />
+            <Circle
+              cx="160"
+              cy="160"
+              r="130"
+              stroke="url(#rainbowGrad)"
+              strokeWidth={10}
+              fill="none"
+              strokeLinecap="round"
+              transform="rotate(-90 160 160)"
+            />
+            <Circle
+              cx="160"
+              cy="30"
+              r="7"
+              fill="#0a0a0aff"
+            />
           </Svg>
-
-          <ProgressRing
-            size={286}
-            strokeWidth={14}
-            progress={ringProgress}
-            valueLabel=" "
-            caption=" "
-            trackColor={palette.purpleTrack}
-            progressGradientColors={[palette.purple, palette.iconAccent]}
-            valueColor={palette.white}
-            captionColor={palette.white}
-          />
 
           <View pointerEvents="none" style={styles.ringOverlay}>
             <Text style={styles.dayLabel}>{status.currentStreakLabel}</Text>
             <Text style={styles.timerLabel}>{ringTimerLabel}</Text>
-            <Ionicons name="walk" size={36} color={palette.iconAccent} style={{ marginTop: 16 }} />
+            <View style={styles.walkIconCircle}>
+              <Ionicons name="walk" size={32} color="#00ff9d" />
+            </View>
           </View>
 
           <Pressable
-            onPress={status.active ? confirmReset : handleStart}
-            style={styles.ringLockButton}
+            onPress={() => navigation.navigate('Focus')}
+            style={styles.ringFlashButton}
           >
-            <Ionicons name="power" size={24} color="#ffffff" />
+            <Ionicons name="flash" size={24} color="#a855f7" />
           </Pressable>
         </View>
 
-        <Text style={styles.milestoneLabel}>{nextMilestoneLabel}</Text>
-
-        <View style={styles.quoteChip}>
-          <Ionicons name="water-outline" size={14} color={palette.textMuted} />
-          <Text style={styles.quoteChipText}>{chipLabel}</Text>
-          <Ionicons name="chevron-down" size={14} color={palette.textMuted} />
-        </View>
-
-        <View style={styles.quoteCard}>
-          <Text style={styles.quoteText}>{quoteVm.body}</Text>
-          <Text style={styles.quoteSource}>{quoteVm.sourceLabel}</Text>
-        </View>
-
-          <View style={styles.bottomRow}>
-            <Pressable onPress={() => navigation.navigate('Focus')} style={styles.bottomAction}>
-              <Ionicons name="flash-outline" size={16} color={palette.text} />
-              <Text style={styles.bottomActionText}>Open focus</Text>
-            </Pressable>
+        <Pressable onPress={() => {}} style={styles.nextMilestoneCard}>
+          <View style={styles.milestoneIconWrap}>
+            <Ionicons name="disc-outline" size={26} color="#d946ef" />
           </View>
+          <View style={styles.milestoneCopy}>
+            <Text style={styles.milestoneLabelSmall}>Next milestone</Text>
+            <Text style={styles.milestoneValueLarge}>{nextMilestoneLabel}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+        </Pressable>
+
+        <View style={styles.quoteGlassCard}>
+          <View style={styles.quoteLeftBar} />
+          <View style={styles.quoteContent}>
+            <Text style={styles.quoteTextMain}>"{quoteVm.body}"</Text>
+            <Text style={styles.quoteSourceText}>{quoteVm.sourceLabel}</Text>
+          </View>
+        </View>
+
+        <Pressable onPress={() => navigation.navigate('Focus')} style={styles.openFocusButton}>
+          <Ionicons name="flash" size={20} color={palette.yellow} style={{ marginRight: 12 }} />
+          <Text style={styles.openFocusText}>Open focus</Text>
+          <Ionicons name="chevron-forward" size={18} color={palette.yellow} style={{ marginLeft: 'auto' }} />
+        </Pressable>
         </ScrollView>
       </AnimatedThemeBackdrop>
     </SafeAreaView>
   );
-}
-
-function createStyles(palette: ScreenPalette) {
-  return StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: palette.backgroundTop,
-  },
-  content: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  topIconButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  topTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: palette.text,
-  },
-  toggleShell: {
-    flexDirection: 'row',
-    borderRadius: 18,
-    padding: 4,
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  toggleOption: {
-    minWidth: 40,
-    minHeight: 30,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-  },
-  toggleOptionActive: {
-    backgroundColor: palette.activeToggleBg,
-  },
-  toggleText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: palette.text,
-  },
-  headerBlock: {
-    marginTop: spacing.lg,
-    alignItems: 'center',
-  },
-  screenTitle: {
-    fontSize: 24,
-    lineHeight: 30,
-    fontWeight: '800',
-    color: palette.text,
-    textAlign: 'center',
-    letterSpacing: -0.5,
-  },
-  screenSubtitle: {
-    marginTop: spacing.sm,
-    maxWidth: 250,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '500',
-    textAlign: 'center',
-    color: palette.textMuted,
-  },
-  ringSection: {
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ringAtmosphere: {
-    position: 'absolute',
-  },
-  ringOverlay: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ringLockButton: {
-    position: 'absolute',
-    right: 12,
-    bottom: 24,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#050505',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.15)',
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  dayLabel: {
-    fontSize: 24,
-    lineHeight: 30,
-    fontWeight: '700',
-    color: palette.text,
-    textAlign: 'center',
-    letterSpacing: 0,
-  },
-  timerLabel: {
-    marginTop: 4,
-    fontSize: 52,
-    lineHeight: 60,
-    fontWeight: '800',
-    color: palette.text,
-    textAlign: 'center',
-    letterSpacing: -1.5,
-  },
-  milestoneLabel: {
-    marginTop: spacing.lg,
-    fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'center',
-    color: palette.textMuted,
-  },
-  quoteChip: {
-    marginTop: spacing.md,
-    alignSelf: 'center',
-    minHeight: 34,
-    borderRadius: 17,
-    paddingHorizontal: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  quoteChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: palette.textMuted,
-  },
-  quoteCard: {
-    marginTop: spacing.md,
-    borderRadius: 20,
-    padding: spacing.md,
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
-  },
-  quoteText: {
-    fontSize: 17,
-    lineHeight: 25,
-    fontWeight: '700',
-    color: palette.text,
-    textAlign: 'left',
-    letterSpacing: -0.2,
-  },
-  quoteSource: {
-    marginTop: spacing.sm,
-    fontSize: 14,
-    lineHeight: 19,
-    fontWeight: '500',
-    color: palette.textMuted,
-  },
-  bottomRow: {
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  bottomAction: {
-    minHeight: 56,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  bottomActionText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: palette.text,
-  },
-  });
 }

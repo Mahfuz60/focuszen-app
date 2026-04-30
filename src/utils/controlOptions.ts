@@ -9,7 +9,7 @@ export type ControlOptionDescriptor = {
 };
 
 const APP_DISPLAY_NAMES: Partial<Record<AppControlTarget, string>> = {
-  WhatsApp: 'WhatsApp Messenger',
+  WhatsApp: 'WhatsApp',
 };
 
 const APP_PRIORITY_ORDER: Partial<Record<AppControlTarget, number>> = {
@@ -21,7 +21,7 @@ const APP_OPTION_MAP: Record<AppControlTarget, ControlOptionDescriptor[]> = {
   YouTube: [
     { key: 'blockShorts', label: 'Block shorts', icon: 'play-outline' },
     { key: 'blockSearch', label: 'Block video search', icon: 'search-outline' },
-    { key: 'blockPictureInPicture', label: 'Block picture-in-picture', icon: 'tablet-landscape-outline' },
+    { key: 'blockPictureInPicture', label: 'Block picture', icon: 'tablet-landscape-outline' },
     { key: 'blockComments', label: 'Block comments', icon: 'chatbox-ellipses-outline' },
   ],
   Instagram: [

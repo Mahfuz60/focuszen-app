@@ -27,19 +27,19 @@ export const useGoalsStore = create<GoalsState>()(
       suggestions: seedSuggestions,
       incrementGoalMetric: (metric, value) =>
         set((state) => ({
-          goals: state.goals.map((goal) =>
+          goals: (state.goals || []).map((goal) =>
             goal.metric === metric ? { ...goal, current: goal.current + value } : goal
           ),
         })),
       refreshBadges: () =>
         set((state) => ({
-          badges: unlockBadges(state.badges, state.goals, state.streak, new Date().toISOString()),
+          badges: unlockBadges(state.badges || [], state.goals || [], state.streak, new Date().toISOString()),
         })),
       registerCompletion: () => {
         const streak = calculateStreak(get().streak, new Date().toISOString());
         set((state) => ({
           streak,
-          badges: unlockBadges(state.badges, state.goals, streak, new Date().toISOString()),
+          badges: unlockBadges(state.badges || [], state.goals || [], streak, new Date().toISOString()),
         }));
       },
       setSuggestions: (suggestions) => set({ suggestions }),

@@ -1,16 +1,16 @@
 import React, { useMemo } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import {
   Pressable,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useFocusStore } from '../stores/useFocusStore';
@@ -19,102 +19,26 @@ import { usePlannerStore } from '../stores/usePlannerStore';
 import { useProfileStore } from '../stores/useProfileStore';
 import { useStudyStore } from '../stores/useStudyStore';
 import { useUsageStore } from '../stores/useUsageStore';
-import { spacing, typography } from '../theme/tokens';
+
+import { spacing } from '../theme/tokens';
+import {
+  createHomeStyles as createStyles,
+  darkPalette,
+  lightPalette,
+  ScreenPalette,
+  qaCardStyle,
+  qaArrowBtnStyle,
+  qaArrowIconColor,
+  perfCardStyle,
+  brandZenStyle,
+  brandTextStyle,
+  greetingNameStyle,
+  greetingTextStyle,
+  upNextArrowStyle,
+  extraStyles,
+} from '../styles/HomeScreen.styles';
 import { formatMinutes } from '../utils/date';
 import { buildHomeDashboard } from '../utils/homeDashboard';
-
-const darkPalette = {
-  backgroundTop: '#0d0b1a',
-  backgroundBottom: '#171026',
-  screenGlow: 'rgba(0, 230, 118, 0.18)',
-  screenGlowSoft: 'rgba(213, 0, 249, 0.15)',
-  screenGlowAccent: 'rgba(0, 176, 255, 0.18)',
-  surface: 'rgba(255, 255, 255, 0.06)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.04)',
-  surfaceMuted: 'rgba(255, 255, 255, 0.02)',
-  stroke: 'rgba(255, 255, 255, 0.12)',
-  text: '#ffffff',
-  textMuted: '#b0b8c4',
-  textSoft: '#8f9bb3',
-  green: '#00e676',
-  greenSoft: 'rgba(0, 230, 118, 0.2)',
-  purple: '#d500f9',
-  purpleSoft: 'rgba(213, 0, 249, 0.2)',
-  blue: '#00b0ff',
-  blueSoft: 'rgba(0, 176, 255, 0.2)',
-  white: '#ffffff',
-  shadow: 'rgba(0, 0, 0, 0.6)',
-  streakShell: 'rgba(255, 255, 255, 0.08)',
-  streakBorder: 'rgba(0, 230, 118, 0.5)',
-  streakCoreBorder: 'rgba(255, 255, 255, 0.15)',
-};
-
-const lightPalette = {
-  backgroundTop: '#e8f5e9',
-  backgroundBottom: '#f3e5f5',
-  screenGlow: 'rgba(0, 200, 83, 0.15)',
-  screenGlowSoft: 'rgba(170, 0, 255, 0.12)',
-  screenGlowAccent: 'rgba(41, 98, 255, 0.15)',
-  surface: 'rgba(255, 255, 255, 0.8)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.6)',
-  surfaceMuted: 'rgba(255, 255, 255, 0.4)',
-  stroke: 'rgba(255, 255, 255, 0.9)',
-  text: '#0f172a',
-  textMuted: '#475569',
-  textSoft: '#94a3b8',
-  green: '#00c853',
-  greenSoft: 'rgba(0, 200, 83, 0.15)',
-  purple: '#aa00ff',
-  purpleSoft: 'rgba(170, 0, 255, 0.12)',
-  blue: '#2962ff',
-  blueSoft: 'rgba(41, 98, 255, 0.12)',
-  white: '#ffffff',
-  shadow: 'rgba(0, 0, 0, 0.06)',
-  streakShell: 'rgba(255, 255, 255, 0.9)',
-  streakBorder: 'rgba(0, 200, 83, 0.4)',
-  streakCoreBorder: 'rgba(0, 200, 83, 0.2)',
-};
-
-type ScreenPalette = typeof darkPalette;
-
-const quickActions = [
-  {
-    key: 'focus',
-    label: 'Focus',
-    icon: 'timer',
-    target: 'Focus',
-    baseColorLight: '#10b981',
-    bgDark: '#00e676',
-    iconDark: '#ffffff',
-  },
-  {
-    key: 'planner',
-    label: 'Planner',
-    icon: 'calendar',
-    target: 'DailyPlanner',
-    baseColorLight: '#a855f7',
-    bgDark: '#d500f9',
-    iconDark: '#ffffff',
-  },
-  {
-    key: 'control',
-    label: 'App Control',
-    icon: 'options',
-    target: 'Control',
-    baseColorLight: '#3b82f6',
-    bgDark: '#2979ff',
-    iconDark: '#ffffff',
-  },
-  {
-    key: 'insights',
-    label: 'Insights',
-    icon: 'bar-chart',
-    target: 'Insights',
-    baseColorLight: '#f43f5e',
-    bgDark: '#ff1744',
-    iconDark: '#ffffff',
-  },
-] as const;
 
 function formatCountdown(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60)
@@ -154,15 +78,8 @@ export function HomeScreen() {
   const streak = useGoalsStore((state) => state.streak);
   const tasks = usePlannerStore((state) => state.tasks);
   const selectedDate = usePlannerStore((state) => state.selectedDate);
-  const palette = useMemo<ScreenPalette>(
-    () =>
-      mode === 'dark'
-        ? {
-            ...darkPalette,
-          }
-        : {
-            ...lightPalette,
-          },
+  const palette = useMemo(
+    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
     [mode]
   );
   const styles = useMemo(() => createStyles(palette), [palette]);
@@ -206,7 +123,7 @@ export function HomeScreen() {
     ? formatCountdown(activeSession.remainingSeconds)
     : formatFocusSlot(featuredFocusTask?.focusPresetMinutes ?? selectedPreset);
   const focusCardMeta = activeSession
-    ? 'Session live now'
+    ? `Live • Starts: ${dashboard.activeSessionTask?.startTime ?? featuredFocusTask?.startTime ?? '--:--'}`
     : featuredFocusTask
       ? 'Ready to begin'
       : 'Start with your next block';
@@ -230,14 +147,48 @@ export function HomeScreen() {
     navigation.navigate('Focus');
   }
 
-  function navigateQuickAction(target: (typeof quickActions)[number]['target']) {
-    if (target === 'DailyPlanner') {
-      navigation.navigate('DailyPlanner');
-      return;
-    }
-
-    navigation.navigate(target);
+  function navigateQuickAction(target: string) {
+    if (target === 'DailyPlanner') { navigation.navigate('DailyPlanner'); return; }
+    if (target === 'Breathe') { navigation.navigate('Breathe'); return; }
+    if (target === 'Alarm') { navigation.navigate('Alarm'); return; }
+    if (target === 'Vitals') { navigation.navigate('Vitals'); return; }
+    navigation.navigate(target as any);
   }
+
+  const localQuickActions = [
+    {
+      key: 'breathe',
+      label: 'Breathe',
+      sub: 'Guided breathing',
+      icon: 'wind' as const,
+      target: 'Breathe',
+      color: '#38bdf8',
+    },
+    {
+      key: 'alarm',
+      label: 'Alarm',
+      sub: 'Rise timer',
+      icon: 'bell' as const,
+      target: 'Alarm',
+      color: '#fbbf24',
+    },
+    {
+      key: 'vitals',
+      label: 'Wellness',
+      sub: 'Water & eye care',
+      icon: 'heart' as const,
+      target: 'Vitals',
+      color: '#10b981',
+    },
+    {
+      key: 'plan',
+      label: 'Planner',
+      sub: 'Daily tasks',
+      icon: 'clipboard' as const,
+      target: 'DailyPlanner',
+      color: '#a855f7',
+    },
+  ] as const;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -255,22 +206,32 @@ export function HomeScreen() {
           contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}
         >
           <View style={styles.headerRow}>
-            <Text style={styles.brandText}>FocusZen</Text>
-            <Pressable
-              onPress={() => navigation.navigate('Insights')}
-              style={styles.headerIconButton}
-            >
-              <Ionicons name="notifications-outline" size={20} color={palette.text} />
-            </Pressable>
+            <Text style={[styles.brandText, brandTextStyle(mode, palette)]}>
+              Focus<Text style={brandZenStyle(mode, palette)}>Zen</Text>
+            </Text>
+            <View>
+              <Pressable
+                onPress={() => navigation.navigate('Insights')}
+                style={styles.headerIconButton}
+              >
+                <Ionicons name="notifications-outline" size={20} color={palette.text} />
+              </Pressable>
+              <View style={styles.notificationDot} />
+            </View>
           </View>
 
           <View style={styles.heroRow}>
             <View style={styles.heroCopy}>
-              <Text style={styles.greetingText}>{`${dashboard.greeting}, ${displayName}`}</Text>
+              <Text style={[styles.greetingText, greetingTextStyle(mode)]}>
+                {mode === 'dark' ? `${dashboard.greeting.toUpperCase()}, ` : `${dashboard.greeting}, `}
+                <Text style={greetingNameStyle(mode, palette)}>
+                  {mode === 'dark' ? displayName.toUpperCase() : displayName}
+                </Text>
+                {mode === 'light' ? ' 👋' : ''}
+              </Text>
               <Text style={styles.heroLine}>Own your day</Text>
               <Text style={[styles.heroLine, styles.heroLineAccent]}>before</Text>
-              <Text style={styles.heroLine}>distractions</Text>
-              <Text style={styles.heroLine}>do.</Text>
+              <Text style={styles.heroLine}>distractions do.</Text>
               <Text style={styles.heroSupport}>
                 {`${supportDate} is shaped by your focus, your plan, and the attention you protect.`}
               </Text>
@@ -278,105 +239,181 @@ export function HomeScreen() {
 
             <View style={styles.streakWrap}>
               <View style={styles.streakRing}>
-                <View style={styles.streakArc} />
+                <Svg width={140} height={140} style={{ position: 'absolute', transform: [{ scaleX: -1 }] }}>
+                  <Circle
+                    cx={70}
+                    cy={70}
+                    r={60}
+                    stroke={palette.greenSoft}
+                    strokeWidth={6}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={[272.2, 377]}
+                    transform="rotate(140 70 70)"
+                  />
+                  <Circle
+                    cx={70}
+                    cy={70}
+                    r={60}
+                    stroke={palette.green}
+                    strokeWidth={6}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={[272.2, 377]}
+                    strokeDashoffset={272.2 * 0.25}
+                    transform="rotate(140 70 70)"
+                  />
+                  <Circle cx={70} cy={10} r={6} fill={palette.green} transform={`rotate(${230 + 260 * 0.75} 70 70)`} />
+                </Svg>
                 <View style={styles.streakCore}>
                   <Text style={styles.streakValue}>{dashboard.summary.streakDays}</Text>
-                  <Text style={styles.streakLabel}>day streak</Text>
+                  <Text style={styles.streakLabel}>DAY STREAK</Text>
+                  <View style={extraStyles.streakBadge}>
+                    <Text style={[extraStyles.streakBadgeText, { color: palette.green }]}>Keep it going!</Text>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
 
           <Pressable onPress={handlePrimaryAction} style={styles.focusCard}>
-            <View style={styles.focusHeader}>
-              <View style={styles.focusEyebrowRow}>
-                <Ionicons name="flash" size={16} color={palette.green} />
-                <Text style={styles.focusEyebrow}>Today's focus</Text>
+            <View style={[extraStyles.focusCardContent, { paddingRight: spacing.sm }]}>
+              <View style={styles.focusHeader}>
+                <View style={styles.focusEyebrowRow}>
+                  <Ionicons name="flash" size={14} color={palette.green} />
+                  <Text style={styles.focusEyebrow}>TODAY'S FOCUS</Text>
+                </View>
               </View>
-              <View style={styles.playGlow}>
+
+              <Text style={styles.focusTitle}>{focusCardTitle}</Text>
+
+              <View style={styles.focusFooter}>
+                <View style={styles.focusTimerRow}>
+                  <Ionicons name="timer-outline" size={18} color={palette.green} />
+                  <Text style={styles.focusTimer}>{focusCardTime}</Text>
+                </View>
+                <View style={styles.focusFooterRight}>
+                  <Text style={styles.focusMeta}>Start with your next block</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.playGlowOuter}>
+              <View style={styles.playGlowInner}>
                 <Ionicons
                   name={activeSession ? 'pause' : 'play'}
-                  size={20}
+                  size={32}
                   color={palette.white}
-                  style={{ marginLeft: activeSession ? 0 : 3 }}
+                  style={activeSession ? styles.playIconActive : styles.playIcon}
                 />
               </View>
             </View>
-
-            <Text style={styles.focusTitle}>{focusCardTitle}</Text>
-
-            <View style={styles.focusFooter}>
-              <View style={styles.focusTimerRow}>
-                <Ionicons name="timer-outline" size={18} color={palette.green} />
-                <Text style={styles.focusTimer}>{focusCardTime}</Text>
-              </View>
-              <Text style={styles.focusMeta}>{focusCardMeta}</Text>
-            </View>
           </Pressable>
 
-          <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <Ionicons name="leaf-outline" size={16} color={palette.green} />
-                <Text style={styles.metricLabel}>Focus</Text>
-              </View>
-              <Text style={styles.metricValue}>{formatMinutes(dashboard.summary.focusMinutes)}</Text>
-            </View>
-
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <Ionicons name="school-outline" size={16} color={palette.purple} />
-                <Text style={styles.metricLabel}>Study</Text>
-              </View>
-              <Text style={styles.metricValue}>{formatMinutes(dashboard.summary.studyMinutes)}</Text>
-            </View>
-
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <Ionicons name="heart-outline" size={16} color={palette.blue} />
-                <Text style={styles.metricLabel}>Social</Text>
-              </View>
-              <Text style={styles.metricValue}>{formatMinutes(dashboard.summary.socialMinutes)}</Text>
-            </View>
-
-            <View style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <Ionicons name="folder-open-outline" size={16} color={palette.textMuted} />
-                <Text style={styles.metricLabel}>Open tasks</Text>
-              </View>
-              <Text style={styles.metricValue}>{String(openTasksCount)}</Text>
-            </View>
-          </View>
 
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Quick actions</Text>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
           </View>
 
-          <View style={styles.quickActionsRow}>
-            {quickActions.map((action) => {
-              const bgColor = mode === 'dark' ? action.bgDark : action.baseColorLight;
-              return (
-                <Pressable
-                  key={action.key}
-                  onPress={() => navigateQuickAction(action.target)}
-                  style={styles.quickActionItem}
-                >
-                  <View
-                    style={[
-                      styles.quickActionIconWrap,
-                      {
-                        backgroundColor: bgColor,
-                        shadowColor: bgColor,
-                      },
-                    ]}
-                  >
-                    <Ionicons name={action.icon} size={28} color="#ffffff" />
+          <View style={styles.qaGrid}>
+            {localQuickActions.map((action) => (
+              <Pressable
+                key={action.key}
+                onPress={() => navigateQuickAction(action.target)}
+                style={[styles.qaCard, qaCardStyle(mode, action.color)]}
+              >
+                <View style={styles.qaInner}>
+                  <View style={styles.qaTopRow}>
+                    <View style={[styles.qaIconWrap, { backgroundColor: `${action.color}25` }]}>
+                      <Feather name={action.icon as any} size={24} color={action.color} />
+                    </View>
+                    <View style={[styles.qaArrowBtn, qaArrowBtnStyle(mode)]}>
+                      <Feather name="arrow-right" size={16} color={qaArrowIconColor(mode)} />
+                    </View>
                   </View>
-                  <Text style={styles.quickActionLabel}>{action.label}</Text>
-                </Pressable>
-              );
-            })}
+
+                  <View style={styles.qaLabelWrap}>
+                    <Text style={styles.qaLabel}>{action.label}</Text>
+                    <Text style={styles.qaSub}>{action.sub}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.qaBarRow}>
+                  {[0.25, 0.55, 0.35, 0.7, 0.45, 0.85, 0.6].map((h, i) => (
+                    <View
+                      key={i}
+                      style={[
+                        styles.qaBarItem,
+                        {
+                          height: `${h * 100}%` as any,
+                          backgroundColor: i === 6 ? action.color : `${action.color}55`,
+                        },
+                      ]}
+                    />
+                  ))}
+                </View>
+
+                <View style={[styles.qaBottomBar, { backgroundColor: action.color }]} />
+              </Pressable>
+            ))}
           </View>
+
+          {/* ── Daily Performance ── */}
+          <View style={[styles.sectionHeader, { marginTop: spacing.xl }]}>
+            <Text style={styles.sectionTitle}>Daily Performance</Text>
+          </View>
+
+          <View style={styles.perfGrid}>
+            {[
+              { key: 'focus',  label: 'Focus',  value: formatMinutes(dashboard.summary.focusMinutes), sub: 'Focus time today',  icon: 'target' as const,         color: '#22d3ee' },
+              { key: 'study',  label: 'Study',  value: formatMinutes(dashboard.summary.studyMinutes), sub: 'Study time today',  icon: 'book-open' as const,      color: '#a78bfa' },
+              { key: 'social', label: 'Social', value: formatMinutes(dashboard.summary.socialMinutes),sub: 'Social app time',   icon: 'message-circle' as const, color: '#fb7185' },
+              { key: 'tasks',  label: 'Tasks',  value: String(openTasksCount),                        sub: 'Open tasks left',   icon: 'check-circle' as const,   color: '#fbbf24' },
+            ].map((metric) => (
+              <View
+                key={metric.key}
+                style={[styles.perfCard, perfCardStyle(mode, metric.color)]}
+              >
+                <View style={styles.perfInner}>
+                  <View style={styles.perfTopRow}>
+                    <View style={[styles.perfIconWrap, { backgroundColor: `${metric.color}25` }]}>
+                      <Feather name={metric.icon as any} size={20} color={metric.color} />
+                    </View>
+                    <Text style={styles.perfLabel}>{metric.label}</Text>
+                  </View>
+                  <Text style={styles.perfValue}>{metric.value}</Text>
+                  <Text style={styles.perfSub}>{metric.sub}</Text>
+                </View>
+
+                <Svg width="100%" height={44} viewBox="0 0 160 44" preserveAspectRatio="none">
+                  <Defs>
+                    <SvgLinearGradient id={`grad-${metric.key}`} x1="0" y1="0" x2="0" y2="1">
+                      <Stop offset="0" stopColor={metric.color} stopOpacity={0.3} />
+                      <Stop offset="1" stopColor={metric.color} stopOpacity={0.02} />
+                    </SvgLinearGradient>
+                  </Defs>
+                  <Path
+                    d="M0,30 L10,26 L22,32 L34,20 L46,28 L58,16 L70,24 L82,18 L94,28 L106,14 L118,22 L130,18 L142,26 L160,20 L160,44 L0,44 Z"
+                    fill={`url(#grad-${metric.key})`}
+                  />
+                  <Path
+                    d="M0,30 L10,26 L22,32 L34,20 L46,28 L58,16 L70,24 L82,18 L94,28 L106,14 L118,22 L130,18 L142,26 L160,20"
+                    stroke={metric.color}
+                    strokeWidth={2}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+
+                <View style={[styles.perfBottomBar, { backgroundColor: metric.color }]} />
+              </View>
+            ))}
+          </View>
+
+
+
+         
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Up next</Text>
@@ -390,7 +427,7 @@ export function HomeScreen() {
             style={styles.upNextCard}
           >
             <View style={styles.upNextIconWrap}>
-              <Ionicons name="trending-up-outline" size={18} color={palette.purple} />
+              <Ionicons name="trending-up-outline" size={18} color={palette.green} />
             </View>
 
             <View style={styles.upNextCopy}>
@@ -404,346 +441,16 @@ export function HomeScreen() {
               </Text>
             </View>
 
-            <Text style={styles.upNextTime}>{nextTask?.startTime ?? '--:--'}</Text>
+            {nextTask ? (
+              <Text style={styles.upNextTime}>{nextTask.startTime}</Text>
+            ) : (
+              <View style={[styles.upNextArrowWrap, upNextArrowStyle(mode, styles)]}>
+                <Ionicons name="chevron-forward" size={18} color={mode === 'dark' ? palette.text : palette.green} />
+              </View>
+            )}
           </Pressable>
         </ScrollView>
       </AnimatedThemeBackdrop>
     </SafeAreaView>
   );
-}
-
-function createStyles(palette: ScreenPalette) {
-  return StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: palette.backgroundTop,
-  },
-  content: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  brandText: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: palette.green,
-    letterSpacing: -0.5,
-  },
-  headerIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  heroRow: {
-    marginTop: spacing.xl,
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  heroCopy: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  greetingText: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: '600',
-    color: palette.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.xs,
-  },
-  heroLine: {
-    fontSize: 34,
-    lineHeight: 40,
-    fontWeight: '700',
-    color: palette.text,
-    letterSpacing: -0.5,
-  },
-  heroLineAccent: {
-    color: palette.green,
-  },
-  heroSupport: {
-    marginTop: spacing.sm,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '500',
-    color: palette.textSoft,
-    maxWidth: '90%',
-  },
-  streakWrap: {
-    width: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  streakRing: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    borderWidth: 1.5,
-    borderColor: palette.streakBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.streakShell,
-    shadowColor: palette.green,
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-  },
-  streakArc: {
-    position: 'absolute',
-    top: 5,
-    right: 10,
-    width: 32,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: palette.purple,
-    shadowColor: palette.purple,
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  streakCore: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: palette.streakCoreBorder,
-    backgroundColor: palette.surface,
-  },
-  streakValue: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: palette.text,
-    letterSpacing: -1,
-  },
-  streakLabel: {
-    marginTop: -2,
-    fontSize: 12,
-    fontWeight: '600',
-    color: palette.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  focusCard: {
-    marginTop: spacing.xl,
-    borderRadius: 28,
-    padding: spacing.lg,
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 8,
-  },
-  focusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  focusEyebrowRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: palette.greenSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  focusEyebrow: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: palette.green,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  playGlow: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.green,
-    shadowColor: palette.green,
-    shadowOpacity: 0.4,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  focusTitle: {
-    marginTop: spacing.md,
-    fontSize: 26,
-    lineHeight: 32,
-    fontWeight: '700',
-    color: palette.text,
-    letterSpacing: -0.5,
-  },
-  focusFooter: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  focusTimerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  focusTimer: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: palette.text,
-    letterSpacing: -0.2,
-  },
-  focusMeta: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: palette.textSoft,
-  },
-  metricsGrid: {
-    marginTop: spacing.lg,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  metricCard: {
-    width: '48%',
-    borderRadius: 24,
-    padding: spacing.md,
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  metricHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  metricLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: palette.textMuted,
-  },
-  metricValue: {
-    marginTop: spacing.sm,
-    fontSize: 32,
-    lineHeight: 36,
-    fontWeight: '800',
-    color: palette.text,
-    letterSpacing: -1,
-  },
-  sectionHeader: {
-    marginTop: spacing.xl,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: palette.text,
-    letterSpacing: -0.5,
-  },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: palette.blue,
-  },
-  quickActionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  quickActionItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  quickActionIconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
-  },
-  quickActionLabel: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: palette.text,
-  },
-  upNextCard: {
-    marginBottom: spacing.sm,
-    borderRadius: 24,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  upNextIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.purpleSoft,
-  },
-  upNextCopy: {
-    flex: 1,
-  },
-  upNextTitle: {
-    fontSize: 17,
-    lineHeight: 24,
-    fontWeight: '600',
-    color: palette.text,
-    letterSpacing: -0.2,
-  },
-  upNextMeta: {
-    marginTop: 2,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '400',
-    color: palette.textMuted,
-  },
-  upNextTime: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: palette.text,
-  },
-  });
 }

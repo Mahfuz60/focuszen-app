@@ -6,6 +6,9 @@ export type RootStackParamList = {
   RoutineBuilder: undefined;
   QuickStart: undefined;
   GoalsMission: undefined;
+  Breathe: undefined;
+  Alarm: undefined;
+  Vitals: undefined;
 };
 
 export type MainTabParamList = {

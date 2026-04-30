@@ -84,9 +84,9 @@ export function getLatestInsightsAnchorDate({
   usageEntries,
 }: Pick<BuildInsightsDashboardInput, 'focusSessions' | 'studySessions' | 'usageEntries'>) {
   const timestamps = [
-    ...focusSessions.map((session) => getFocusSessionDate(session).getTime()),
-    ...studySessions.map((session) => new Date(session.startedAt).getTime()),
-    ...usageEntries.map((entry) => new Date(entry.date).getTime()),
+    ...(focusSessions || []).map((session) => getFocusSessionDate(session).getTime()),
+    ...(studySessions || []).map((session) => new Date(session.startedAt).getTime()),
+    ...(usageEntries || []).map((entry) => new Date(entry.date).getTime()),
   ].filter((value) => Number.isFinite(value));
 
   if (timestamps.length === 0) {
@@ -129,15 +129,15 @@ export function buildInsightsDashboard({
   const currentBounds = getPeriodBounds(anchorDate, range);
   const previousAnchorDate = shiftInsightsAnchorDate(anchorDate, range, -1);
   const previousBounds = getPeriodBounds(previousAnchorDate, range);
-  const currentUsage = usageEntries.filter((entry) => isDateWithinBounds(new Date(entry.date), currentBounds));
-  const previousUsage = usageEntries.filter((entry) => isDateWithinBounds(new Date(entry.date), previousBounds));
-  const currentFocus = focusSessions.filter((session) =>
+  const currentUsage = (usageEntries || []).filter((entry) => isDateWithinBounds(new Date(entry.date), currentBounds));
+  const previousUsage = (usageEntries || []).filter((entry) => isDateWithinBounds(new Date(entry.date), previousBounds));
+  const currentFocus = (focusSessions || []).filter((session) =>
     isDateWithinBounds(getFocusSessionDate(session), currentBounds)
   );
-  const previousFocus = focusSessions.filter((session) =>
+  const previousFocus = (focusSessions || []).filter((session) =>
     isDateWithinBounds(getFocusSessionDate(session), previousBounds)
   );
-  const currentStudy = studySessions.filter((session) =>
+  const currentStudy = (studySessions || []).filter((session) =>
     isDateWithinBounds(new Date(session.startedAt), currentBounds)
   );
 

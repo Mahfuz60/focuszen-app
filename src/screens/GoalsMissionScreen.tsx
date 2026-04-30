@@ -8,6 +8,7 @@ import { MetricPill } from '../components/MetricPill';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useGoalsStore } from '../stores/useGoalsStore';
 import { spacing, typography } from '../theme/tokens';
+import { goalsMissionStyles as styles } from '../styles/GoalsMissionScreen.styles';
 
 export function GoalsMissionScreen() {
   const { colors } = useAppTheme();
@@ -31,7 +32,7 @@ export function GoalsMissionScreen() {
         <Text style={[styles.supportText, { color: colors.textMuted }]}>Unlock conditions are persisted locally with badge progress.</Text>
       </SurfaceCard>
 
-      {goals.map((goal, index) => {
+      {(goals || []).map((goal, index) => {
         const progress = Math.min(1, goal.current / goal.target);
         return (
           <SurfaceCard key={goal.id} delay={index * 70}>
@@ -50,7 +51,7 @@ export function GoalsMissionScreen() {
       <SurfaceCard delay={220}>
         <SectionHeader title="Milestones & badges" />
         <View style={styles.badges}>
-          {badges.map((badge) => (
+          {(badges || []).map((badge) => (
             <MetricPill key={badge.id} label={`${badge.label} ${badge.progress}%`} tone={badge.unlocked ? 'focus' : 'blue'} />
           ))}
         </View>
@@ -65,40 +66,4 @@ export function GoalsMissionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  levels: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  supportText: {
-    marginTop: spacing.xs,
-    fontSize: typography.body,
-    lineHeight: 24,
-  },
-  goalRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    alignItems: 'center',
-  },
-  heading: {
-    fontSize: typography.heading,
-    fontWeight: '800',
-  },
-  metricLabel: {
-    marginTop: spacing.sm,
-    fontSize: typography.body,
-    fontWeight: '700',
-  },
-  badges: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  metricValue: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
-});
+

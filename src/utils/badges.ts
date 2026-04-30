@@ -5,19 +5,23 @@ export function calculateBadgeProgress(goal: Goal) {
 }
 
 export function unlockBadges(badges: Badge[], goals: Goal[], streak: Streak, nowIso: string) {
-  return badges.map((badge) => {
+  const safeBadges = badges || [];
+  const safeGoals = goals || [];
+  const safeStreak = streak || { current: 0, best: 0, lastActivityIso: '' };
+
+  return safeBadges.map((badge) => {
     let unlocked = badge.unlocked;
     let progress = badge.progress;
 
-    const matchingGoal = goals.find((goal) => goal.rewardBadgeId === badge.id);
+    const matchingGoal = safeGoals.find((goal) => goal.rewardBadgeId === badge.id);
     if (matchingGoal) {
       progress = calculateBadgeProgress(matchingGoal);
       unlocked = progress >= 100;
     }
 
     if (badge.id === 'badge-streak') {
-      progress = Math.min(100, Math.round((streak.current / 14) * 100));
-      unlocked = streak.current >= 14;
+      progress = Math.min(100, Math.round((safeStreak.current / 14) * 100));
+      unlocked = safeStreak.current >= 14;
     }
 
     return {

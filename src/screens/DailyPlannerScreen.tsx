@@ -9,7 +9,6 @@ import {
   Pressable,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -20,7 +19,14 @@ import { useAppTheme } from '../hooks/useAppTheme';
 import { useGoalsStore } from '../stores/useGoalsStore';
 import { useFocusStore } from '../stores/useFocusStore';
 import { usePlannerStore } from '../stores/usePlannerStore';
-import { radius, spacing, typography } from '../theme/tokens';
+
+import {
+  createPlannerStyles as createStyles,
+  darkPalette,
+  getCategoryStyles,
+  lightPalette,
+  ScreenPalette,
+} from '../styles/DailyPlannerScreen.styles';
 import type { PlannerCategory, PlannerTask } from '../types/models';
 import {
   buildPlannerDraftFromTask,
@@ -35,114 +41,7 @@ import {
   syncPlannerDuration,
 } from '../utils/planner';
 
-const darkPalette = {
-  backgroundTop: '#0d0b1a',
-  backgroundBottom: '#171026',
-  surface: 'rgba(255, 255, 255, 0.08)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.05)',
-  stroke: 'rgba(255, 255, 255, 0.15)',
-  text: '#ffffff',
-  textMuted: '#cbd5e1',
-  textSoft: '#94a3b8',
-  white: '#ffffff',
-  green: '#00ff9d',
-  purple: '#d946ef',
-  blue: '#38bdf8',
-  chipActive: 'rgba(0, 255, 157, 0.15)',
-  chipBorder: 'rgba(0, 255, 157, 0.3)',
-  shadow: 'rgba(0, 0, 0, 0.5)',
-  greenSoft: 'rgba(0, 255, 157, 0.15)',
-  purpleSoft: 'rgba(217, 70, 239, 0.15)',
-  gold: '#fbbf24',
-  goldSoft: 'rgba(251, 191, 36, 0.15)',
-  blueSoft: 'rgba(56, 189, 248, 0.15)',
-  red: '#ef4444',
-  redSoft: 'rgba(239, 68, 68, 0.15)',
-};
 
-const lightPalette = {
-  backgroundTop: '#e8f5e9',
-  backgroundBottom: '#f3e5f5',
-  surface: 'rgba(255, 255, 255, 0.75)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.45)',
-  surfaceMuted: 'rgba(255, 255, 255, 0.25)',
-  stroke: 'rgba(0, 0, 0, 0.06)',
-  text: '#020617',
-  textMuted: '#475569',
-  textSoft: '#94a3b8',
-  green: '#00c853',
-  greenSoft: 'rgba(0, 200, 83, 0.12)',
-  purple: '#aa00ff',
-  purpleSoft: 'rgba(170, 0, 255, 0.1)',
-  gold: '#ffab00',
-  goldSoft: 'rgba(255, 171, 0, 0.1)',
-  blue: '#2962ff',
-  blueSoft: 'rgba(41, 98, 255, 0.1)',
-  red: '#d50000',
-  redSoft: 'rgba(213, 0, 0, 0.1)',
-  shadow: 'rgba(0, 0, 0, 0.08)',
-};
-
-type ScreenPalette = typeof darkPalette;
-
-function getCategoryStyles(
-  palette: ScreenPalette
-): Record<PlannerCategory, { icon: React.ComponentProps<typeof Ionicons>['name']; bg: string; text: string }> {
-  return {
-    Study: { icon: 'book-outline', bg: palette.blueSoft, text: palette.blue },
-    Work: { icon: 'briefcase-outline', bg: palette.greenSoft, text: palette.green },
-    Health: { icon: 'body-outline', bg: palette.goldSoft, text: palette.gold },
-    Personal: { icon: 'sparkles-outline', bg: palette.purpleSoft, text: palette.purple },
-  };
-}
-
-type PlannerQuickActionProps = {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  label: string;
-  tone?: 'neutral' | 'success' | 'danger';
-  onPress: () => void;
-  palette: ScreenPalette;
-  styles: ReturnType<typeof createStyles>;
-};
-
-function PlannerQuickAction({
-  icon,
-  label,
-  tone = 'neutral',
-  onPress,
-  palette,
-  styles,
-}: PlannerQuickActionProps) {
-  const toneStyle = {
-    neutral: {
-      backgroundColor: palette.surfaceMuted,
-      color: palette.text,
-    },
-    success: {
-      backgroundColor: palette.greenSoft,
-      color: palette.green,
-    },
-    danger: {
-      backgroundColor: palette.redSoft,
-      color: palette.red,
-    },
-  }[tone];
-
-  return (
-    <Pressable onPress={onPress} style={[styles.quickAction, { backgroundColor: toneStyle.backgroundColor }]}>
-      <Ionicons name={icon} size={15} color={toneStyle.color} />
-      <Text style={[styles.quickActionLabel, { color: toneStyle.color }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function formatCountdown(totalSeconds: number) {
-  const minutes = Math.floor(totalSeconds / 60)
-    .toString()
-    .padStart(2, '0');
-  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-  return `${minutes}:${seconds}`;
-}
 
 export function DailyPlannerScreen() {
   const { mode, text } = useAppTheme();
@@ -164,21 +63,21 @@ export function DailyPlannerScreen() {
   const incrementGoalMetric = useGoalsStore((state) => state.incrementGoalMetric);
   const registerCompletion = useGoalsStore((state) => state.registerCompletion);
   const refreshBadges = useGoalsStore((state) => state.refreshBadges);
-  const palette = useMemo<ScreenPalette>(
+  const palette = useMemo(
     () =>
       mode === 'dark'
-        ? {
+        ? ({
             ...darkPalette,
             text: text.primary,
             textMuted: text.secondary,
             textSoft: text.tertiary,
-          }
-        : {
+          } as ScreenPalette)
+        : ({
             ...lightPalette,
             text: text.primary,
             textMuted: text.secondary,
             textSoft: text.tertiary,
-          },
+          } as ScreenPalette),
     [mode, text]
   );
   const categoryStyles = useMemo(() => getCategoryStyles(palette), [palette]);
@@ -197,6 +96,11 @@ export function DailyPlannerScreen() {
   const editingTask = useMemo(
     () => tasks.find((task) => task.id === editingTaskId) ?? null,
     [editingTaskId, tasks]
+  );
+
+  const activeTask = useMemo(
+    () => tasks.find((task) => task.id === activeSession?.linkedTaskId) ?? null,
+    [activeSession?.linkedTaskId, tasks]
   );
   const categoryGlows = useMemo(
     () => ({
@@ -375,7 +279,9 @@ export function DailyPlannerScreen() {
               {activeSession ? (
                 <View style={styles.liveFocusCard}>
                   <View style={styles.liveFocusCopy}>
-                    <Text style={styles.liveFocusLabel}>Focus live</Text>
+                    <Text style={styles.liveFocusLabel}>
+                      {activeTask ? `Focusing: ${activeTask.title} (Starts: ${activeTask.startTime})` : 'Focus live'}
+                    </Text>
                     <Text style={styles.liveFocusTime}>
                       {formatCountdown(activeSession.remainingSeconds)}
                     </Text>
@@ -570,6 +476,11 @@ export function DailyPlannerScreen() {
                           <Text style={styles.taskTitle}>{task.title}</Text>
                           <Text style={styles.taskMeta}>
                             {`${task.startTime} | ${task.durationMinutes} min`}
+                            {activeSession && activeSession.linkedTaskId === task.id && (
+                              <Text style={{ color: palette.green, fontWeight: '800' }}>
+                                {` | Live: ${formatCountdown(activeSession.remainingSeconds)}`}
+                              </Text>
+                            )}
                           </Text>
                         </View>
                       </View>
@@ -638,396 +549,53 @@ export function DailyPlannerScreen() {
   );
 }
 
-function createStyles(palette: ScreenPalette) {
-  return StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: palette.backgroundTop,
-  },
-  flex: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xxl * 2,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xl,
-  },
-  topIconButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  topTitle: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  summaryShell: {
-    borderRadius: 28,
-    padding: spacing.lg,
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 8,
-  },
-  summaryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  summaryTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  summaryPercent: {
-    fontSize: typography.caption,
-    fontWeight: '700',
-    color: palette.textMuted,
-  },
-  progressTrack: {
-    marginTop: spacing.md,
-    height: 8,
-    borderRadius: radius.round,
-    overflow: 'hidden',
-    backgroundColor: palette.surfaceMuted,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: radius.round,
-    backgroundColor: palette.green,
-  },
-  summaryText: {
-    marginTop: spacing.md,
-    fontSize: 15,
-    lineHeight: 23,
-    textAlign: 'center',
-    color: palette.textMuted,
-  },
-  liveFocusCard: {
-    marginTop: spacing.md,
-    borderRadius: 18,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: palette.surfaceSoft,
-  },
-  liveFocusCopy: {
-    gap: 2,
-  },
-  liveFocusLabel: {
-    fontSize: typography.caption,
-    fontWeight: '700',
-    color: palette.textMuted,
-  },
-  liveFocusTime: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  liveFocusButton: {
-    minHeight: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    backgroundColor: palette.greenSoft,
-  },
-  liveFocusButtonText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: palette.green,
-  },
-  suggestionsShell: {
-    marginTop: spacing.xl,
-    borderRadius: 24,
-    padding: spacing.md,
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  suggestionsLabel: {
-    fontSize: typography.caption,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    color: palette.textSoft,
-  },
-  suggestionCard: {
-    marginTop: spacing.md,
-    borderRadius: 18,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: palette.surfaceSoft,
-  },
-  suggestionIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  suggestionCopy: {
-    flex: 1,
-  },
-  suggestionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: palette.text,
-  },
-  suggestionMeta: {
-    marginTop: 4,
-    fontSize: 14,
-    color: palette.textMuted,
-  },
-  addSuggestionButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.green,
-  },
-  addSuggestionButtonDisabled: {
-    opacity: 0.58,
-  },
-  addCustomButton: {
-    marginTop: spacing.xl,
-    minHeight: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.greenSoft,
-    borderWidth: 1,
-    borderColor: palette.green,
-  },
-  addCustomButtonText: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: palette.green,
-  },
-  composerCard: {
-    marginTop: spacing.lg,
-    borderRadius: 24,
-    padding: spacing.lg,
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  composerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  composerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  composerHide: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: palette.textMuted,
-  },
-  inputShell: {
-    marginTop: spacing.md,
-  },
-  inputLabel: {
-    marginBottom: spacing.xs,
-    fontSize: typography.caption,
-    fontWeight: '700',
-    color: palette.textMuted,
-  },
-  primaryInput: {
-    minHeight: 52,
-    borderRadius: 18,
-    paddingHorizontal: spacing.md,
-    backgroundColor: palette.surfaceSoft,
-    color: palette.text,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  secondaryInput: {
-    minHeight: 48,
-    borderRadius: 16,
-    paddingHorizontal: spacing.md,
-    backgroundColor: palette.surfaceSoft,
-    color: palette.text,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  inlineInputs: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  categoriesWrap: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.round,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    backgroundColor: palette.surfaceSoft,
-  },
-  categoryChipLabel: {
-    fontSize: typography.caption,
-    fontWeight: '700',
-  },
-  saveButton: {
-    marginTop: spacing.lg,
-    minHeight: 52,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.green,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: palette.backgroundTop,
-  },
-  tasksSectionHeader: {
-    marginTop: spacing.lg,
-    marginBottom: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  tasksSectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  tasksSectionMeta: {
-    fontSize: typography.caption,
-    fontWeight: '700',
-    color: palette.textMuted,
-  },
-  emptyCard: {
-    borderRadius: 22,
-    padding: spacing.lg,
-    alignItems: 'center',
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: palette.textMuted,
-  },
-  taskCard: {
-    marginBottom: spacing.md,
-    borderRadius: 22,
-    padding: spacing.md,
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  taskTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  taskIdentity: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  taskIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  taskCopy: {
-    flex: 1,
-  },
-  taskTitle: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  taskMeta: {
-    marginTop: 4,
-    fontSize: 14,
-    lineHeight: 19,
-    color: palette.textMuted,
-  },
-  statusBadge: {
-    minHeight: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
-  },
-  statusBadgeOpen: {
-    backgroundColor: palette.surfaceMuted,
-  },
-  statusBadgeDone: {
-    backgroundColor: palette.greenSoft,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  statusBadgeTextOpen: {
-    color: palette.textMuted,
-  },
-  statusBadgeTextDone: {
-    color: palette.green,
-  },
-  actionsGrid: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  quickAction: {
-    minHeight: 40,
-    minWidth: '47%',
-    borderRadius: 16,
-    paddingHorizontal: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  quickActionLabel: {
-    fontSize: typography.caption,
-    fontWeight: '800',
-  },
-  });
+function formatCountdown(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+type PlannerQuickActionProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  palette: ScreenPalette;
+  styles: any;
+  tone?: 'default' | 'success' | 'danger';
+};
+
+function PlannerQuickAction({
+  icon,
+  label,
+  onPress,
+  palette,
+  styles,
+  tone = 'default',
+}: PlannerQuickActionProps) {
+  const isDanger = tone === 'danger';
+  const isSuccess = tone === 'success';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.quickAction,
+        isDanger ? styles.quickActionDanger : isSuccess ? styles.quickActionSuccess : null,
+      ]}
+    >
+      <Ionicons
+        name={icon}
+        size={18}
+        color={isDanger ? palette.red : isSuccess ? palette.green : palette.text}
+      />
+      <Text
+        style={[
+          styles.quickActionLabel,
+          isDanger ? { color: palette.red } : isSuccess ? { color: palette.green } : null,
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
 }

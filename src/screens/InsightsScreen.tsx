@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -22,6 +21,13 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { useStudyStore } from '../stores/useStudyStore';
 import { useUsageStore } from '../stores/useUsageStore';
 import { spacing } from '../theme/tokens';
+import {
+  createInsightsStyles as createStyles,
+  darkPalette,
+  lightPalette,
+  ScreenPalette,
+  chartPalettes,
+} from '../styles/InsightsScreen.styles';
 import { AppControlTarget } from '../types/models';
 import { buildControlInsightsOverview } from '../utils/controlInsightsOverview';
 import { getLatestInsightsAnchorDate } from '../utils/insightsAnalytics';
@@ -29,64 +35,7 @@ import { buildPurifyFocusOverview } from '../utils/purifyFocusOverview';
 import { buildPurifyInsights } from '../utils/purifyInsights';
 import { buildPurifyStatus } from '../utils/purifyProgress';
 
-const darkPalette = {
-  backgroundTop: '#0d0b1a',
-  backgroundBottom: '#171026',
-  screenGlow: 'rgba(0, 255, 157, 0.18)',
-  screenGlowSoft: 'rgba(213, 0, 249, 0.15)',
-  screenGlowAccent: 'rgba(0, 176, 255, 0.18)',
-  surface: 'rgba(255, 255, 255, 0.08)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.05)',
-  stroke: 'rgba(255, 255, 255, 0.15)',
-  text: '#ffffff',
-  textMuted: '#cbd5e1',
-  textSoft: '#94a3b8',
-  white: '#ffffff',
-  green: '#00ff9d',
-  purple: '#d946ef',
-  blue: '#38bdf8',
-  chipActive: 'rgba(0, 255, 157, 0.15)',
-  chipBorder: 'rgba(0, 255, 157, 0.3)',
-  barTrack: 'rgba(255, 255, 255, 0.05)',
-  shadow: 'rgba(0, 0, 0, 0.5)',
-};
 
-const lightPalette = {
-  backgroundTop: '#e8f5e9',
-  backgroundBottom: '#f3e5f5',
-  screenGlow: 'rgba(0, 200, 83, 0.15)',
-  screenGlowSoft: 'rgba(170, 0, 255, 0.12)',
-  screenGlowAccent: 'rgba(41, 98, 255, 0.15)',
-  surface: 'rgba(255, 255, 255, 0.8)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.6)',
-  stroke: 'rgba(255, 255, 255, 0.9)',
-  text: '#020617',
-  textMuted: '#475569',
-  textSoft: '#94a3b8',
-  white: '#ffffff',
-  green: '#00c853',
-  purple: '#aa00ff',
-  blue: '#2962ff',
-  chipActive: 'rgba(255, 255, 255, 0.9)',
-  chipBorder: 'rgba(0, 200, 83, 0.3)',
-  barTrack: 'rgba(0, 0, 0, 0.04)',
-  shadow: 'rgba(0, 0, 0, 0.08)',
-};
-
-type ScreenPalette = typeof darkPalette & {
-  screenGlow: string;
-  screenGlowSoft: string;
-  screenGlowAccent: string;
-};
-const chartPalettes = [
-  { colors: ['#10b981', '#059669'], glow: 'rgba(16, 185, 129, 0.25)' },
-  { colors: ['#8b5cf6', '#6d28d9'], glow: 'rgba(139, 92, 246, 0.25)' },
-  { colors: ['#3b82f6', '#2563eb'], glow: 'rgba(59, 130, 246, 0.25)' },
-  { colors: ['#f59e0b', '#d97706'], glow: 'rgba(245, 158, 11, 0.25)' },
-  { colors: ['#ec4899', '#db2777'], glow: 'rgba(236, 72, 153, 0.25)' },
-  { colors: ['#06b6d4', '#0891b2'], glow: 'rgba(6, 182, 212, 0.25)' },
-  { colors: ['#f43f5e', '#e11d48'], glow: 'rgba(244, 63, 94, 0.25)' },
-] as const;
 
 type InsightTab = 'overview' | 'focus' | 'control' | 'purify';
 type UsageFilter = 'all' | 'blocked' | 'used';
@@ -143,15 +92,11 @@ export function InsightsScreen() {
   const [insightRange, setInsightRange] = useState<'week' | 'month' | 'year'>('week');
   const [usageFilter, setUsageFilter] = useState<UsageFilter>('all');
   const [nowIso, setNowIso] = useState(() => new Date().toISOString());
-  const palette = useMemo<ScreenPalette>(
+  const palette = useMemo(
     () =>
       mode === 'dark'
-        ? {
-            ...darkPalette,
-          }
-        : {
-            ...lightPalette,
-          },
+        ? ({ ...darkPalette } as ScreenPalette)
+        : ({ ...lightPalette } as ScreenPalette),
     [mode]
   );
   const styles = useMemo(() => createStyles(palette), [palette]);
@@ -360,7 +305,7 @@ export function InsightsScreen() {
   }
 
   function renderFocusOverviewCard() {
-    const highestValue = Math.max(...focusOverview.chartItems.map((item) => item.value), 1);
+    const highestValue = Math.max(...(focusOverview.chartItems || []).map((item) => item.value), 1);
 
     return (
       <LinearGradient colors={mode === 'dark' ? ['rgba(0, 255, 157, 0.15)', 'rgba(0, 255, 157, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(0, 200, 83, 0.15)']} style={styles.sectionCard}>
@@ -384,13 +329,13 @@ export function InsightsScreen() {
         <Text style={styles.heroDelta}>{formatDelta(weeklyDelta)}</Text>
 
         <View style={styles.barChartRow}>
-          {focusOverview.chartItems.map((item) => {
+          {(focusOverview.chartItems || []).map((item) => {
             const isBest = item.label === focusOverview.bestDay.value && item.value > 0;
             const barHeight = Math.max((item.value / highestValue) * 78, 18);
             
-            const barColors = mode === 'dark' ? ['#00ff9d', '#0ea5e9'] : ['#10b981', '#3b82f6'];
-            const trackColor = mode === 'dark' ? 'rgba(0,255,157,0.1)' : 'rgba(16,185,129,0.06)';
-            const shadowGlow = mode === 'dark' ? 'rgba(0,255,157,0.5)' : 'rgba(16,185,129,0.3)';
+            const barColors = chartPalettes.focus[mode];
+            const trackColor = chartPalettes.focus.track[mode];
+            const shadowGlow = chartPalettes.focus.glow[mode];
 
             return (
               <View key={item.label} style={styles.barColumn}>
@@ -478,7 +423,7 @@ export function InsightsScreen() {
                   <Text style={styles.usageTitle}>{item.appName}</Text>
                   <View style={styles.usageMeterTrack}>
                     <LinearGradient
-                      colors={item.blocked ? ['#00ff9d', '#0ea5e9'] : ['#d946ef', '#8b5cf6']}
+                      colors={item.blocked ? chartPalettes.usage.blocked : chartPalettes.usage.active}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={[
@@ -535,7 +480,7 @@ export function InsightsScreen() {
 
   function renderPurifyCard() {
     return (
-      <LinearGradient colors={mode === 'dark' ? ['rgba(213, 0, 249, 0.15)', 'rgba(213, 0, 249, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(170, 0, 255, 0.12)']} style={styles.sectionCard}>
+      <LinearGradient colors={chartPalettes.purify[mode]} style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Purify progress</Text>
           <View style={styles.inlineBadge}>
@@ -573,16 +518,16 @@ export function InsightsScreen() {
 
   function renderPurifyMilestonesCard() {
     return (
-      <LinearGradient colors={mode === 'dark' ? ['rgba(213, 0, 249, 0.15)', 'rgba(213, 0, 249, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(170, 0, 255, 0.12)']} style={styles.sectionCard}>
+      <LinearGradient colors={chartPalettes.purify[mode]} style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>All milestones</Text>
           <View style={styles.inlineBadge}>
-            <Text style={styles.inlineBadgeText}>{`${purifyInsights.reachedCount} stages`}</Text>
+            <Text style={styles.inlineBadgeText}>{`${purifyInsights.reachedCount || 0} stages`}</Text>
           </View>
         </View>
 
         <View style={styles.milestonesList}>
-          {purifyInsights.milestones.map((milestone) => {
+          {(purifyInsights.milestones || []).map((milestone) => {
             const reached = milestone.state === 'reached';
             const next = milestone.state === 'next';
 
@@ -688,18 +633,20 @@ export function InsightsScreen() {
           </View>
 
           <View style={styles.tabRow}>
-            {([
-              ['overview', 'Overview'],
-              ['focus', 'Focus'],
-              ['control', 'Control'],
-              ['purify', 'Purify'],
-            ] as [InsightTab, string][]).map(([tab, label]) => {
-              const active = activeTab === tab;
+            {(
+              [
+                ['overview', 'Overview'],
+                ['focus', 'Focus'],
+                ['control', 'Control'],
+                ['purify', 'Purify'],
+              ] as const
+            ).map(([tab, label]) => {
+              const active = activeTab === (tab as InsightTab);
 
               return (
                 <Pressable
                   key={tab}
-                  onPress={() => setActiveTab(tab)}
+                  onPress={() => setActiveTab(tab as InsightTab)}
                   style={[styles.tabChip, active ? styles.tabChipActive : null]}
                 >
                   <Text style={[styles.tabChipText, active ? styles.tabChipTextActive : null]}>
@@ -717,388 +664,3 @@ export function InsightsScreen() {
   );
 }
 
-function createStyles(palette: ScreenPalette) {
-  return StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: palette.backgroundTop,
-  },
-  content: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  topIconButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-  },
-  topTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: palette.text,
-  },
-  tabRow: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    gap: 6,
-    padding: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 24,
-  },
-  tabChip: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabChipActive: {
-    backgroundColor: palette.chipActive,
-    borderWidth: 1,
-    borderColor: palette.chipBorder,
-    shadowColor: palette.green,
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  tabChipText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: palette.textSoft,
-    letterSpacing: 0.2,
-  },
-  tabChipTextActive: {
-    color: palette.text,
-    fontWeight: '900',
-  },
-  sectionCard: {
-    marginTop: spacing.lg,
-    borderRadius: 24,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    shadowColor: palette.shadow,
-    shadowOpacity: 0.14,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: palette.text,
-    letterSpacing: -0.2,
-  },
-  weekChip: {
-    minHeight: 34,
-    paddingHorizontal: spacing.md,
-    borderRadius: 17,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: palette.surfaceSoft,
-  },
-  weekChipText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: palette.text,
-  },
-  heroMinutes: {
-    marginTop: spacing.md,
-    fontSize: 54,
-    lineHeight: 60,
-    fontWeight: '900',
-    letterSpacing: -1.5,
-    color: palette.text,
-  },
-  heroMeta: {
-    marginTop: 4,
-    fontSize: 17,
-    color: palette.textMuted,
-  },
-  heroDelta: {
-    marginTop: 4,
-    fontSize: 14,
-    fontWeight: '700',
-    color: palette.green,
-  },
-  barChartRow: {
-    marginTop: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  barColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  barTopValue: {
-    minHeight: 18,
-    marginBottom: 6,
-    fontSize: 12,
-    fontWeight: '700',
-    color: palette.textMuted,
-  },
-  barTrack: {
-    width: 14,
-    height: 78,
-    justifyContent: 'flex-end',
-    borderRadius: 999,
-    backgroundColor: palette.barTrack,
-  },
-  barFill: {
-    width: '100%',
-    borderRadius: 999,
-  },
-  barGlow: {
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  barLabel: {
-    marginTop: 10,
-    fontSize: 13,
-    color: palette.textSoft,
-  },
-  barLabelActive: {
-    color: palette.text,
-    fontWeight: '800',
-  },
-  summaryGrid: {
-    marginTop: spacing.lg,
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  summaryCard: {
-    flex: 1,
-    borderRadius: 18,
-    padding: spacing.md,
-    backgroundColor: palette.surfaceSoft,
-  },
-  summaryIconWrap: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-  },
-  summaryIconWrapPurple: {
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
-  },
-  summaryLabel: {
-    marginTop: spacing.sm,
-    fontSize: 15,
-    color: palette.textMuted,
-  },
-  summaryValue: {
-    marginTop: 6,
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  filterRow: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  filterChip: {
-    flex: 1,
-    minHeight: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfaceSoft,
-  },
-  filterChipActive: {
-    borderWidth: 1,
-    borderColor: palette.chipBorder,
-    backgroundColor: palette.chipActive,
-  },
-  filterChipText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: palette.textSoft,
-  },
-  filterChipTextActive: {
-    color: palette.text,
-  },
-  usageList: {
-    marginTop: spacing.md,
-    gap: spacing.md,
-  },
-  usageRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  usageLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  usageCopy: {
-    flex: 1,
-  },
-  usageTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  usageMeterTrack: {
-    marginTop: 10,
-    height: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-    backgroundColor: palette.barTrack,
-  },
-  usageMeterFill: {
-    height: '100%',
-    borderRadius: 999,
-  },
-  emptyState: {
-    paddingVertical: spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  emptyStateText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: palette.textSoft,
-  },
-  usageMinutes: {
-    marginLeft: spacing.md,
-    fontSize: 16,
-    color: palette.textMuted,
-  },
-  inlineBadge: {
-    minHeight: 30,
-    paddingHorizontal: spacing.sm,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfaceSoft,
-  },
-  inlineBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: palette.textMuted,
-  },
-  metricTriplet: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  metricTile: {
-    flex: 1,
-    borderRadius: 18,
-    padding: spacing.md,
-    backgroundColor: palette.surfaceSoft,
-  },
-  metricTileValue: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  metricTileLabel: {
-    marginTop: 4,
-    fontSize: 13,
-    color: palette.textMuted,
-  },
-  detailCard: {
-    marginTop: spacing.md,
-    borderRadius: 18,
-    padding: spacing.md,
-    backgroundColor: palette.surfaceSoft,
-  },
-  detailLabel: {
-    fontSize: 13,
-    color: palette.textSoft,
-  },
-  detailValue: {
-    marginTop: 6,
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: '800',
-    color: palette.text,
-  },
-  detailMeta: {
-    marginTop: 8,
-    fontSize: 13,
-    lineHeight: 18,
-    color: palette.textMuted,
-  },
-  milestonesList: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
-  },
-  milestoneRow: {
-    borderRadius: 18,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: palette.surfaceSoft,
-  },
-  milestoneDot: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  milestoneDotReached: {
-    backgroundColor: palette.green,
-  },
-  milestoneDotNext: {
-    backgroundColor: palette.purple,
-  },
-  milestoneCopy: {
-    flex: 1,
-  },
-  milestoneTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: palette.text,
-  },
-  milestoneMeta: {
-    marginTop: 2,
-    fontSize: 14,
-    color: palette.textMuted,
-  },
-  milestoneState: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: palette.textSoft,
-    textTransform: 'uppercase',
-  },
-  milestoneStateReached: {
-    color: palette.green,
-  },
-  milestoneStateNext: {
-    color: palette.purple,
-  },
-  });
-}

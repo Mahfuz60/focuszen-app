@@ -19,17 +19,17 @@ export const useRoutineStore = create<RoutineState>()(
       routines: seedRoutines,
       toggleRoutineEnabled: (routineId) =>
         set((state) => ({
-          routines: state.routines.map((routine) =>
+          routines: (state.routines || []).map((routine) =>
             routine.id === routineId ? { ...routine, enabled: !routine.enabled } : routine
           ),
         })),
       toggleStepCompleted: (routineId, stepId) =>
         set((state) => ({
-          routines: state.routines.map((routine) =>
+          routines: (state.routines || []).map((routine) =>
             routine.id === routineId
               ? {
                   ...routine,
-                  steps: routine.steps.map((step) =>
+                  steps: (routine.steps || []).map((step) =>
                     step.id === stepId ? { ...step, completed: !step.completed } : step
                   ),
                 }
@@ -38,13 +38,13 @@ export const useRoutineStore = create<RoutineState>()(
         })),
       addStep: (routineId, step) =>
         set((state) => ({
-          routines: state.routines.map((routine) =>
+          routines: (state.routines || []).map((routine) =>
             routine.id === routineId ? { ...routine, steps: [...routine.steps, step] } : routine
           ),
         })),
       reorderSteps: (routineId, fromIndex, toIndex) =>
         set((state) => ({
-          routines: state.routines.map((routine) => {
+          routines: (state.routines || []).map((routine) => {
             if (routine.id !== routineId) {
               return routine;
             }

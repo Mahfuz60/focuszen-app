@@ -14,7 +14,7 @@ export function calculateComparison(entries: UsageEntry[], benchmark: UsageCompa
       differencePercent <= 0
         ? `You use social apps ${Math.abs(differencePercent)}% less than the average benchmark.`
         : `You use social apps ${differencePercent}% more than the average benchmark.`,
-    snapshots: benchmark.snapshots.map((snapshot) => {
+    snapshots: (benchmark.snapshots || []).map((snapshot) => {
       const minutesUsed = totals[snapshot.appName] ?? 0;
       return {
         ...snapshot,

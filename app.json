@@ -15,10 +15,7 @@
       "**/*"
     ],
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#ffffff"
-      },
+
       "permissions": [
         "android.permission.QUERY_USAGE_STATS",
         "android.permission.PACKAGE_USAGE_STATS",
@@ -35,6 +32,11 @@
         "android.permission.BIND_VPN_SERVICE"
       ],
       "package": "com.focuszen.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f849c342-3bfe-40dd-817b-456dc66c0af8"
+      }
     }
   }
 }

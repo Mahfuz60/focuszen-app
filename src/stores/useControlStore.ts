@@ -41,7 +41,7 @@ export const useControlStore = create<ControlState>()(
         set((state) => {
           if (state.strictModeEnabled) return {};
           return {
-            controls: state.controls.map((control) =>
+            controls: (state.controls || []).map((control) =>
               control.appName === appName
                 ? {
                     ...control,
@@ -61,13 +61,13 @@ export const useControlStore = create<ControlState>()(
         set((state) => {
           if (state.strictModeEnabled) return {};
           return {
-            controls: state.controls.map((control) =>
+            controls: (state.controls || []).map((control) =>
               control.appName === appName
                 ? {
                     ...control,
                     features: {
                       ...control.features,
-                      [feature]: !control.features[feature],
+                      [feature]: !(control.features[feature] ?? true),
                     },
                   }
                 : control
@@ -76,13 +76,13 @@ export const useControlStore = create<ControlState>()(
         }),
       setTimeLimit: (appName, minutes) =>
         set((state) => ({
-          controls: state.controls.map((control) =>
+          controls: (state.controls || []).map((control) =>
             control.appName === appName ? { ...control, timeLimitMinutes: minutes } : control
           ),
         })),
       setScheduleRule: (appName, rule) =>
         set((state) => ({
-          controls: state.controls.map((control) =>
+          controls: (state.controls || []).map((control) =>
             control.appName === appName ? { ...control, scheduleRule: rule } : control
           ),
         })),
