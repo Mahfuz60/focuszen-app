@@ -147,47 +147,11 @@ export function HomeScreen() {
     navigation.navigate('Focus');
   }
 
-  function navigateQuickAction(target: string) {
-    if (target === 'DailyPlanner') { navigation.navigate('DailyPlanner'); return; }
-    if (target === 'Breathe') { navigation.navigate('Breathe'); return; }
-    if (target === 'Alarm') { navigation.navigate('Alarm'); return; }
-    if (target === 'Vitals') { navigation.navigate('Vitals'); return; }
-    navigation.navigate(target as any);
-  }
-
   const localQuickActions = [
-    {
-      key: 'breathe',
-      label: 'Breathe',
-      sub: 'Guided breathing',
-      icon: 'wind' as const,
-      target: 'Breathe',
-      color: '#38bdf8',
-    },
-    {
-      key: 'alarm',
-      label: 'Alarm',
-      sub: 'Rise timer',
-      icon: 'bell' as const,
-      target: 'Alarm',
-      color: '#fbbf24',
-    },
-    {
-      key: 'vitals',
-      label: 'Wellness',
-      sub: 'Water & eye care',
-      icon: 'heart' as const,
-      target: 'Vitals',
-      color: '#10b981',
-    },
-    {
-      key: 'plan',
-      label: 'Planner',
-      sub: 'Daily tasks',
-      icon: 'clipboard' as const,
-      target: 'DailyPlanner',
-      color: '#a855f7',
-    },
+    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', icon: 'wind' as const, target: 'Breathe', color: '#38bdf8' },
+    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', icon: 'moon' as const, target: 'Alarm', color: '#fbbf24' },
+    { key: 'bodycare', label: 'Body Care', sub: 'Water & eye care', icon: 'heart' as const, target: 'BodyCare', color: '#10b981' },
+    { key: 'plan', label: 'Planner', sub: 'Daily tasks', icon: 'clipboard' as const, target: 'DailyPlanner', color: '#a855f7' },
   ] as const;
 
   return (
@@ -319,7 +283,7 @@ export function HomeScreen() {
             {localQuickActions.map((action) => (
               <Pressable
                 key={action.key}
-                onPress={() => navigateQuickAction(action.target)}
+                onPress={() => navigation.navigate(action.target)}
                 style={[styles.qaCard, qaCardStyle(mode, action.color)]}
               >
                 <View style={styles.qaInner}>

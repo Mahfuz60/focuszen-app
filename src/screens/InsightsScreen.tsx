@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { AppBrandIcon } from '../components/AppBrandIcon';
 import { useAppTheme } from '../hooks/useAppTheme';
@@ -305,267 +306,198 @@ export function InsightsScreen() {
   }
 
   function renderFocusOverviewCard() {
-    const highestValue = Math.max(...(focusOverview.chartItems || []).map((item) => item.value), 1);
+    const dataPoints = focusOverview.chartItems || [];
+    const highestValue = Math.max(...dataPoints.map((item) => item.value), 60);
+    
+    // SVG Line Chart Logic
+    const width = 300; // Adjusted for Y-axis
+    const height = 120;
+    const padding = 10;
+    const chartHeight = height - padding * 2;
+    const stepX = (width - padding * 2) / (dataPoints.length - 1);
+    
+    const points = dataPoints.map((item, i) => ({
+      x: padding + i * stepX,
+      y: height - padding - (Math.min(item.value, highestValue) / highestValue) * chartHeight,
+    }));
+
+    const linePath = points.reduce((path, p, i) => 
+      i === 0 ? `M${p.x},${p.y}` : `${path} L${p.x},${p.y}`, '');
+    
+    const fillPath = `${linePath} L${points[points.length - 1].x},${height} L${points[0].x},${height} Z`;
 
     return (
-      <LinearGradient colors={mode === 'dark' ? ['rgba(0, 255, 157, 0.15)', 'rgba(0, 255, 157, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(0, 200, 83, 0.15)']} style={styles.sectionCard}>
+      <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Focus overview</Text>
-          <Pressable
-            style={styles.weekChip}
-            onPress={() =>
-              setInsightRange((prev) => (prev === 'week' ? 'month' : prev === 'month' ? 'year' : 'week'))
-            }
-          >
-            <Text style={styles.weekChipText}>
-              {insightRange === 'week' ? 'This week' : insightRange === 'month' ? 'This month' : 'This year'}
-            </Text>
-            <Ionicons name="chevron-down" size={14} color={palette.textMuted} />
-          </Pressable>
+          <View>
+             <Text style={styles.heroMinutes}>{focusMinutesLabel}</Text>
+             <Text style={styles.heroMeta}>Total focus</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end', paddingTop: 8 }}>
+             <Text style={styles.heroDelta}>↑ {formatDelta(weeklyDelta)}</Text>
+          </View>
         </View>
 
-        <Text style={styles.heroMinutes}>{focusMinutesLabel}</Text>
-        <Text style={styles.heroMeta}>Total focus time</Text>
-        <Text style={styles.heroDelta}>{formatDelta(weeklyDelta)}</Text>
+        <View style={styles.chartContainer}>
+          <View style={styles.chartYAxis}>
+            <Text style={styles.chartYLabel}>60m</Text>
+            <Text style={styles.chartYLabel}>45m</Text>
+            <Text style={styles.chartYLabel}>30m</Text>
+            <Text style={styles.chartYLabel}>15m</Text>
+            <Text style={styles.chartYLabel}>0m</Text>
+          </View>
 
-        <View style={styles.barChartRow}>
-          {(focusOverview.chartItems || []).map((item) => {
-            const isBest = item.label === focusOverview.bestDay.value && item.value > 0;
-            const barHeight = Math.max((item.value / highestValue) * 78, 18);
+          <View style={styles.chartArea}>
+            <View style={styles.chartGrid}>
+              <View style={styles.chartGridLine} />
+              <View style={styles.chartGridLine} />
+              <View style={styles.chartGridLine} />
+              <View style={styles.chartGridLine} />
+              <View style={styles.chartGridLine} />
+            </View>
             
-            const barColors = chartPalettes.focus[mode];
-            const trackColor = chartPalettes.focus.track[mode];
-            const shadowGlow = chartPalettes.focus.glow[mode];
+            <Svg width="100%" height={height}>
+              <Defs>
+                <SvgLinearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor={palette.green} stopOpacity={0.25} />
+                  <Stop offset="1" stopColor={palette.green} stopOpacity={0} />
+                </SvgLinearGradient>
+              </Defs>
+              <Path d={fillPath} fill="url(#chartFill)" />
+              <Path d={linePath} stroke={palette.green} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              {points.map((p, i) => (
+                <Circle key={i} cx={p.x} cy={p.y} r={4.5} fill={palette.green} stroke={palette.surface} strokeWidth={2.5} />
+              ))}
+            </Svg>
 
-            return (
-              <View key={item.label} style={styles.barColumn}>
-                <Text style={styles.barTopValue}>{item.value > 0 ? `${item.value}m` : ' '}</Text>
-                <View style={[styles.barTrack, { backgroundColor: trackColor }]}>
-                  <LinearGradient
-                    colors={barColors}
-                    style={[
-                      styles.barFill,
-                      {
-                        height: barHeight,
-                        shadowColor: isBest ? shadowGlow : 'transparent',
-                      },
-                      isBest ? styles.barGlow : null,
-                    ]}
-                  />
-                </View>
-                <Text style={[styles.barLabel, isBest ? styles.barLabelActive : null]}>
-                  {item.label}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-
-        <View style={styles.summaryGrid}>
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryIconWrap}>
-              <Ionicons name="flame-outline" size={14} color={palette.green} />
+            <View style={styles.chartXLabels}>
+              {dataPoints.map((item) => (
+                <Text key={item.label} style={styles.chartXLabel}>{item.label}</Text>
+              ))}
             </View>
-            <Text style={styles.summaryLabel}>Best day</Text>
-            <Text style={styles.summaryValue}>{focusOverview.bestDay.value}</Text>
-          </View>
-
-          <View style={styles.summaryCard}>
-            <View style={[styles.summaryIconWrap, styles.summaryIconWrapPurple]}>
-              <Ionicons name="sparkles" size={14} color={palette.purple} />
-            </View>
-            <Text style={styles.summaryLabel}>Top time</Text>
-            <Text style={styles.summaryValue}>{topTimeRange}</Text>
           </View>
         </View>
-      </LinearGradient>
+
+        <View style={styles.periodToggle}>
+          {['7D', '4W', '12M'].map((p) => (
+            <Pressable 
+              key={p} 
+              style={[styles.periodBtn, insightRange === (p === '7D' ? 'week' : p === '4W' ? 'month' : 'year') ? styles.periodBtnActive : null]}
+              onPress={() => setInsightRange(p === '7D' ? 'week' : p === '4W' ? 'month' : 'year')}
+            >
+              <Text style={[styles.periodText, insightRange === (p === '7D' ? 'week' : p === '4W' ? 'month' : 'year') ? styles.periodTextActive : null]}>{p}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
     );
   }
 
-  function renderUsageCard() {
+  function renderSummaryPairs() {
     return (
-      <LinearGradient colors={mode === 'dark' ? ['rgba(0, 176, 255, 0.15)', 'rgba(0, 176, 255, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(41, 98, 255, 0.12)']} style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>App usage</Text>
-
-        <View style={styles.filterRow}>
-          {(['all', 'blocked', 'used'] as UsageFilter[]).map((filter) => {
-            const active = usageFilter === filter;
-            const label =
-              filter === 'all' ? 'All' : filter === 'blocked' ? 'Blocked' : 'Used';
-
-            return (
-              <Pressable
-                key={filter}
-                onPress={() => setUsageFilter(filter)}
-                style={[styles.filterChip, active ? styles.filterChipActive : null]}
-              >
-                <Text style={[styles.filterChipText, active ? styles.filterChipTextActive : null]}>
-                  {label}
-                </Text>
-              </Pressable>
-            );
-          })}
+      <View style={styles.summaryGrid}>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryHeader}>
+             <View style={styles.summaryIconWrap}>
+                <Ionicons name="leaf-outline" size={16} color={palette.green} />
+             </View>
+             <Text style={styles.summaryLabel}>Best Day</Text>
+          </View>
+          <Text style={styles.summaryValue}>{focusOverview.bestDay.value || 'None'}</Text>
+          <Text style={styles.summarySub}>No focus sessions</Text>
         </View>
 
-        <View style={styles.usageList}>
-          {appUsageRows.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="bar-chart-outline" size={32} color={palette.textSoft} />
-              <Text style={styles.emptyStateText}>No usage data recorded yet</Text>
-            </View>
-          ) : (
-            appUsageRows.map((item) => (
-            <View key={item.appName} style={styles.usageRow}>
-              <View style={styles.usageLeft}>
-                <AppBrandIcon appName={item.appName} size={34} />
-
-                <View style={styles.usageCopy}>
-                  <Text style={styles.usageTitle}>{item.appName}</Text>
-                  <View style={styles.usageMeterTrack}>
-                    <LinearGradient
-                      colors={item.blocked ? chartPalettes.usage.blocked : chartPalettes.usage.active}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={[
-                        styles.usageMeterFill,
-                        {
-                          width: `${Math.max(Math.min((item.minutesUsed / Math.max(appUsageRows[0]?.minutesUsed ?? 1, 1)) * 100, 100), 2)}%`,
-                        },
-                      ]}
-                    />
-                  </View>
-                </View>
-              </View>
-
-              <Text style={styles.usageMinutes}>{item.minutesUsed}m</Text>
-            </View>
-          )))}
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryHeader}>
+             <View style={[styles.summaryIconWrap, { backgroundColor: 'rgba(217,70,239,0.05)' }]}>
+                <Ionicons name="sparkles" size={16} color={palette.purple} />
+             </View>
+             <Text style={styles.summaryLabel}>Top Time</Text>
+          </View>
+          <Text style={styles.summaryValue}>{topTimeRange || 'None'}</Text>
+          <Text style={styles.summarySub}>No data yet</Text>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
-  function renderControlCard() {
+  function renderControlSnapshot() {
     return (
-      <LinearGradient colors={mode === 'dark' ? ['rgba(0, 176, 255, 0.15)', 'rgba(0, 176, 255, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(41, 98, 255, 0.12)']} style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
+      <View style={styles.sectionCard}>
+        <View style={styles.purifyHeader}>
           <Text style={styles.sectionTitle}>Control snapshot</Text>
-          <View style={styles.inlineBadge}>
-            <Text style={styles.inlineBadgeText}>{controlOverview.facts.strict.value}</Text>
-          </View>
+          <Text style={[styles.sectionTitle, { color: palette.green }]}>0%</Text>
         </View>
 
-        <View style={styles.metricTriplet}>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricTileValue}>{controlOverview.metrics.protected.value}</Text>
-            <Text style={styles.metricTileLabel}>Protected</Text>
-          </View>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricTileValue}>{controlOverview.metrics.blocked.value}</Text>
-            <Text style={styles.metricTileLabel}>Blocked</Text>
-          </View>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricTileValue}>{controlUsageLabel}</Text>
-            <Text style={styles.metricTileLabel}>Usage</Text>
-          </View>
-        </View>
-
-        <View style={styles.detailCard}>
-          <Text style={styles.detailLabel}>Top app</Text>
-          <Text style={styles.detailValue}>{controlOverview.facts.topApp.value}</Text>
-        </View>
-      </LinearGradient>
-    );
-  }
-
-  function renderPurifyCard() {
-    return (
-      <LinearGradient colors={chartPalettes.purify[mode]} style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Purify progress</Text>
-          <View style={styles.inlineBadge}>
-            <Text style={styles.inlineBadgeText}>{purifyInsights.activeStage.title}</Text>
-          </View>
-        </View>
-
-        <View style={styles.metricTriplet}>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricTileValue}>{purifyInsights.summary.current.value}</Text>
-            <Text style={styles.metricTileLabel}>{purifyInsights.summary.current.label}</Text>
-          </View>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricTileValue}>{purifyInsights.summary.best.value}</Text>
-            <Text style={styles.metricTileLabel}>{purifyInsights.summary.best.label}</Text>
-          </View>
-          <View style={styles.metricTile}>
-            <Text style={styles.metricTileValue}>{purifyInsights.summary.lifetime.value}</Text>
-            <Text style={styles.metricTileLabel}>{purifyInsights.summary.lifetime.label}</Text>
-          </View>
-        </View>
-
-        <View style={styles.detailCard}>
-          <Text style={styles.detailLabel}>Live streak</Text>
-          <Text style={styles.detailValue}>{purifyStatus.currentStreakLabel}</Text>
-          <Text style={styles.detailMeta}>
-            {purifyStatus.active
-              ? `Elapsed ${purifyStatus.elapsedLabel}. Next milestone: ${purifyInsights.nextStage?.title ?? 'Completed'}`
-              : purifyInsights.motivationLine}
-          </Text>
-        </View>
-      </LinearGradient>
-    );
-  }
-
-  function renderPurifyMilestonesCard() {
-    return (
-      <LinearGradient colors={chartPalettes.purify[mode]} style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>All milestones</Text>
-          <View style={styles.inlineBadge}>
-            <Text style={styles.inlineBadgeText}>{`${purifyInsights.reachedCount || 0} stages`}</Text>
-          </View>
-        </View>
-
-        <View style={styles.milestonesList}>
-          {(purifyInsights.milestones || []).map((milestone) => {
-            const reached = milestone.state === 'reached';
-            const next = milestone.state === 'next';
-
-            return (
-              <View key={milestone.key} style={styles.milestoneRow}>
-                <View
-                  style={[
-                    styles.milestoneDot,
-                    reached ? styles.milestoneDotReached : null,
-                    next ? styles.milestoneDotNext : null,
-                  ]}
-                >
-                  <Ionicons
-                    name={reached ? 'checkmark' : next ? 'flag-outline' : 'lock-closed-outline'}
-                    size={14}
-                    color={reached || next ? palette.white : palette.textSoft}
-                  />
-                </View>
-
-                <View style={styles.milestoneCopy}>
-                  <Text style={styles.milestoneTitle}>{milestone.label}</Text>
-                  <Text style={styles.milestoneMeta}>{milestone.title}</Text>
-                </View>
-
-                <Text
-                  style={[
-                    styles.milestoneState,
-                    reached ? styles.milestoneStateReached : null,
-                    next ? styles.milestoneStateNext : null,
-                  ]}
-                >
-                  {reached ? 'Reached' : next ? 'Next' : 'Locked'}
-                </Text>
+        <View style={styles.tripletGrid}>
+          {[
+            { label: 'Protected', value: controlOverview.metrics.protected.value, icon: 'shield-outline', color: palette.blue },
+            { label: 'Blocked', value: controlOverview.metrics.blocked.value, icon: 'lock-closed-outline', color: palette.green },
+            { label: 'Usage', value: controlUsageLabel, icon: 'time-outline', color: palette.purple },
+          ].map((item, i) => (
+            <View key={i} style={styles.tripletCard}>
+              <View style={[styles.tripletIcon, { backgroundColor: `${item.color}15` }]}>
+                <Ionicons name={item.icon as any} size={20} color={item.color} />
               </View>
-            );
-          })}
+              <Text style={styles.tripletValue}>{item.value}</Text>
+              <Text style={styles.tripletLabel}>{item.label}</Text>
+            </View>
+          ))}
         </View>
-      </LinearGradient>
+
+        <View style={[styles.detailCard, { marginTop: 24, backgroundColor: 'transparent', padding: 0 }]}>
+           <Text style={styles.summaryLabel}>Top App</Text>
+           <Text style={[styles.summaryValue, { marginTop: 4 }]}>{controlOverview.facts.topApp.value || 'None'}</Text>
+           <Text style={styles.summarySub}>No app usage recorded</Text>
+        </View>
+      </View>
+    );
+  }
+
+  function renderPurifyOverhaul() {
+    return (
+      <View style={styles.sectionCard}>
+        <View style={styles.purifyHeader}>
+          <Text style={styles.sectionTitle}>Purify progress</Text>
+          <View style={styles.purifyBadge}>
+            <Text style={styles.purifyBadgeText}>{purifyInsights.activeStage.title}</Text>
+          </View>
+        </View>
+
+        <View style={styles.tripletGrid}>
+          {[
+            { label: 'Current Streak', value: purifyInsights.summary.current.value, icon: 'flash-outline', color: palette.purple },
+            { label: 'Best Streak', value: purifyInsights.summary.best.value, icon: 'star-outline', color: palette.green },
+            { label: 'Lifetime Days', value: purifyInsights.summary.lifetime.value, icon: 'calendar-outline', color: palette.blue },
+          ].map((item, i) => (
+            <View key={i} style={styles.tripletCard}>
+              <View style={[styles.tripletIcon, { backgroundColor: `${item.color}15` }]}>
+                <Ionicons name={item.icon as any} size={20} color={item.color} />
+              </View>
+              <Text style={styles.tripletValue}>{item.value}</Text>
+              <Text style={styles.tripletLabel}>{item.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.timelineWrap}>
+           <Text style={styles.summaryLabel}>Live Streak</Text>
+           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+              <Text style={styles.summaryValue}>{purifyStatus.currentStreakLabel || '0 day streak'}</Text>
+              <Ionicons name="rocket-outline" size={24} color={palette.purple} />
+           </View>
+
+           <View style={[styles.timelineRow, { marginTop: 20 }]}>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <View key={i} style={[styles.timelineDot, i === 0 ? styles.timelineDotActive : null]} />
+              ))}
+           </View>
+           <View style={styles.timelineMeta}>
+              <Text style={styles.timelineText}>Elapsed {purifyStatus.elapsedLabel}</Text>
+              <Text style={styles.timelineText}>Next: {purifyInsights.nextStage?.title || 'None'}</Text>
+           </View>
+        </View>
+      </View>
     );
   }
 
@@ -574,6 +506,7 @@ export function InsightsScreen() {
       return (
         <>
           {renderFocusOverviewCard()}
+          {renderSummaryPairs()}
         </>
       );
     }
@@ -581,8 +514,7 @@ export function InsightsScreen() {
     if (activeTab === 'control') {
       return (
         <>
-          {renderControlCard()}
-          {renderUsageCard()}
+          {renderControlSnapshot()}
         </>
       );
     }
@@ -590,17 +522,18 @@ export function InsightsScreen() {
     if (activeTab === 'purify') {
       return (
         <>
-          {renderPurifyCard()}
-          {renderPurifyMilestonesCard()}
+          {renderPurifyOverhaul()}
         </>
       );
     }
 
+    // Overview Tab
     return (
       <>
         {renderFocusOverviewCard()}
-        {renderControlCard()}
-        {renderPurifyCard()}
+        {renderSummaryPairs()}
+        {renderControlSnapshot()}
+        {renderPurifyOverhaul()}
       </>
     );
   }

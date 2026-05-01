@@ -225,15 +225,11 @@ export function PurifyScreen() {
               <Text style={styles.screenSubtitle}>Build self-discipline. Step away from harmful habits.</Text>
             </View>
             
-            <Pressable
-              onPress={status.active ? confirmReset : handleStart}
-              style={[styles.topRightPowerBtn, { backgroundColor: 'rgba(213, 0, 249, 0.1)', padding: 12, borderRadius: 24 }]}
-            >
-              <Ionicons name="power" size={24} color="#d500f9" />
-            </Pressable>
+            
           </View>
 
           <View style={styles.ringSection}>
+           
           <Svg
             width={320}
             height={320}
@@ -277,16 +273,26 @@ export function PurifyScreen() {
             <Text style={styles.dayLabel}>{status.currentStreakLabel}</Text>
             <Text style={styles.timerLabel}>{ringTimerLabel}</Text>
             <View style={styles.walkIconCircle}>
-              <Ionicons name="walk" size={32} color="#00ff9d" />
+              <Pressable >
+
+                  <Ionicons name="walk" size={32} color={palette.iconColor} />
+              </Pressable>
+
+            
             </View>
           </View>
-
-          <Pressable
-            onPress={() => navigation.navigate('Focus')}
-            style={styles.ringFlashButton}
+             <Pressable
+            onPress={status.active ? confirmReset : handleStart}
+            style={styles.topRightPowerBtn}
           >
-            <Ionicons name="flash" size={24} color="#a855f7" />
+            <View style={styles.iconSquircle}>
+              <Ionicons name="power" size={20} color={palette.powerAccent} />
+            </View>
           </Pressable>
+          
+
+        
+
         </View>
 
         <Pressable onPress={() => {}} style={styles.nextMilestoneCard}>

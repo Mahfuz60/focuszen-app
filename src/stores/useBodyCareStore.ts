@@ -13,13 +13,14 @@ export type EyeRestLog = {
   completedAt: string;
 };
 
-type VitalsStore = {
+type BodyCareStore = {
   waterGoalMl: number;
   waterEntries: WaterEntry[];
   eyeRestLogs: EyeRestLog[];
   totalWaterToday: number;
   setWaterGoal: (ml: number) => void;
   logWater: (amountMl: number) => void;
+  deleteWaterEntry: (id: string) => void;
   logEyeRest: () => void;
   resetDailyWater: () => void;
 };
@@ -34,7 +35,7 @@ export function computeTodayWater(entries: WaterEntry[]): number {
     .reduce((sum, e) => sum + e.amountMl, 0);
 }
 
-export const useVitalsStore = create<VitalsStore>()(
+export const useBodyCareStore = create<BodyCareStore>()(
   persist(
     (set, get) => ({
       waterGoalMl: 2500,
@@ -65,13 +66,22 @@ export const useVitalsStore = create<VitalsStore>()(
           eyeRestLogs: [log, ...state.eyeRestLogs].slice(0, 200),
         }));
       },
+      deleteWaterEntry: (id: string) => {
+        set((state) => {
+          const updated = state.waterEntries.filter(e => e.id !== id);
+          return {
+            waterEntries: updated,
+            totalWaterToday: computeTodayWater(updated),
+          };
+        });
+      },
       resetDailyWater: () => {
         const entries = get().waterEntries;
         set({ totalWaterToday: computeTodayWater(entries) });
       },
     }),
     {
-      name: 'focuszen/vitals',
+      name: 'focuszen/bodycare',
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {

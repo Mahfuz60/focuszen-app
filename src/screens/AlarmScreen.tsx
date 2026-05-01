@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import {
-  Alert,
   Animated,
   Easing,
   Pressable,
@@ -11,7 +10,6 @@ import {
   Text,
   TextInput,
   View,
-  Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
@@ -30,6 +28,11 @@ export function AlarmScreen() {
   const navigation = useNavigation<any>();
   const addSession = useAlarmStore((s) => s.addSession);
   const completeSession = useAlarmStore((s) => s.completeSession);
+  const cancelActiveSession = useAlarmStore((s) => s.cancelActiveSession);
+  const activeSessionId = useAlarmStore((s) => s.activeSessionId);
+  const isAlarmFiring = useAlarmStore((s) => s.isAlarmFiring);
+  const setAlarmFiring = useAlarmStore((s) => s.setAlarmFiring);
+  const sessions = useAlarmStore((s) => s.sessions);
   const totalNaps = useAlarmStore((s) => s.totalNapsTaken);
 
   const palette = useMemo(
@@ -42,19 +45,25 @@ export function AlarmScreen() {
   const [customMinutes, setCustomMinutes] = useState('20');
   const [isRunning, setIsRunning] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [alarmFiring, setAlarmFiring] = useState(false);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const remainingRef = useRef(0);
-  const totalSecondsRef = useRef(0);
+
+  const activeSession = useMemo(() => 
+    sessions.find(s => s.id === activeSessionId && !s.completedAt),
+    [sessions, activeSessionId]
+  );
 
   const getDurationMinutes = useCallback(() => {
     if (selectedPreset === 'custom') return Math.max(1, parseInt(customMinutes, 10) || 20);
     return NAP_PRESETS[selectedPreset].minutes;
   }, [selectedPreset, customMinutes]);
+
+  const updateCustomMinutes = useCallback((value: string) => {
+    setCustomMinutes(value.replace(/\D/g, '').slice(0, 3));
+  }, []);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -64,7 +73,7 @@ export function AlarmScreen() {
 
   const fireAlarm = useCallback(() => {
     setAlarmFiring(true);
-    Vibration.vibrate([0, 500, 200, 500, 200, 1000], true);
+    setIsRunning(false);
 
     const pulse = Animated.loop(
       Animated.sequence([
@@ -73,33 +82,34 @@ export function AlarmScreen() {
       ])
     );
     pulse.start();
-  }, [pulseAnim]);
+  }, [pulseAnim, setAlarmFiring]);
 
   const stopAlarm = useCallback(() => {
-    Vibration.cancel();
     setAlarmFiring(false);
+    pulseAnim.stopAnimation();
     pulseAnim.setValue(1);
-  }, [pulseAnim]);
+  }, [pulseAnim, setAlarmFiring]);
 
   const stopTimer = useCallback((completed: boolean) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setIsRunning(false);
+    progressAnim.stopAnimation();
     progressAnim.setValue(0);
     stopAlarm();
 
-    if (completed && sessionId) {
-      completeSession(sessionId);
+    if (activeSessionId) {
+      if (completed) {
+        completeSession(activeSessionId);
+      } else {
+        cancelActiveSession();
+      }
     }
-    setSessionId(null);
     setRemainingSeconds(0);
-  }, [sessionId, progressAnim, completeSession, stopAlarm]);
+  }, [activeSessionId, progressAnim, completeSession, cancelActiveSession, stopAlarm]);
 
   const startTimer = useCallback(() => {
     const minutes = getDurationMinutes();
-    const totalSecs = minutes * 60;
-    totalSecondsRef.current = totalSecs;
-    remainingRef.current = totalSecs;
-
+    
     const id = `nap-${Date.now()}`;
     addSession({
       id,
@@ -108,36 +118,61 @@ export function AlarmScreen() {
       startedAt: new Date().toISOString(),
       completedAt: null,
     });
-    setSessionId(id);
-    setIsRunning(true);
-    setRemainingSeconds(totalSecs);
+    
     setAlarmFiring(false);
-
-    Animated.timing(progressAnim, {
-      toValue: 1,
-      duration: totalSecs * 1000,
-      easing: Easing.linear,
-      useNativeDriver: false,
-    }).start();
-
-    timerRef.current = setInterval(() => {
-      remainingRef.current -= 1;
-      setRemainingSeconds(remainingRef.current);
-
-      if (remainingRef.current <= 0) {
-        if (timerRef.current) clearInterval(timerRef.current);
-        setIsRunning(false);
-        fireAlarm();
-      }
-    }, 1000);
-  }, [getDurationMinutes, addSession, selectedPreset, progressAnim, fireAlarm]);
+    // Timer setup happens in useEffect via store change
+  }, [getDurationMinutes, addSession, selectedPreset, setAlarmFiring]);
 
   useEffect(() => {
+    if (activeSession) {
+      const start = new Date(activeSession.startedAt).getTime();
+      const duration = activeSession.durationMinutes * 60 * 1000;
+      const now = Date.now();
+      const elapsed = now - start;
+      const remaining = Math.max(0, Math.floor((duration - elapsed) / 1000));
+
+      if (remaining <= 0) {
+        if (!isAlarmFiring) fireAlarm();
+        setRemainingSeconds(0);
+        progressAnim.setValue(1);
+      } else {
+        setIsRunning(true);
+        setRemainingSeconds(remaining);
+        remainingRef.current = remaining;
+        
+        const totalDuration = activeSession.durationMinutes * 60;
+        const progress = 1 - (remaining / totalDuration);
+        progressAnim.setValue(progress);
+        
+        Animated.timing(progressAnim, {
+          toValue: 1,
+          duration: remaining * 1000,
+          easing: Easing.linear,
+          useNativeDriver: false,
+        }).start();
+
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          remainingRef.current -= 1;
+          setRemainingSeconds(remainingRef.current);
+
+          if (remainingRef.current <= 0) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            fireAlarm();
+          }
+        }, 1000);
+      }
+    } else {
+      setIsRunning(false);
+      setRemainingSeconds(0);
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (isAlarmFiring) stopAlarm();
+    }
+
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      Vibration.cancel();
     };
-  }, []);
+  }, [activeSession, fireAlarm, progressAnim, stopAlarm, isAlarmFiring]);
 
   const preset = NAP_PRESETS[selectedPreset];
   const statusBarStyle = mode === 'dark' ? 'light-content' : 'dark-content';
@@ -159,7 +194,7 @@ export function AlarmScreen() {
             <Pressable onPress={() => { stopTimer(false); navigation.goBack(); }} style={styles.topIconButton}>
               <Ionicons name="arrow-back" size={22} color={palette.text} />
             </Pressable>
-            <Text style={styles.topTitle}>Rise Alert</Text>
+            <Text style={styles.topTitle}>Power Nap</Text>
             <View style={styles.topIconButton}>
               <Text style={styles.napCount}>{totalNaps} naps</Text>
             </View>
@@ -167,14 +202,14 @@ export function AlarmScreen() {
 
           {/* Timer display */}
           <View style={styles.timerSection}>
-            <Animated.View style={[styles.timerRing, { transform: [{ scale: alarmFiring ? pulseAnim : 1 }] }]}>
-              <View style={[styles.timerInner, alarmFiring && { borderColor: palette.alarm }]}>
+            <Animated.View style={[styles.timerRing, { transform: [{ scale: isAlarmFiring ? pulseAnim : 1 }] }]}>
+              <View style={[styles.timerInner, isAlarmFiring && { borderColor: palette.alarm }]}>
                 <Text style={styles.timerEmoji}>{preset.emoji}</Text>
-                <Text style={[styles.timerDisplay, alarmFiring && { color: palette.alarm }]}>
-                  {isRunning || alarmFiring ? formatTime(remainingSeconds) : `${getDurationMinutes()}:00`}
+                <Text style={[styles.timerDisplay, isAlarmFiring && { color: palette.alarm }]}>
+                  {isRunning || isAlarmFiring ? formatTime(remainingSeconds) : formatTime(getDurationMinutes() * 60)}
                 </Text>
                 <Text style={styles.timerLabel}>
-                  {alarmFiring ? 'Wake up!' : isRunning ? 'Napping...' : 'Set timer'}
+                  {isAlarmFiring ? 'Wake up!' : isRunning ? 'Napping...' : 'Set timer'}
                 </Text>
               </View>
             </Animated.View>
@@ -188,7 +223,7 @@ export function AlarmScreen() {
           </View>
 
           {/* Preset selector */}
-          {!isRunning && !alarmFiring && (
+          {!isRunning && !isAlarmFiring && (
             <View style={styles.presetsSection}>
               <Text style={styles.sectionLabel}>DURATION</Text>
               <View style={styles.presetsGrid}>
@@ -209,9 +244,10 @@ export function AlarmScreen() {
                   <TextInput
                     style={styles.customInput}
                     value={customMinutes}
-                    onChangeText={setCustomMinutes}
+                    onChangeText={updateCustomMinutes}
                     keyboardType="numeric"
                     maxLength={3}
+                    placeholder="20"
                     placeholderTextColor={palette.textSoft}
                   />
                   <Text style={styles.customUnit}>minutes</Text>
@@ -223,9 +259,9 @@ export function AlarmScreen() {
           )}
 
           {/* CTA */}
-          {alarmFiring ? (
-            <Pressable onPress={stopAlarm} style={styles.dismissButton}>
-              <Ionicons name="hand-right-outline" size={22} color={palette.backgroundTop} />
+          {isAlarmFiring ? (
+            <Pressable onPress={() => stopTimer(true)} style={styles.dismissButton}>
+              <Ionicons name="hand-right-outline" size={22} color="#ffffff" />
               <Text style={styles.dismissText}>Dismiss Alarm</Text>
             </Pressable>
           ) : (
@@ -233,7 +269,7 @@ export function AlarmScreen() {
               onPress={isRunning ? () => stopTimer(false) : startTimer}
               style={[styles.ctaButton, isRunning && styles.ctaButtonStop]}
             >
-              <Ionicons name={isRunning ? 'stop-outline' : 'moon-outline'} size={22} color={isRunning ? palette.red : palette.backgroundTop} />
+              <Ionicons name={isRunning ? 'stop-outline' : 'moon-outline'} size={22} color={isRunning ? palette.red : '#ffffff'} />
               <Text style={[styles.ctaText, isRunning && styles.ctaTextStop]}>
                 {isRunning ? 'Cancel nap' : 'Start nap timer'}
               </Text>

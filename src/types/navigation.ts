@@ -8,7 +8,7 @@ export type RootStackParamList = {
   GoalsMission: undefined;
   Breathe: undefined;
   Alarm: undefined;
-  Vitals: undefined;
+  BodyCare: undefined;
 };
 
 export type MainTabParamList = {

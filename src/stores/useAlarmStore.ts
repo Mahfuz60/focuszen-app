@@ -15,8 +15,12 @@ export type AlarmSession = {
 type AlarmStore = {
   sessions: AlarmSession[];
   totalNapsTaken: number;
+  activeSessionId: string | null;
+  isAlarmFiring: boolean;
   addSession: (session: AlarmSession) => void;
   completeSession: (id: string) => void;
+  cancelActiveSession: () => void;
+  setAlarmFiring: (firing: boolean) => void;
 };
 
 export const NAP_PRESETS: Record<NapPreset, { label: string; minutes: number; emoji: string; benefit: string }> = {
@@ -57,17 +61,31 @@ export const useAlarmStore = create<AlarmStore>()(
     (set) => ({
       sessions: [],
       totalNapsTaken: 0,
+      activeSessionId: null,
+      isAlarmFiring: false,
       addSession: (session) =>
         set((state) => ({
           sessions: [session, ...state.sessions].slice(0, 100),
           totalNapsTaken: state.totalNapsTaken + 1,
+          activeSessionId: session.id,
+          isAlarmFiring: false,
         })),
       completeSession: (id) =>
         set((state) => ({
+          activeSessionId: state.activeSessionId === id ? null : state.activeSessionId,
+          isAlarmFiring: false,
           sessions: state.sessions.map((s) =>
             s.id === id ? { ...s, completedAt: new Date().toISOString() } : s
           ),
         })),
+      cancelActiveSession: () =>
+        set((state) => ({
+          activeSessionId: null,
+          isAlarmFiring: false,
+          sessions: state.sessions.filter((s) => s.id !== state.activeSessionId),
+          totalNapsTaken: Math.max(0, state.totalNapsTaken - 1),
+        })),
+      setAlarmFiring: (firing) => set({ isAlarmFiring: firing }),
     }),
     {
       name: 'focuszen/alarm',

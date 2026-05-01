@@ -1,58 +1,6 @@
 import { spacing } from '../theme/tokens';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { StyleSheet } from 'react-native';
 export type QuickActionTarget = 'DailyPlanner' | 'Control' | 'Insights';
-
-export const quickActions = [
-  {
-    key: 'plan',
-    label: 'Planner',
-    icon: 'calendar-outline' as const,
-    target: 'DailyPlanner' as QuickActionTarget,
-    baseColorLight: '#10b981',
-    bgDark: '#00e676',
-    iconDark: '#ffffff',
-  },
-  {
-    key: 'purify',
-    label: 'Purify',
-    icon: 'flame-outline' as const,
-    target: 'DailyPlanner' as QuickActionTarget,
-    baseColorLight: '#d946ef',
-    bgDark: '#d500f9',
-    iconDark: '#ffffff',
-  },
-  {
-    key: 'control',
-    label: 'App Control',
-    icon: 'options-outline' as const,
-    target: 'Control' as QuickActionTarget,
-    baseColorLight: '#3b82f6',
-    bgDark: '#2979ff',
-    iconDark: '#ffffff',
-  },
-  {
-    key: 'insights',
-    label: 'Insights',
-    icon: 'bar-chart-outline' as const,
-    target: 'Insights' as QuickActionTarget,
-    baseColorLight: '#f43f5e',
-    bgDark: '#ff1744',
-    iconDark: '#ffffff',
-  },
-] as const;
-
-export function Sparkline({ color }: { color: string }) {
-  return (
-    <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 30, overflow: 'hidden', borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}>
-      <Svg width="100%" height="100%" viewBox="0 0 100 30" preserveAspectRatio="none">
-        <Path d="M0,25 Q10,20 20,25 T40,25 T60,15 T80,25 T100,20 L100,30 L0,30 Z" fill={color} opacity={0.15} />
-        <Path d="M0,25 Q10,20 20,25 T40,25 T60,15 T80,25 T100,20" stroke={color} strokeWidth="1.5" fill="none" opacity={0.6} />
-      </Svg>
-    </View>
-  );
-}
 
 export const darkPalette = {
   backgroundTop: '#0d0b1a',
@@ -333,62 +281,6 @@ export function createHomeStyles(palette: ScreenPalette) {
       fontWeight: '500',
       color: palette.textSoft,
     },
-    metricsGrid: {
-      marginTop: spacing.lg,
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-      gap: 12,
-    },
-    metricCard: {
-      width: '48%',
-      borderRadius: 24,
-      padding: spacing.lg,
-      paddingBottom: 40,
-      backgroundColor: palette.surfaceSoft,
-      borderWidth: 1,
-      borderColor: palette.stroke,
-      shadowColor: palette.shadow,
-      shadowOpacity: 0.1,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      position: 'relative',
-    },
-    metricHeader: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: spacing.sm,
-    },
-    metricIconWrap: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    metricIconYellow: {
-      backgroundColor: palette.white === '#ffffff' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(251, 191, 36, 0.2)',
-    },
-    metricTextWrap: {
-      flex: 1,
-    },
-    metricLabel: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: palette.textSoft,
-    },
-    metricValue: {
-      fontSize: 24,
-      lineHeight: 28,
-      fontWeight: '800',
-      color: palette.text,
-      letterSpacing: -0.5,
-    },
-    metricSubtext: {
-      fontSize: 12,
-      color: palette.textMuted,
-      marginTop: 2,
-    },
     sectionHeader: {
       marginTop: spacing.xl,
       flexDirection: 'row',
@@ -566,38 +458,42 @@ export function createHomeStyles(palette: ScreenPalette) {
       marginTop: spacing.sm,
     },
     perfCard: {
-      width: '48%',
-      borderRadius: 20,
+      width: '48.6%',
+      borderRadius: 24,
       overflow: 'hidden',
+      minHeight: 120,
     },
     perfInner: {
       padding: 16,
-      paddingBottom: 8,
+      paddingBottom: 25,
     },
     perfTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-      marginBottom: 12,
+      gap: 12,
+      marginBottom: 14,
     },
     perfIconWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: 'rgba(255,255,255,0.04)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.05)',
     },
     perfLabel: {
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '800',
       letterSpacing: -0.2,
       color: palette.text,
     },
     perfValue: {
-      fontSize: 38,
+      fontSize: 32,
       fontWeight: '900',
-      letterSpacing: -1,
-      lineHeight: 42,
+      letterSpacing: -0.5,
+      lineHeight: 36,
       color: palette.text,
     },
     perfSub: {

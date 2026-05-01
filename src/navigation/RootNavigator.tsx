@@ -10,7 +10,7 @@ import { NameSetupScreen } from '../screens/NameSetupScreen';
 import { PermissionsSetupScreen } from '../screens/PermissionsSetupScreen';
 import { BreatheScreen } from '../screens/BreatheScreen';
 import { AlarmScreen } from '../screens/AlarmScreen';
-import { VitalsScreen } from '../screens/VitalsScreen';
+import { BodyCareScreen } from '../screens/BodyCareScreen';
 import { RootStackParamList } from '../types/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useProfileStore } from '../stores/useProfileStore';
@@ -58,7 +58,7 @@ export function RootNavigator() {
         <Stack.Screen name="GoalsMission" component={GoalsMissionScreen} />
         <Stack.Screen name="Breathe" component={BreatheScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Alarm" component={AlarmScreen} options={{ animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="Vitals" component={VitalsScreen} options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="BodyCare" component={BodyCareScreen} options={{ animation: 'slide_from_bottom' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

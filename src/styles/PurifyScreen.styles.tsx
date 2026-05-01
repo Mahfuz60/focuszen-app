@@ -21,6 +21,10 @@ export const darkPalette = {
   yellow: '#fbbf24',
   shadow: 'rgba(0, 0, 0, 0.5)',
   activeToggleBg: '#56cce9ff',
+  flashAccent: '#00ff9d',
+  powerAccent: '#d500f9',
+  iconColor:'#07ea4fff',
+  powerBackground:'#b10a0aff'
 };
 
 export const lightPalette = {
@@ -43,6 +47,10 @@ export const lightPalette = {
   yellow: '#d97706',
   shadow: 'rgba(0, 0, 0, 0.06)',
   activeToggleBg: '#56cce9ff',
+  flashAccent: '#0d9488',
+  powerAccent: '#121213ff',
+  powerBackground:'#d442abff',
+  iconColor:'#05f128ff',
 };
 
 export type ScreenPalette = typeof darkPalette & {
@@ -143,37 +151,34 @@ export function createPurifyStyles(palette: ScreenPalette) {
   },
   topRightPowerBtn: {
     position: 'absolute',
-    right: 0,
-    top: -10,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfaceSoft,
-    borderWidth: 1,
-    borderColor: palette.stroke,
-    shadowColor: '#a855f7',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  ringFlashButton: {
-    position: 'absolute',
     right: 16,
     bottom: 26,
-    width: 56,
-    height: 56,
+    width:48,
+    height:48,
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: palette.surfaceSoft,
     borderWidth: 1,
     borderColor: palette.stroke,
-    shadowColor: '#a855f7',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: palette.powerAccent,
+    color: palette.iconColor,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+    backgroundColor: palette.powerBackground,
+  },
+  iconColor:{
+    color: palette.iconColor,
+   
+  },
+  
+  iconSquircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
   },
   dayLabel: {
     fontSize: 22,

@@ -1,0 +1,170 @@
+import { StyleSheet } from 'react-native';
+import { spacing } from '../theme/tokens';
+
+export const darkPalette = {
+  backgroundTop: '#040712',
+  backgroundBottom: '#080d1a',
+  primaryGlow: 'rgba(56, 189, 248, 0.25)',
+  secondaryGlow: 'rgba(16, 185, 129, 0.18)',
+  accentGlow: 'rgba(56, 189, 248, 0.12)',
+  surface: 'rgba(18, 25, 41, 0.92)',
+  surfaceSoft: 'rgba(255, 255, 255, 0.08)',
+  stroke: 'rgba(148, 163, 184, 0.16)',
+  strokeAlert: 'rgba(56, 189, 248, 0.4)',
+  text: '#ffffff',
+  textMuted: '#f1f5f9',
+  textSoft: '#94a3b8',
+  blue: '#38bdf8',
+  blueSoft: 'rgba(56, 189, 248, 0.16)',
+  green: '#10b981',
+  greenSoft: 'rgba(16, 185, 129, 0.16)',
+  accent: '#38bdf8',
+  accentSoft: 'rgba(56, 189, 248, 0.12)',
+  shadow: 'rgba(93, 91, 91, 0.8)',
+};
+
+export const lightPalette = {
+  backgroundTop: '#f0f9ff',
+  backgroundBottom: '#f8fafc',
+  primaryGlow: 'rgba(2, 132, 199, 0.12)',
+  secondaryGlow: 'rgba(5, 150, 105, 0.1)',
+  accentGlow: 'rgba(2, 132, 199, 0.06)',
+  surface: 'rgba(255, 255, 255, 0.95)',
+  surfaceSoft: 'rgba(255, 255, 255, 0.75)',
+  stroke: 'rgba(2, 132, 199, 0.12)',
+  strokeAlert: 'rgba(2, 132, 199, 0.45)',
+  text: '#0f172a',
+  textMuted: '#475569',
+  textSoft: '#64748b',
+  blue: '#0284c7',
+  blueSoft: 'rgba(2, 132, 199, 0.08)',
+  green: '#059669',
+  greenSoft: 'rgba(5, 150, 105, 0.08)',
+  accent: '#0284c7',
+  accentSoft: 'rgba(2, 132, 199, 0.06)',
+  shadow: 'rgba(0, 0, 0, 0.04)',
+};
+
+export type ScreenPalette = typeof darkPalette;
+
+export function createBodyCareStyles(palette: ScreenPalette) {
+  return StyleSheet.create({
+    safeArea: { flex: 1, backgroundColor: palette.backgroundTop },
+    content: { paddingHorizontal: spacing.md, paddingTop: spacing.sm },
+    topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
+    topIconButton: {
+      width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
+      backgroundColor: palette.surfaceSoft, borderWidth: 1, borderColor: palette.stroke,
+    },
+    topTitle: { fontSize: 20, fontWeight: '900', color: palette.text, letterSpacing: 0.5, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
+    sectionCard: {
+      marginTop: spacing.md, padding: spacing.lg, borderRadius: 28,
+      backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
+      shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 12 },
+      elevation: 8,
+    },
+    sectionCardAlert: { borderColor: palette.strokeAlert, backgroundColor: palette.blueSoft },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md },
+    cardIconWrap: {
+      width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+      backgroundColor: palette.blueSoft,
+    },
+    cardHeaderMain: { flex: 1 },
+    cardTitle: { fontSize: 18, fontWeight: '800', color: palette.text },
+    cardMeta: { fontSize: 14, color: palette.textSoft, fontWeight: '600' },
+    cardPercent: { fontSize: 24, fontWeight: '900', color: palette.blue },
+    waterTrack: {
+      height: 10, borderRadius: 5, backgroundColor: palette.surfaceSoft,
+      marginVertical: spacing.sm, overflow: 'hidden',
+    },
+    waterFill: { height: '100%', backgroundColor: palette.blue, borderRadius: 5 },
+    waterPresets: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+    waterChip: {
+      flex: 1, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
+      backgroundColor: palette.surfaceSoft, borderWidth: 1, borderColor: palette.stroke,
+    },
+    waterChipText: { fontSize: 13, fontWeight: '800', color: palette.textMuted },
+    
+    eyeActionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md },
+    eyeChevron: { opacity: 0.5 },
+    eyeNextRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: palette.stroke },
+    eyeNextText: { fontSize: 14, fontWeight: '700', color: palette.textSoft },
+    eyeNextValue: { fontSize: 14, fontWeight: '800', color: palette.green },
+    eyeActiveCard: { marginTop: spacing.md, alignItems: 'center', padding: spacing.md },
+    eyeActiveTitle: { fontSize: 18, fontWeight: '800', color: palette.blue },
+    eyeActiveTimer: { fontSize: 44, fontWeight: '900', color: palette.text, position: 'absolute' },
+    eyeActiveDesc: { fontSize: 13, color: palette.textSoft, marginTop: spacing.sm, textAlign: 'center' },
+    eyeTimerShell: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center', marginVertical: spacing.md },
+
+    standCard: {
+      marginTop: spacing.md, borderRadius: 28, backgroundColor: palette.surface,
+      borderWidth: 1, borderColor: palette.stroke, overflow: 'hidden',
+      flexDirection: 'row', height: 160,
+    },
+    standContent: { flex: 1.2, padding: spacing.lg, justifyContent: 'center' },
+    standTitle: { fontSize: 18, fontWeight: '800', color: palette.blue, marginBottom: 8 },
+    standDesc: { fontSize: 13, color: palette.textMuted, lineHeight: 18, fontWeight: '600' },
+    standImageWrap: { flex: 1, position: 'relative' },
+    standImage: { width: '100%', height: '100%', opacity: 0.8 },
+
+    summarySection: { marginTop: spacing.xl },
+    sectionTitle: { fontSize: 15, fontWeight: '900', color: palette.text, textTransform: 'uppercase', letterSpacing: 1, marginBottom: spacing.md },
+    summaryGrid: { flexDirection: 'row', gap: spacing.md },
+    summaryCard: {
+      flex: 1, padding: spacing.lg, borderRadius: 24,
+      backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
+      shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, shadowOffset: { width: 0, height: 10 },
+      elevation: 6,
+    },
+    summaryIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+    summaryValue: { fontSize: 22, fontWeight: '900', color: palette.text },
+    summaryLabel: { fontSize: 12, fontWeight: '700', color: palette.textSoft, marginTop: 2 },
+
+    motivationCard: {
+      marginTop: spacing.md, padding: spacing.lg, borderRadius: 24,
+      backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.stroke,
+      flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    },
+    motivationIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+    motivationTitle: { fontSize: 16, fontWeight: '800', color: palette.text },
+    motivationSub: { fontSize: 13, color: palette.textSoft, marginTop: 2, fontWeight: '600' },
+    
+    // Hydration specific
+    goalInput: { fontSize: 14, fontWeight: '700', color: palette.blue, padding: 0, margin: 0, minWidth: 40 },
+    historySection: { marginTop: spacing.xl, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 20, padding: spacing.md, borderWidth: 1, borderColor: palette.stroke },
+    historyTitle: { fontSize: 11, fontWeight: '900', color: palette.textSoft, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: spacing.md, marginLeft: 4 },
+    logRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.sm, marginBottom: 8, backgroundColor: palette.surfaceSoft, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+    logIconWrap: { width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(56, 189, 248, 0.1)', alignItems: 'center', justifyContent: 'center' },
+    logInfo: { flex: 1 },
+    logAmount: { fontSize: 15, fontWeight: '800', color: palette.text },
+    logTime: { fontSize: 11, fontWeight: '600', color: palette.textSoft, marginTop: 2 },
+    logDelete: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(239, 68, 68, 0.08)' },
+    
+    // Celebration
+    cardSuccess: { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.08)' },
+    successBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10b981', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 8 },
+    successBadgeText: { fontSize: 10, fontWeight: '900', color: '#ffffff', textTransform: 'uppercase' },
+
+    // Chart styles
+    chartContainer: { 
+      marginTop: spacing.md, padding: spacing.lg, borderRadius: 28,
+      backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
+    },
+    chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl },
+    chartTitle: { fontSize: 16, fontWeight: '800', color: palette.text },
+    chartSub: { fontSize: 12, fontWeight: '600', color: palette.textSoft },
+    chartTabs: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.lg, backgroundColor: palette.surfaceSoft, padding: 4, borderRadius: 12 },
+    chartTab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 10 },
+    chartTabActive: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.stroke },
+    chartTabText: { fontSize: 11, fontWeight: '800', color: palette.textSoft, textTransform: 'uppercase' },
+    chartTabTextActive: { color: palette.blue },
+    chartBody: { position: 'relative' },
+    chartGrid: { position: 'absolute', width: '100%', height: 100, justifyContent: 'space-between' },
+    chartGridLine: { height: 1, backgroundColor: palette.stroke, opacity: 0.5 },
+    chartBars: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingHorizontal: spacing.xs, zIndex: 1 },
+    chartBarWrap: { alignItems: 'center', gap: 8 },
+    chartBar: { width: 14, borderRadius: 7, backgroundColor: palette.blueSoft },
+    chartBarActive: { backgroundColor: palette.blue, shadowColor: palette.blue, shadowOpacity: 0.5, shadowRadius: 10, elevation: 4 },
+    chartLabel: { fontSize: 10, fontWeight: '800', color: palette.textSoft },
+  });
+}

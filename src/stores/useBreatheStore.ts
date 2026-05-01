@@ -13,13 +13,24 @@ export type BreatheSession = {
 
 export type BreathePhase = 'inhale' | 'hold' | 'exhale' | 'hold2';
 
+export type BreathePatternConfig = {
+  label: string;
+  inhale: number;
+  hold: number;
+  exhale: number;
+  hold2: number;
+  description: string;
+};
+
 type BreatheStore = {
   sessions: BreatheSession[];
   totalSessionsCompleted: number;
+  customPattern: BreathePatternConfig;
   addSession: (session: BreatheSession) => void;
+  setCustomPattern: (pattern: Partial<BreathePatternConfig>) => void;
 };
 
-export const BREATHE_PATTERNS: Record<BreathePattern, { label: string; inhale: number; hold: number; exhale: number; hold2: number; description: string }> = {
+export const BREATHE_PATTERNS: Record<BreathePattern, BreathePatternConfig> = {
   box: {
     label: 'Box Breathing',
     inhale: 4,
@@ -59,10 +70,15 @@ export const useBreatheStore = create<BreatheStore>()(
     (set) => ({
       sessions: [],
       totalSessionsCompleted: 0,
+      customPattern: BREATHE_PATTERNS.custom,
       addSession: (session) =>
         set((state) => ({
           sessions: [session, ...state.sessions].slice(0, 100),
           totalSessionsCompleted: state.totalSessionsCompleted + 1,
+        })),
+      setCustomPattern: (pattern) =>
+        set((state) => ({
+          customPattern: { ...state.customPattern, ...pattern },
         })),
     }),
     {

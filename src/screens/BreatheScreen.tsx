@@ -24,11 +24,20 @@ import {
   ScreenPalette,
 } from "../styles/BreatheScreen.styles"
 
+const customPhases: { key: BreathePhase; label: string }[] = [
+  { key: 'inhale', label: 'Inhale' },
+  { key: 'hold', label: 'Hold' },
+  { key: 'exhale', label: 'Exhale' },
+  { key: 'hold2', label: 'Hold 2' },
+];
+
 export function BreatheScreen() {
   const { mode } = useAppTheme();
   const navigation = useNavigation<any>();
   const addSession = useBreatheStore((s) => s.addSession);
   const totalCompleted = useBreatheStore((s) => s.totalSessionsCompleted);
+  const customPattern = useBreatheStore((s) => s.customPattern);
+  const setCustomPattern = useBreatheStore((s) => s.setCustomPattern);
 
   const palette = useMemo(
     () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
@@ -42,6 +51,8 @@ export function BreatheScreen() {
   const [phaseCountdown, setPhaseCountdown] = useState(0);
   const [cycleCount, setCycleCount] = useState(0);
   const [sessionStart, setSessionStart] = useState<string | null>(null);
+  const [customDraft, setCustomDraft] = useState(customPattern);
+  const [isCustomEditorOpen, setIsCustomEditorOpen] = useState(false);
 
   const scaleAnim = useRef(new Animated.Value(0.6)).current;
   const opacityAnim = useRef(new Animated.Value(0.5)).current;
@@ -52,7 +63,11 @@ export function BreatheScreen() {
   const cycleRef = useRef(0);
   const startRef = useRef<string | null>(null);
 
-  const pattern = BREATHE_PATTERNS[selectedPattern];
+  const pattern = selectedPattern === 'custom' ? customPattern : BREATHE_PATTERNS[selectedPattern];
+  const customDraftChanged = customDraft.inhale !== customPattern.inhale
+    || customDraft.hold !== customPattern.hold
+    || customDraft.exhale !== customPattern.exhale
+    || customDraft.hold2 !== customPattern.hold2;
 
   const phaseLabels: Record<BreathePhase, string> = {
     inhale: 'Inhale',
@@ -77,6 +92,21 @@ export function BreatheScreen() {
       return pattern.hold2;
     },
     [pattern]
+  );
+
+  useEffect(() => {
+    setCustomDraft(customPattern);
+  }, [customPattern]);
+
+  const updateCustomDuration = useCallback(
+    (key: BreathePhase, delta: number) => {
+      setCustomDraft((draft) => {
+        const min = key === 'hold' || key === 'hold2' ? 0 : 1;
+        const next = Math.max(min, Math.min(30, draft[key] + delta));
+        return { ...draft, [key]: next };
+      });
+    },
+    []
   );
 
   const animateForPhase = useCallback(
@@ -217,20 +247,28 @@ export function BreatheScreen() {
 
               {/* Decorative SVG Glow Ring */}
               <Svg width={280} height={280} style={{ position: 'absolute' }}>
+                <Defs>
+                  <SvgLinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                    <Stop offset="0" stopColor={palette.accent} stopOpacity={0.5} />
+                    <Stop offset="1" stopColor="#7c3aed" stopOpacity={0.28} />
+                  </SvgLinearGradient>
+                </Defs>
+                <Circle
+                  cx={140} cy={140} r={133}
+                  stroke="url(#ringGrad)"
+                  strokeWidth={2}
+                  fill="none"
+                  opacity={0.9}
+                />
                 <Circle
                   cx={140} cy={140} r={125}
                   stroke={palette.accent}
-                  strokeWidth={1}
+                  strokeWidth={1.2}
                   fill="none"
-                  opacity={0.15}
-                  strokeDasharray="4 4"
+                  opacity={0.28}
+                  strokeDasharray="5 8"
                 />
               </Svg>
-
-              {/* Progress Dot */}
-              <Animated.View style={[{ position: 'absolute', width: 260, height: 260, transform: [{ rotate: rotation }] }]}>
-                <View style={{ position: 'absolute', top: -5, left: 130, width: 10, height: 10, borderRadius: 5, backgroundColor: '#ffffff', shadowColor: '#ffffff', shadowOpacity: 0.8, shadowRadius: 10, elevation: 10 }} />
-              </Animated.View>
 
               <Animated.View
                 style={[
@@ -241,6 +279,13 @@ export function BreatheScreen() {
                   },
                 ]}
               />
+
+              {/* Progress Dot */}
+              <Animated.View style={[styles.progressDotOrbit, { transform: [{ rotate: rotation }] }]}>
+                <Svg width={20} height={20} style={styles.progressDot}>
+                  <Circle cx={10} cy={10} r={8} fill={palette.ringDot} />
+                </Svg>
+              </Animated.View>
               
               <View style={styles.ringCore}>
                 {!isRunning && (
@@ -302,6 +347,17 @@ export function BreatheScreen() {
             </View>
           </View>
 
+          <View style={styles.readyTechnique}>
+            <View style={styles.readyTechniqueHeader}>
+              <Feather name="wind" size={16} color={palette.accent} />
+              <Text style={styles.readyTechniqueLabel}>{pattern.label}</Text>
+            </View>
+            <Text style={styles.readyTechniqueRhythm}>
+              {pattern.inhale}-{pattern.hold}-{pattern.exhale}{pattern.hold2 > 0 ? `-${pattern.hold2}` : ''}
+            </Text>
+            <Text style={styles.readyTechniqueDesc}>{pattern.description}</Text>
+          </View>
+
           {/* Pattern selector */}
           {!isRunning && (
             <View style={styles.patternsSection}>
@@ -312,6 +368,7 @@ export function BreatheScreen() {
 
               <View style={styles.patternsGrid}>
                 {Object.entries(BREATHE_PATTERNS).map(([key, p]) => {
+                  const displayPattern = key === 'custom' && selectedPattern === 'custom' ? customDraft : p;
                   const icons: Record<string, any> = {
                     box: { icon: 'wind', colors: ['#38bdf8', '#818cf8'] },
                     '478': { icon: 'activity', colors: ['#34d399', '#3b82f6'] },
@@ -323,7 +380,10 @@ export function BreatheScreen() {
                   return (
                     <Pressable
                       key={key}
-                      onPress={() => setSelectedPattern(key as BreathePattern)}
+                      onPress={() => {
+                        setSelectedPattern(key as BreathePattern);
+                        setIsCustomEditorOpen(key === 'custom');
+                      }}
                       style={[styles.patternCard, selectedPattern === key && styles.patternCardActive]}
                     >
                       {/* Left Side Accent Glow */}
@@ -345,13 +405,41 @@ export function BreatheScreen() {
                       
                       <View style={styles.patternInfo}>
                         <Text style={[styles.patternName, selectedPattern === key && styles.patternNameActive]}>
-                          {p.label}
+                          {displayPattern.label}
                         </Text>
                         <Text style={styles.patternRhythm}>
-                          {p.inhale}-{p.hold}-{p.exhale}{p.hold2 > 0 ? `-${p.hold2}` : ''}
+                          {displayPattern.inhale}-{displayPattern.hold}-{displayPattern.exhale}{displayPattern.hold2 > 0 ? `-${displayPattern.hold2}` : ''}
                         </Text>
                         {selectedPattern === key && (
-                          <Text style={styles.patternDesc}>{p.description}</Text>
+                          <Text style={styles.patternDesc}>{displayPattern.description}</Text>
+                        )}
+                        {selectedPattern === key && key === 'custom' && isCustomEditorOpen && (
+                          <View style={styles.customEditor}>
+                            {customPhases.map((item) => (
+                              <View key={item.key} style={styles.customRow}>
+                                <Text style={styles.customLabel}>{item.label}</Text>
+                                <View style={styles.customStepper}>
+                                  <Pressable onPress={() => updateCustomDuration(item.key, -1)} style={styles.customStepButton}>
+                                    <Feather name="minus" size={16} color={palette.text} />
+                                  </Pressable>
+                                  <Text style={styles.customValue}>{customDraft[item.key]}s</Text>
+                                  <Pressable onPress={() => updateCustomDuration(item.key, 1)} style={styles.customStepButton}>
+                                    <Feather name="plus" size={16} color={palette.text} />
+                                  </Pressable>
+                                </View>
+                              </View>
+                            ))}
+                            <Pressable
+                              disabled={!customDraftChanged}
+                              onPress={() => {
+                                setCustomPattern(customDraft);
+                                setIsCustomEditorOpen(false);
+                              }}
+                              style={[styles.customApply, !customDraftChanged && styles.customApplyDisabled]}
+                            >
+                              <Text style={styles.customApplyText}>Apply</Text>
+                            </Pressable>
+                          </View>
                         )}
                       </View>
                       <Feather name="chevron-right" size={22} color={palette.textSoft} />
