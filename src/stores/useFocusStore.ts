@@ -1,6 +1,9 @@
+import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
+const { FocusZenSettings } = NativeModules;
 import { STORAGE_KEYS } from '../storage/storage';
 import { FocusSession } from '../types/models';
 import { seedFocusSessions } from '../data/seed';
@@ -42,26 +45,41 @@ export const useFocusStore = create<FocusState>()(
       selectedPreset: 30,
       deepWorkEnabled: true,
       startSession: (presetMinutes, linkedTaskId) =>
-        set((state) => ({
-          selectedPreset: presetMinutes,
-          activeSession: {
-            startedAt: new Date().toISOString(),
-            presetMinutes,
-            remainingSeconds: presetMinutes * 60,
-            elapsedSeconds: 0,
-            paused: false,
-            deepWork: state.deepWorkEnabled,
-            linkedTaskId,
-          },
-        })),
+        set((state) => {
+          if (FocusZenSettings) {
+            FocusZenSettings.setFocusSession(true, state.deepWorkEnabled);
+          }
+          return {
+            selectedPreset: presetMinutes,
+            activeSession: {
+              startedAt: new Date().toISOString(),
+              presetMinutes,
+              remainingSeconds: presetMinutes * 60,
+              elapsedSeconds: 0,
+              paused: false,
+              deepWork: state.deepWorkEnabled,
+              linkedTaskId,
+            },
+          };
+        }),
       pauseSession: () =>
-        set((state) => ({
-          activeSession: state.activeSession ? { ...state.activeSession, paused: true } : null,
-        })),
+        set((state) => {
+          if (FocusZenSettings) {
+            FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
+          }
+          return {
+            activeSession: state.activeSession ? { ...state.activeSession, paused: true } : null,
+          };
+        }),
       resumeSession: () =>
-        set((state) => ({
-          activeSession: state.activeSession ? { ...state.activeSession, paused: false } : null,
-        })),
+        set((state) => {
+          if (FocusZenSettings) {
+            FocusZenSettings.setFocusSession(true, state.deepWorkEnabled);
+          }
+          return {
+            activeSession: state.activeSession ? { ...state.activeSession, paused: false } : null,
+          };
+        }),
       tick: () =>
         set((state) => {
           if (!state.activeSession || state.activeSession.paused) {
@@ -99,10 +117,20 @@ export const useFocusStore = create<FocusState>()(
           selectedPreset: Math.max(15, Math.round(minutes)),
           activeSession: setActiveFocusSessionTotalMinutes(state.activeSession, minutes),
         })),
+      cancelSession: () => set((state) => {
+        if (FocusZenSettings) {
+          FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
+        }
+        return { activeSession: null, selectedPreset: 30 };
+      }),
       completeSession: () => {
         const state = get();
         if (!state.activeSession) {
           return null;
+        }
+
+        if (FocusZenSettings) {
+          FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
         }
 
         const nowIso = new Date().toISOString();
@@ -126,22 +154,31 @@ export const useFocusStore = create<FocusState>()(
 
         return completed;
       },
-      cancelSession: () => set({ activeSession: null, selectedPreset: 30 }),
-      setDeepWorkEnabled: (enabled) => set({ deepWorkEnabled: enabled }),
+      setDeepWorkEnabled: (enabled) => set((state) => {
+        if (state.activeSession && FocusZenSettings) {
+          FocusZenSettings.setFocusSession(!state.activeSession.paused, enabled);
+        }
+        return { deepWorkEnabled: enabled };
+      }),
       setSelectedPreset: (minutes) =>
-        set((state) => ({
-          selectedPreset: minutes,
-          activeSession: state.activeSession
-            ? {
-                ...state.activeSession,
-                startedAt: new Date().toISOString(),
-                presetMinutes: minutes,
-                remainingSeconds: minutes * 60,
-                elapsedSeconds: 0,
-                paused: true,
-              }
-            : null,
-        })),
+        set((state) => {
+          if (FocusZenSettings) {
+            FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
+          }
+          return {
+            selectedPreset: minutes,
+            activeSession: state.activeSession
+              ? {
+                  ...state.activeSession,
+                  startedAt: new Date().toISOString(),
+                  presetMinutes: minutes,
+                  remainingSeconds: minutes * 60,
+                  elapsedSeconds: 0,
+                  paused: true,
+                }
+              : null,
+          };
+        }),
     }),
     {
       name: STORAGE_KEYS.focus,

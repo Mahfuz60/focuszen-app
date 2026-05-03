@@ -7,7 +7,10 @@ import com.facebook.react.uimanager.ViewManager
 
 class PermissionCheckerPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return listOf(PermissionCheckerModule(reactContext))
+        return listOf(
+            PermissionCheckerModule(reactContext),
+            SettingsModule(reactContext)
+        )
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {

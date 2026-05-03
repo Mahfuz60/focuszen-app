@@ -24,7 +24,7 @@ export const darkPalette = {
   flashAccent: '#00ff9d',
   powerAccent: '#d500f9',
   iconColor:'#07ea4fff',
-  powerBackground:'#b10a0aff'
+  powerBackground:'#f9f2f2ff'
 };
 
 export const lightPalette = {

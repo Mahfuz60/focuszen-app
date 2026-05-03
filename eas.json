@@ -12,7 +12,10 @@
         "buildType": "apk",
         "image": "latest"
       },
-      "node": "22.0.0"
+      "node": "22.0.0",
+      "env": {
+        "EAS_SKIP_AUTO_FINGERPRINT": "1"
+      }
     },
     "production": {}
   },

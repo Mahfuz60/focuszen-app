@@ -1,6 +1,9 @@
+import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
+const { FocusZenSettings } = NativeModules;
 import { seedControlSettings } from '../data/seed';
 import { STORAGE_KEYS } from '../storage/storage';
 import { AppControlSettings, AppControlTarget, AppFeatureKey, SafeBrowsingSettings, ScheduleRule } from '../types/models';
@@ -28,16 +31,26 @@ type ControlState = {
   setCustomDomains: (domains: string[]) => void;
   toggleStrictMode: () => void;
   grantPermissions: () => void;
+  syncAllSettings: () => void;
 };
 
 export const useControlStore = create<ControlState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       controls: seedControlSettings,
       safeBrowsing: seedSafeBrowsing,
       strictModeEnabled: false,
       permissionsGranted: false,
       grantPermissions: () => set({ permissionsGranted: true }),
+      syncAllSettings: () => {
+        const state = get();
+        if (FocusZenSettings) {
+          state.controls.forEach(control => {
+            FocusZenSettings.updateAppFeatures(control.appName, control.features);
+          });
+          FocusZenSettings.setStrictMode(state.strictModeEnabled);
+        }
+      },
       toggleAppBlocked: (appName) =>
         set((state) => {
           if (state.strictModeEnabled) return {};
@@ -61,20 +74,25 @@ export const useControlStore = create<ControlState>()(
       toggleFeature: (appName, feature) =>
         set((state) => {
           if (state.strictModeEnabled) return {};
-          return {
-            controls: (state.controls || []).map((control) =>
-              control.appName === appName
-                ? {
-                    ...control,
-                    blocked: feature === 'blockApp' ? !(control.features[feature] ?? false) : control.blocked,
-                    features: {
-                      ...control.features,
-                      [feature]: !(control.features[feature] ?? false),
-                    },
-                  }
-                : control
-            ),
-          };
+          const newControls = (state.controls || []).map((control) =>
+            control.appName === appName
+              ? {
+                  ...control,
+                  blocked: feature === 'blockApp' ? !(control.features[feature] ?? false) : control.blocked,
+                  features: {
+                    ...control.features,
+                    [feature]: !(control.features[feature] ?? false),
+                  },
+                }
+              : control
+          );
+          
+          const updatedControl = newControls.find(c => c.appName === appName);
+          if (updatedControl && FocusZenSettings) {
+            FocusZenSettings.updateAppFeatures(appName, updatedControl.features);
+          }
+          
+          return { controls: newControls };
         }),
       setTimeLimit: (appName, minutes) =>
         set((state) => ({
@@ -102,7 +120,13 @@ export const useControlStore = create<ControlState>()(
         set((state) => ({
           safeBrowsing: { ...state.safeBrowsing, customDomains: domains },
         })),
-      toggleStrictMode: () => set((state) => ({ strictModeEnabled: !state.strictModeEnabled })),
+      toggleStrictMode: () => set((state) => {
+        const next = !state.strictModeEnabled;
+        if (FocusZenSettings) {
+          FocusZenSettings.setStrictMode(next);
+        }
+        return { strictModeEnabled: next };
+      }),
     }),
     {
       name: STORAGE_KEYS.control,

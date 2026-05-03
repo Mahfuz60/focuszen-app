@@ -19,6 +19,10 @@ import { RootNavigator } from '../navigation/RootNavigator';
 import { ensureAppMeta } from '../storage/storage';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useAlarmStore } from '../stores/useAlarmStore';
+import { useControlStore } from '../stores/useControlStore';
+import { NativeModules } from 'react-native';
+
+const { FocusZenSettings } = NativeModules;
 
 // Uncomment after running 'npx expo install expo-av'
 // import { Audio } from 'expo-av';
@@ -43,6 +47,7 @@ export function AppRoot() {
   const isAlarmFiring = useAlarmStore((s) => s.isAlarmFiring);
   const setAlarmFiring = useAlarmStore((s) => s.setAlarmFiring);
   const sessions = useAlarmStore((s) => s.sessions);
+  const syncAllSettings = useControlStore((s) => s.syncAllSettings);
 
   const activeSession = sessions.find(s => s.id === activeSessionId && !s.completedAt);
 
@@ -60,7 +65,11 @@ export function AppRoot() {
 
   useEffect(() => {
     ensureAppMeta();
-  }, []);
+    syncAllSettings();
+    if (FocusZenSettings) {
+      FocusZenSettings.startService();
+    }
+  }, [syncAllSettings]);
 
   // Global Alarm Monitor
   useEffect(() => {

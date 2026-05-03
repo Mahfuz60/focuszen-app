@@ -128,9 +128,9 @@ export function HomeScreen() {
       ? 'Ready to begin'
       : 'Start with your next block';
   const usageDetails = [
-    { key: 'focus', label: 'Focus', value: dashboard.summary.focusMinutes, color: '#7bbce5' },
-    { key: 'study', label: 'Study', value: dashboard.summary.studyMinutes, color: '#e59540' },
-    { key: 'social', label: 'Social apps', value: dashboard.summary.socialMinutes, color: '#a9cf45' },
+    { key: 'focus', label: 'Focus', value: dashboard.summary.focusMinutes, color: mode === 'dark' ? '#38bdf8' : '#0ea5e9' },
+    { key: 'study', label: 'Study', value: dashboard.summary.studyMinutes, color: mode === 'dark' ? '#fbbf24' : '#f59e0b' },
+    { key: 'social', label: 'Social apps', value: dashboard.summary.socialMinutes, color: mode === 'dark' ? '#10b981' : '#059669' },
   ];
   const usageChartTotal = usageDetails.reduce((total, item) => total + item.value, 0);
   const usageDisplayTotal = Math.max(usageChartTotal, 1);
@@ -372,29 +372,41 @@ export function HomeScreen() {
 
               <View style={styles.usageChartWrap}>
                 <Svg width={190} height={190} viewBox="0 0 124 124">
+                  {/* Background Track */}
                   <Circle
                     cx={62}
                     cy={62}
                     r={48}
-                    stroke={mode === 'dark' ? 'rgba(255,255,255,0.08)' : '#eef2f7'}
-                    strokeWidth={12}
+                    stroke={mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'}
+                    strokeWidth={14}
                     fill="none"
                   />
-                  {usageChartSegments.map((segment) => (
+                  {usageChartTotal > 0 ? usageChartSegments.map((segment) => (
                     <Circle
                       key={segment.key}
                       cx={62}
                       cy={62}
                       r={48}
                       stroke={segment.color}
-                      strokeWidth={12}
+                      strokeWidth={14}
                       strokeDasharray={segment.dashArray}
                       strokeDashoffset={segment.dashOffset}
                       fill="none"
                       strokeLinecap="round"
                       transform="rotate(-90 62 62)"
                     />
-                  ))}
+                  )) : (
+                    /* Default state ring when 0m total */
+                    <Circle
+                      cx={62}
+                      cy={62}
+                      r={48}
+                      stroke={mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}
+                      strokeWidth={14}
+                      fill="none"
+                      strokeDasharray="1 6" // Dashed look for empty state
+                    />
+                  )}
                 </Svg>
                 <Text style={styles.usageCenterValue}>
                   {formatMinutes(usageChartTotal)}
