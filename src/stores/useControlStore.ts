@@ -4,6 +4,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { seedControlSettings } from '../data/seed';
 import { STORAGE_KEYS } from '../storage/storage';
 import { AppControlSettings, AppControlTarget, AppFeatureKey, SafeBrowsingSettings, ScheduleRule } from '../types/models';
+import { getControlOptionDescriptors } from '../utils/controlOptions';
 
 const seedSafeBrowsing: SafeBrowsingSettings = {
   adultContentBlock: true,
@@ -47,10 +48,10 @@ export const useControlStore = create<ControlState>()(
                     ...control,
                     blocked: !control.blocked,
                     features: !control.blocked
-                      ? Object.keys(control.features).reduce((acc, key) => {
-                          acc[key as AppFeatureKey] = true;
+                      ? (getControlOptionDescriptors(control.appName) || []).reduce((acc, opt) => {
+                          acc[opt.key] = true;
                           return acc;
-                        }, {} as Record<AppFeatureKey, boolean>)
+                        }, { ...control.features } as Record<AppFeatureKey, boolean>)
                       : control.features,
                   }
                 : control
@@ -65,9 +66,10 @@ export const useControlStore = create<ControlState>()(
               control.appName === appName
                 ? {
                     ...control,
+                    blocked: feature === 'blockApp' ? !(control.features[feature] ?? false) : control.blocked,
                     features: {
                       ...control.features,
-                      [feature]: !(control.features[feature] ?? true),
+                      [feature]: !(control.features[feature] ?? false),
                     },
                   }
                 : control

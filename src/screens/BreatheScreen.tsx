@@ -217,7 +217,7 @@ export function BreatheScreen() {
             <Pressable onPress={() => { stopSession(); navigation.goBack(); }} style={styles.topIconButton}>
               <Ionicons name="arrow-back" size={22} color={palette.text} />
             </Pressable>
-            <Text style={styles.topTitle}>Reset</Text>
+            <Text style={styles.topTitle}>Breathe</Text>
             <View style={styles.topIconButton}>
               <Ionicons name="stats-chart-outline" size={20} color={palette.textSoft} />
             </View>

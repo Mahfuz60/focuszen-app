@@ -8,9 +8,10 @@ import {
   StatusBar,
   Text,
   View,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useFocusStore } from '../stores/useFocusStore';
@@ -29,7 +30,6 @@ import {
   qaCardStyle,
   qaArrowBtnStyle,
   qaArrowIconColor,
-  perfCardStyle,
   brandZenStyle,
   brandTextStyle,
   greetingNameStyle,
@@ -127,6 +127,27 @@ export function HomeScreen() {
     : featuredFocusTask
       ? 'Ready to begin'
       : 'Start with your next block';
+  const usageDetails = [
+    { key: 'focus', label: 'Focus', value: dashboard.summary.focusMinutes, color: '#7bbce5' },
+    { key: 'study', label: 'Study', value: dashboard.summary.studyMinutes, color: '#e59540' },
+    { key: 'social', label: 'Social apps', value: dashboard.summary.socialMinutes, color: '#a9cf45' },
+  ];
+  const usageChartTotal = usageDetails.reduce((total, item) => total + item.value, 0);
+  const usageDisplayTotal = Math.max(usageChartTotal, 1);
+  const usageChartCircumference = 2 * Math.PI * 48;
+  let usageChartOffset = 0;
+  const usageChartSegments = usageDetails.map((item) => {
+    const percent = item.value / usageDisplayTotal;
+    const segment = {
+      ...item,
+      percent,
+      dashOffset: -usageChartOffset,
+      dashArray: `${percent * usageChartCircumference} ${usageChartCircumference}`,
+    };
+
+    usageChartOffset += percent * usageChartCircumference;
+    return segment;
+  });
   const supportDate = dashboard.selectedDateLabel === 'Today'
     ? formatShortDate(selectedDate)
     : dashboard.selectedDateLabel;
@@ -148,10 +169,10 @@ export function HomeScreen() {
   }
 
   const localQuickActions = [
-    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', icon: 'wind' as const, target: 'Breathe', color: '#38bdf8' },
-    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', icon: 'moon' as const, target: 'Alarm', color: '#fbbf24' },
-    { key: 'bodycare', label: 'Body Care', sub: 'Water & eye care', icon: 'heart' as const, target: 'BodyCare', color: '#10b981' },
-    { key: 'plan', label: 'Planner', sub: 'Daily tasks', icon: 'clipboard' as const, target: 'DailyPlanner', color: '#a855f7' },
+    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', image: require('../../assets/breathe.png'), target: 'Breathe', color: '#38bdf8' },
+    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', image: require('../../assets/powerNap.png'), target: 'Alarm', color: '#fbbf24' },
+    { key: 'bodycare', label: 'Wellness', sub: 'Health & Hydration', image: require('../../assets/wellness.png'), target: 'BodyCare', color: '#10b981' },
+    { key: 'plan', label: 'Planner', sub: 'Daily tasks', image: require('../../assets/planner.png'), target: 'DailyPlanner', color: '#a855f7' },
   ] as const;
 
   return (
@@ -289,7 +310,11 @@ export function HomeScreen() {
                 <View style={styles.qaInner}>
                   <View style={styles.qaTopRow}>
                     <View style={[styles.qaIconWrap, { backgroundColor: `${action.color}25` }]}>
-                      <Feather name={action.icon as any} size={24} color={action.color} />
+                      <Image
+                        source={action.image}
+                        style={{ width: 48, height: 48 }}
+                        resizeMode="contain"
+                      />
                     </View>
                     <View style={[styles.qaArrowBtn, qaArrowBtnStyle(mode)]}>
                       <Feather name="arrow-right" size={16} color={qaArrowIconColor(mode)} />
@@ -322,57 +347,69 @@ export function HomeScreen() {
             ))}
           </View>
 
-          {/* ── Daily Performance ── */}
+          {/* ── In-App Usage Details ── */}
           <View style={[styles.sectionHeader, { marginTop: spacing.xl }]}>
-            <Text style={styles.sectionTitle}>Daily Performance</Text>
+            <Text style={styles.sectionTitle}>In-App Usage Details</Text>
           </View>
 
-          <View style={styles.perfGrid}>
-            {[
-              { key: 'focus',  label: 'Focus',  value: formatMinutes(dashboard.summary.focusMinutes), sub: 'Focus time today',  icon: 'target' as const,         color: '#22d3ee' },
-              { key: 'study',  label: 'Study',  value: formatMinutes(dashboard.summary.studyMinutes), sub: 'Study time today',  icon: 'book-open' as const,      color: '#a78bfa' },
-              { key: 'social', label: 'Social', value: formatMinutes(dashboard.summary.socialMinutes),sub: 'Social app time',   icon: 'message-circle' as const, color: '#fb7185' },
-              { key: 'tasks',  label: 'Tasks',  value: String(openTasksCount),                        sub: 'Open tasks left',   icon: 'check-circle' as const,   color: '#fbbf24' },
-            ].map((metric) => (
-              <View
-                key={metric.key}
-                style={[styles.perfCard, perfCardStyle(mode, metric.color)]}
-              >
-                <View style={styles.perfInner}>
-                  <View style={styles.perfTopRow}>
-                    <View style={[styles.perfIconWrap, { backgroundColor: `${metric.color}25` }]}>
-                      <Feather name={metric.icon as any} size={20} color={metric.color} />
-                    </View>
-                    <Text style={styles.perfLabel}>{metric.label}</Text>
+          <View style={styles.usageDetailsCard}>
+            <View style={styles.usageHeaderRow}>
+              <Text style={styles.usageTitle}>Today</Text>
+              <Ionicons name="help-circle-outline" size={22} color={palette.textSoft} />
+            </View>
+
+            <View style={styles.usageDetailsBody}>
+              <View style={styles.usageLegend}>
+                {usageDetails.map((item) => (
+                  <View key={item.key} style={styles.usageLegendRow}>
+                    <View style={[styles.usageLegendDot, { backgroundColor: item.color }]} />
+                    <Text style={styles.usageLegendText}>
+                      {`${item.label} · ${formatMinutes(item.value)}`}
+                    </Text>
                   </View>
-                  <Text style={styles.perfValue}>{metric.value}</Text>
-                  <Text style={styles.perfSub}>{metric.sub}</Text>
-                </View>
-
-                <Svg width="100%" height={44} viewBox="0 0 160 44" preserveAspectRatio="none">
-                  <Defs>
-                    <SvgLinearGradient id={`grad-${metric.key}`} x1="0" y1="0" x2="0" y2="1">
-                      <Stop offset="0" stopColor={metric.color} stopOpacity={0.3} />
-                      <Stop offset="1" stopColor={metric.color} stopOpacity={0.02} />
-                    </SvgLinearGradient>
-                  </Defs>
-                  <Path
-                    d="M0,30 L10,26 L22,32 L34,20 L46,28 L58,16 L70,24 L82,18 L94,28 L106,14 L118,22 L130,18 L142,26 L160,20 L160,44 L0,44 Z"
-                    fill={`url(#grad-${metric.key})`}
-                  />
-                  <Path
-                    d="M0,30 L10,26 L22,32 L34,20 L46,28 L58,16 L70,24 L82,18 L94,28 L106,14 L118,22 L130,18 L142,26 L160,20"
-                    stroke={metric.color}
-                    strokeWidth={2}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </Svg>
-
-                <View style={[styles.perfBottomBar, { backgroundColor: metric.color }]} />
+                ))}
               </View>
-            ))}
+
+              <View style={styles.usageChartWrap}>
+                <Svg width={190} height={190} viewBox="0 0 124 124">
+                  <Circle
+                    cx={62}
+                    cy={62}
+                    r={48}
+                    stroke={mode === 'dark' ? 'rgba(255,255,255,0.08)' : '#eef2f7'}
+                    strokeWidth={12}
+                    fill="none"
+                  />
+                  {usageChartSegments.map((segment) => (
+                    <Circle
+                      key={segment.key}
+                      cx={62}
+                      cy={62}
+                      r={48}
+                      stroke={segment.color}
+                      strokeWidth={12}
+                      strokeDasharray={segment.dashArray}
+                      strokeDashoffset={segment.dashOffset}
+                      fill="none"
+                      strokeLinecap="round"
+                      transform="rotate(-90 62 62)"
+                    />
+                  ))}
+                </Svg>
+                <Text style={styles.usageCenterValue}>
+                  {formatMinutes(usageChartTotal)}
+                </Text>
+                <Text style={styles.usageCenterLabel}>total</Text>
+              </View>
+            </View>
+
+            <View style={styles.usagePercentRow}>
+              {usageChartSegments.slice(0, 3).map((segment) => (
+                <Text key={segment.key} style={styles.usagePercentText}>
+                  {`${Math.round(segment.percent * 100)}%`}
+                </Text>
+              ))}
+            </View>
           </View>
 
 

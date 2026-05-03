@@ -507,6 +507,87 @@ export function createHomeStyles(palette: ScreenPalette) {
       height: 4,
       width: '100%',
     },
+    usageDetailsCard: {
+      borderRadius: 22,
+      padding: spacing.md,
+      backgroundColor: palette.surfaceSoft,
+      borderWidth: 1,
+      borderColor: palette.stroke,
+      shadowColor: palette.shadow,
+      shadowOpacity: 0.14,
+      shadowRadius: 18,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 6,
+    },
+    usageHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    usageTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: palette.text,
+      letterSpacing: -0.3,
+    },
+    usageDetailsBody: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
+    usageLegend: {
+      flex: 1,
+      gap: 8,
+    },
+    usageLegendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    usageLegendDot: {
+      width: 14,
+      height: 14,
+      borderRadius: 2,
+    },
+    usageLegendText: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '600',
+      color: palette.text,
+    },
+    usageChartWrap: {
+      width: 190,
+      height: 190,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    usageCenterValue: {
+      position: 'absolute',
+      fontSize: 20,
+      fontWeight: '900',
+      color: palette.text,
+      letterSpacing: -0.3,
+    },
+    usageCenterLabel: {
+      position: 'absolute',
+      marginTop: 36,
+      fontSize: 12,
+      fontWeight: '700',
+      color: palette.textSoft,
+      textTransform: 'uppercase',
+    },
+    usagePercentRow: {
+      marginTop: spacing.sm,
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+    },
+    usagePercentText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: palette.textMuted,
+    },
   });
 }
 

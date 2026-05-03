@@ -3,9 +3,7 @@ export type RootStackParamList = {
   PermissionsSetup: undefined;
   MainTabs: undefined;
   DailyPlanner: undefined;
-  RoutineBuilder: undefined;
   QuickStart: undefined;
-  GoalsMission: undefined;
   Breathe: undefined;
   Alarm: undefined;
   BodyCare: undefined;

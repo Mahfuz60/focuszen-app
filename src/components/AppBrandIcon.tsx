@@ -31,7 +31,8 @@ type BrandConfig = {
 };
 
 function normalizeAppName(appName: string): AppControlTarget | 'fallback' {
-  switch (appName.trim().toLowerCase()) {
+  const normalized = appName.trim().toLowerCase();
+  switch (normalized) {
     case 'youtube':
       return 'YouTube';
     case 'instagram':
@@ -60,37 +61,30 @@ function normalizeAppName(appName: string): AppControlTarget | 'fallback' {
 }
 
 function getBrandConfig(appName: AppControlTarget | string): BrandConfig {
+  const fixedBg = 'rgba(255, 255, 255, 0.08)';
   switch (normalizeAppName(appName)) {
     case 'YouTube':
-      return { icon: siYoutube, iconColor: '#ffffff', background: '#FF0000' };
+      return { icon: siYoutube, iconColor: '#FF0000', background: fixedBg };
     case 'Instagram':
-      return {
-        icon: siInstagram,
-        iconColor: '#ffffff',
-        gradient: ['#FEDA75', '#FA7E1E', '#D62976', '#962FBF'] as const,
-      };
+      return { icon: siInstagram, iconColor: '#E4405F', background: fixedBg };
     case 'Facebook':
-      return { icon: siFacebook, iconColor: '#ffffff', background: '#1877F2' };
+      return { icon: siFacebook, iconColor: '#1877F2', background: fixedBg };
     case 'Snapchat':
-      return { icon: siSnapchat, iconColor: '#111111', background: '#FFFC00' };
+      return { icon: siSnapchat, iconColor: '#FFFC00', background: fixedBg };
     case 'TikTok':
-      return { icon: siTiktok, iconColor: '#ffffff', background: '#121212' };
+      return { icon: siTiktok, iconColor: '#FFFFFF', background: fixedBg };
     case 'Telegram':
-      return { icon: siTelegram, iconColor: '#ffffff', background: '#27A7E7' };
+      return { icon: siTelegram, iconColor: '#24A1DE', background: fixedBg };
     case 'Line':
-      return { icon: siLine, iconColor: '#ffffff', background: '#06C755' };
+      return { icon: siLine, iconColor: '#06C755', background: fixedBg };
     case 'Messenger':
-      return {
-        icon: siMessenger,
-        iconColor: '#ffffff',
-        gradient: ['#00B2FF', '#5865F2', '#A033FF'] as const,
-      };
+      return { icon: siMessenger, iconColor: '#00B2FF', background: fixedBg };
     case 'WhatsApp':
-      return { icon: siWhatsapp, iconColor: '#ffffff', background: '#25D366' };
+      return { icon: siWhatsapp, iconColor: '#25D366', background: fixedBg };
     case 'X':
-      return { icon: siX, iconColor: '#ffffff', background: '#111111' };
+      return { icon: siX, iconColor: '#FFFFFF', background: fixedBg };
     default:
-      return { icon: siAppstore, iconColor: '#ffffff', background: '#5b8dff' };
+      return { icon: siAppstore, iconColor: '#5b8dff', background: fixedBg };
   }
 }
 

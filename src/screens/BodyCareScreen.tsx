@@ -239,7 +239,7 @@ export function BodyCareScreen() {
             <Pressable onPress={() => navigation.goBack()} style={styles.topIconButton}>
               <Ionicons name="arrow-back" size={22} color={palette.text} />
             </Pressable>
-            <Text style={styles.topTitle}>Body Care</Text>
+            <Text style={styles.topTitle}>Wellness</Text>
             <View style={styles.topIconButton}>
               <Ionicons name="settings-outline" size={20} color={palette.text} />
             </View>

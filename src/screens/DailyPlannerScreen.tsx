@@ -251,7 +251,7 @@ export function DailyPlannerScreen() {
                 <Ionicons name="arrow-back" size={18} color={palette.text} />
               </Pressable>
 
-              <Text style={styles.topTitle}>Planner</Text>
+              <Text style={styles.topTitle}>Schedule</Text>
 
               <Pressable
                 onPress={() => setComposerOpen((current) => !current)}
@@ -266,7 +266,7 @@ export function DailyPlannerScreen() {
               style={styles.summaryShell}
             >
               <View style={styles.summaryHeader}>
-                <Text style={styles.summaryTitle}>Today planner</Text>
+                <Text style={styles.summaryTitle}>Today's Agenda</Text>
                 <Text style={styles.summaryPercent}>{`${completionPercent}% complete`}</Text>
               </View>
 
@@ -444,7 +444,7 @@ export function DailyPlannerScreen() {
             ) : null}
 
             <View style={styles.tasksSectionHeader}>
-              <Text style={styles.tasksSectionTitle}>Today queue</Text>
+              <Text style={styles.tasksSectionTitle}>Daily Tasks</Text>
               <Text style={styles.tasksSectionMeta}>{`${plannerView.summary.pendingTasks} open`}</Text>
             </View>
 

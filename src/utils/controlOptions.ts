@@ -53,8 +53,12 @@ const APP_OPTION_MAP: Record<AppControlTarget, ControlOptionDescriptor[]> = {
   X: [{ key: 'blockExplore', label: 'Block explore tab', icon: 'search-outline' }],
 };
 
-export function getControlOptionDescriptors(appName: AppControlTarget) {
-  return APP_OPTION_MAP[appName] ?? [];
+export function getControlOptionDescriptors(appName: AppControlTarget): ControlOptionDescriptor[] {
+  const options = APP_OPTION_MAP[appName] ?? [];
+  return [
+    { key: 'blockApp', label: 'Full app block', icon: 'ban-outline' },
+    ...options,
+  ];
 }
 
 export function getAppDisplayName(appName: AppControlTarget) {
@@ -62,7 +66,8 @@ export function getAppDisplayName(appName: AppControlTarget) {
 }
 
 export function countEnabledOptions(control: AppControlSettings) {
-  return Object.values(control.features).filter(Boolean).length + (control.blocked ? 1 : 0);
+  const featureCount = Object.values(control.features).filter((v) => v === true).length;
+  return featureCount + (control.blocked ? 1 : 0);
 }
 
 export function sortControlsByUsage(controls: AppControlSettings[]) {

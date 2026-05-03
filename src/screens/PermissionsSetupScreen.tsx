@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useControlStore } from '../stores/useControlStore';
 import { spacing } from '../theme/tokens';
 import {
   permissionsStyles as styles,
@@ -32,6 +33,7 @@ export function PermissionsSetupScreen() {
   const navigation = useNavigation<any>();
   const { colors, mode, text } = useAppTheme();
   const completePermissionsSetup = useSettingsStore((state) => state.completePermissionsSetup);
+  const grantPermissions = useControlStore((state) => state.grantPermissions);
 
   const [completed, setCompleted] = useState<Record<string, boolean>>({
     usage: false,
@@ -75,7 +77,6 @@ export function PermissionsSetupScreen() {
   );
 
   const openSettings = async (action: string, key: string) => {
-    setCompleted((prev) => ({ ...prev, [key]: true }));
     if (Platform.OS === 'android') {
       try {
         await IntentLauncher.startActivityAsync(action);
@@ -90,6 +91,7 @@ export function PermissionsSetupScreen() {
   const handleFinish = () => {
     if (!allCompleted) return;
     completePermissionsSetup();
+    grantPermissions();
     navigation.replace('MainTabs');
   };
 

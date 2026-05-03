@@ -9,8 +9,10 @@
     },
     "preview": {
       "android": {
-        "buildType": "apk"
-      }
+        "buildType": "apk",
+        "image": "latest"
+      },
+      "node": "22.0.0"
     },
     "production": {}
   },
