@@ -11,7 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useFocusStore } from '../stores/useFocusStore';
@@ -64,6 +64,8 @@ function firstName(value: string) {
 }
 
 export function HomeScreen() {
+  const [usageTimeframe, setUsageTimeframe] = React.useState<'today' | 'week' | 'month' | 'year'>('today');
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const { mode, text } = useAppTheme();
   const navigation = useNavigation<any>();
   const tabBarHeight = useBottomTabBarHeight();
@@ -82,7 +84,7 @@ export function HomeScreen() {
     () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
     [mode]
   );
-  const styles = useMemo(() => createStyles(palette), [palette]);
+  const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
 
   const dashboard = useMemo(
     () =>
@@ -127,27 +129,108 @@ export function HomeScreen() {
     : featuredFocusTask
       ? 'Ready to begin'
       : 'Start with your next block';
-  const usageDetails = [
-    { key: 'focus', label: 'Focus', value: dashboard.summary.focusMinutes, color: mode === 'dark' ? '#38bdf8' : '#0ea5e9' },
-    { key: 'study', label: 'Study', value: dashboard.summary.studyMinutes, color: mode === 'dark' ? '#fbbf24' : '#f59e0b' },
-    { key: 'social', label: 'Social apps', value: dashboard.summary.socialMinutes, color: mode === 'dark' ? '#10b981' : '#059669' },
-  ];
+  const usageDetails = React.useMemo(() => {
+    const now = new Date();
+    const timeframeStart = new Date(now);
+    
+    if (usageTimeframe === 'week') timeframeStart.setDate(now.getDate() - 7);
+    else if (usageTimeframe === 'month') timeframeStart.setMonth(now.getMonth() - 1);
+    else if (usageTimeframe === 'year') timeframeStart.setFullYear(now.getFullYear() - 1);
+    else timeframeStart.setHours(0, 0, 0, 0);
+
+    const filteredEntries = usageEntries.filter(entry => new Date(entry.date) >= timeframeStart);
+    const socialMins = filteredEntries.reduce((total, e) => total + e.minutesUsed, 0);
+    
+    // For focus and study, we'd ideally filter those stores too, 
+    // but for now let's use the current day's summary as a base or scale it realistically
+    const focusMins = focusSessions
+      .filter(s => s.endedAt && new Date(s.endedAt) >= timeframeStart)
+      .reduce((total, s) => total + s.completedMinutes, 0);
+    
+    const studyMins = studySessions
+      .filter(s => s.endedAt && new Date(s.endedAt) >= timeframeStart)
+      .reduce((total, s) => total + s.durationMinutes, 0);
+
+    return [
+      { key: 'focus', label: 'Focus', icon: 'bulb', value: focusMins, color: '#3b82f6' },
+      { key: 'study', label: 'Study', icon: 'book', value: studyMins, color: '#f59e0b' },
+      { key: 'social', label: 'Social apps', icon: 'people', value: socialMins, color: '#84cc16' },
+      { key: 'other', label: 'Other apps', icon: 'grid', value: 0, color: '#8b5cf6' },
+    ];
+  }, [usageTimeframe, usageEntries, focusSessions, studySessions, mode]);
+
   const usageChartTotal = usageDetails.reduce((total, item) => total + item.value, 0);
-  const usageDisplayTotal = Math.max(usageChartTotal, 1);
-  const usageChartCircumference = 2 * Math.PI * 48;
-  let usageChartOffset = 0;
-  const usageChartSegments = usageDetails.map((item) => {
-    const percent = item.value / usageDisplayTotal;
-    const segment = {
-      ...item,
-      percent,
-      dashOffset: -usageChartOffset,
-      dashArray: `${percent * usageChartCircumference} ${usageChartCircumference}`,
+  
+  const usageDeltaInfo = useMemo(() => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayEnd = new Date(today);
+
+    const getMins = (start: Date, end: Date) => {
+      const u = usageEntries.filter(e => {
+        const d = new Date(e.date);
+        return d >= start && d < end;
+      }).reduce((t, e) => t + e.minutesUsed, 0);
+      
+      const f = focusSessions.filter(s => {
+        const d = s.endedAt ? new Date(s.endedAt) : null;
+        return d && d >= start && d < end;
+      }).reduce((t, s) => t + s.completedMinutes, 0);
+
+      const st = studySessions.filter(s => {
+        const d = s.endedAt ? new Date(s.endedAt) : null;
+        return d && d >= start && d < end;
+      }).reduce((t, s) => t + s.durationMinutes, 0);
+
+      return u + f + st;
     };
 
-    usageChartOffset += percent * usageChartCircumference;
-    return segment;
-  });
+    const todayVal = getMins(today, new Date());
+    const yesterdayVal = getMins(yesterday, yesterdayEnd);
+    
+    if (yesterdayVal === 0) return { percent: todayVal > 0 ? 100 : 0, isUp: todayVal > 0 };
+    
+    const diff = todayVal - yesterdayVal;
+    const percent = Math.abs((diff / yesterdayVal) * 100);
+    return { percent: Math.round(percent), isUp: diff >= 0 };
+  }, [usageEntries, focusSessions, studySessions]);
+
+  const chartRadius = 60;
+  const usageChartCircumference = 2 * Math.PI * chartRadius;
+  
+  const usageChartSegments = useMemo(() => {
+    const MIN_VISUAL_PERCENT = 0.05; // 5% minimum visual slice
+    const zeroCount = usageDetails.filter(d => d.value === 0).length;
+    const totalMinVisual = zeroCount * MIN_VISUAL_PERCENT;
+    
+    // Calculate visual percents
+    const segments = usageDetails.map((item) => {
+      let visualPercent = 0;
+      if (usageChartTotal === 0) {
+        visualPercent = 1 / usageDetails.length;
+      } else {
+        if (item.value === 0) {
+          visualPercent = MIN_VISUAL_PERCENT;
+        } else {
+          // Scale down the items with data to make room for the 5% minimums
+          visualPercent = (item.value / usageChartTotal) * (1 - totalMinVisual);
+        }
+      }
+      return { ...item, visualPercent, actualPercent: usageChartTotal > 0 ? item.value / usageChartTotal : 0 };
+    });
+
+    let currentOffset = 0;
+    return segments.map(seg => {
+      const s = {
+        ...seg,
+        dashOffset: -currentOffset,
+      };
+      currentOffset += (seg.visualPercent * usageChartCircumference);
+      return s;
+    });
+  }, [usageDetails, usageChartCircumference]);
   const supportDate = dashboard.selectedDateLabel === 'Today'
     ? formatShortDate(selectedDate)
     : dashboard.selectedDateLabel;
@@ -169,10 +252,10 @@ export function HomeScreen() {
   }
 
   const localQuickActions = [
-    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', image: require('../../assets/breathe.png'), target: 'Breathe', color: '#38bdf8' },
-    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', image: require('../../assets/powerNap.png'), target: 'Alarm', color: '#fbbf24' },
-    { key: 'bodycare', label: 'Wellness', sub: 'Health & Hydration', image: require('../../assets/wellness.png'), target: 'BodyCare', color: '#10b981' },
-    { key: 'plan', label: 'Planner', sub: 'Daily tasks', image: require('../../assets/planner.png'), target: 'DailyPlanner', color: '#a855f7' },
+    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', image: require('../../assets/breathe.png'), target: 'Breathe', color: '#4f46e5', progressLabel: 'Session progress', progressText: '60%', progressPercent: 60, btnIcon: 'play', btnLabel: 'Start Session' },
+    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', image: require('../../assets/powerNap.png'), target: 'Alarm', color: '#f59e0b', progressLabel: 'Suggested time', progressText: '20 min', progressPercent: 50, btnIcon: 'timer-outline', btnLabel: 'Set Timer', isSlider: true },
+    { key: 'bodycare', label: 'Wellness', sub: 'Health & Hydration', image: require('../../assets/wellness.png'), target: 'BodyCare', color: '#22c55e', progressLabel: 'Daily goal', progressText: '75%', progressPercent: 75, btnIcon: 'water-outline', btnLabel: 'Log Water' },
+    { key: 'plan', label: 'Planner', sub: 'Daily tasks', image: require('../../assets/planner.png'), target: 'DailyPlanner', color: '#a855f7', progressLabel: 'Tasks completed', progressText: '6 / 8', progressPercent: 75, btnIcon: 'list', btnLabel: 'View Tasks' },
   ] as const;
 
   return (
@@ -327,102 +410,217 @@ export function HomeScreen() {
                   </View>
                 </View>
 
-                <View style={styles.qaBarRow}>
-                  {[0.25, 0.55, 0.35, 0.7, 0.45, 0.85, 0.6].map((h, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.qaBarItem,
-                        {
-                          height: `${h * 100}%` as any,
-                          backgroundColor: i === 6 ? action.color : `${action.color}55`,
-                        },
-                      ]}
-                    />
-                  ))}
-                </View>
+                <View style={styles.qaActionArea}>
+                  <View style={styles.qaProgressHeader}>
+                    <Text style={styles.qaProgressLabel}>{action.progressLabel}</Text>
+                    <Text style={[styles.qaProgressText, { color: action.color }]}>{action.progressText}</Text>
+                  </View>
 
-                <View style={[styles.qaBottomBar, { backgroundColor: action.color }]} />
+                  <View style={styles.qaProgressTrack}>
+                    <View style={[styles.qaProgressFill, { backgroundColor: action.color, width: `${action.progressPercent}%` as any }]} />
+                    {(action as any).isSlider && (
+                      <View style={[styles.qaSliderThumb, { left: `${action.progressPercent}%` as any }]} />
+                    )}
+                  </View>
+
+                  {(action as any).isSlider && (
+                    <View style={styles.qaSliderLabels}>
+                      <Text style={styles.qaSliderLabelText}>10 min</Text>
+                      <Text style={styles.qaSliderLabelText}>20 min</Text>
+                      <Text style={styles.qaSliderLabelText}>30 min</Text>
+                    </View>
+                  )}
+
+                  <Pressable style={[styles.qaActionBtn, { backgroundColor: `${action.color}15` }]}>
+                    <Ionicons name={action.btnIcon as any} size={16} color={action.color} />
+                    <Text style={[styles.qaActionBtnText, { color: action.color }]}>{action.btnLabel}</Text>
+                  </Pressable>
+                </View>
               </Pressable>
             ))}
           </View>
 
-          {/* ── In-App Usage Details ── */}
-          <View style={[styles.sectionHeader, { marginTop: spacing.xl }]}>
-            <Text style={styles.sectionTitle}>In-App Usage Details</Text>
+          <View style={[styles.usageSectionTop, { marginTop: spacing.sm }]}>
+            <Text style={styles.usageTopLabel}>In-App Usage</Text>
+            <View style={styles.usageHeaderRow}>
+               <View>
+                 <Text style={styles.usageTotalHero}>
+                   {usageChartTotal < 60 ? usageChartTotal : Math.floor(usageChartTotal / 60)}
+                   <Text style={styles.usageTotalSuffix}>{usageChartTotal < 60 ? 'm' : 'h'}</Text>
+                 </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -4 }}>
+                     <Ionicons 
+                       name={usageDeltaInfo.isUp ? "trending-up" : "trending-down"} 
+                       size={16} 
+                       color={usageDeltaInfo.isUp ? "#10b981" : "#ef4444"} 
+                     />
+                     <Text style={[styles.usageDelta, { color: usageDeltaInfo.isUp ? "#10b981" : "#ef4444" }]}>
+                       {usageDeltaInfo.percent}% vs yesterday
+                     </Text>
+                  </View>
+               </View>
+
+               <View>
+                 <Pressable 
+                   onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                   style={styles.usageChartBtn}
+                 >
+                   <Ionicons name="stats-chart" size={24} color={palette.text} />
+                 </Pressable>
+                 
+                 {isDropdownOpen && (
+                   <View style={styles.usageDropdownWrap}>
+                     {['today', 'week', 'month', 'year'].map((t) => (
+                       <Pressable
+                         key={t}
+                         onPress={() => {
+                           setUsageTimeframe(t as any);
+                           setIsDropdownOpen(false);
+                         }}
+                         style={[
+                           styles.usageDropdownItem,
+                           usageTimeframe === t && styles.usageDropdownItemActive
+                         ]}
+                       >
+                         <Text style={[
+                           styles.usageDropdownText,
+                           usageTimeframe === t && styles.usageDropdownTextActive
+                         ]}>
+                           {t.charAt(0).toUpperCase() + t.slice(1)}
+                         </Text>
+                       </Pressable>
+                     ))}
+                   </View>
+                 )}
+               </View>
+            </View>
           </View>
 
           <View style={styles.usageDetailsCard}>
-            <View style={styles.usageHeaderRow}>
-              <Text style={styles.usageTitle}>Today</Text>
-              <Ionicons name="help-circle-outline" size={22} color={palette.textSoft} />
-            </View>
-
-            <View style={styles.usageDetailsBody}>
-              <View style={styles.usageLegend}>
-                {usageDetails.map((item) => (
-                  <View key={item.key} style={styles.usageLegendRow}>
-                    <View style={[styles.usageLegendDot, { backgroundColor: item.color }]} />
-                    <Text style={styles.usageLegendText}>
-                      {`${item.label} · ${formatMinutes(item.value)}`}
-                    </Text>
+            <View style={styles.usageList}>
+              {usageDetails.map((item, index) => {
+                const itemPercent = usageChartTotal > 0 ? item.value / usageChartTotal : 0;
+                return (
+                  <View 
+                    key={item.key} 
+                    style={[
+                      styles.usageListItem,
+                      index === usageDetails.length - 1 && styles.usageListItemNoBorder
+                    ]}
+                  >
+                    <View style={styles.usageListLeft}>
+                      <View style={styles.usageIconWrap}>
+                        <Svg width={46} height={46} viewBox="0 0 46 46" style={{ position: 'absolute' }}>
+                          <Circle 
+                            cx="23" cy="23" r="21" 
+                            stroke={mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'} 
+                            strokeWidth={3} 
+                            fill="none" 
+                          />
+                          {itemPercent > 0 && (
+                            <Circle 
+                              cx="23" cy="23" r="21" 
+                              stroke={item.color} 
+                              strokeWidth={3} 
+                              fill="none" 
+                              strokeDasharray={`${2 * Math.PI * 21}`}
+                              strokeDashoffset={`${2 * Math.PI * 21 * (1 - itemPercent)}`}
+                              strokeLinecap="round"
+                              transform="rotate(-90 23 23)"
+                            />
+                          )}
+                        </Svg>
+                        <View style={[styles.usageIconInner, { backgroundColor: `${item.color}${mode === 'dark' ? '20' : '15'}` }]}>
+                          <Ionicons name={item.icon as any} size={18} color={item.color} />
+                        </View>
+                      </View>
+                      <View>
+                        <Text style={styles.usageListName}>{item.label}</Text>
+                        <Text style={styles.usageListTime}>{item.value}m</Text>
+                      </View>
+                    </View>
                   </View>
-                ))}
-              </View>
+                );
+              })}
+            </View>
 
-              <View style={styles.usageChartWrap}>
-                <Svg width={190} height={190} viewBox="0 0 124 124">
-                  {/* Background Track */}
-                  <Circle
-                    cx={62}
-                    cy={62}
-                    r={48}
-                    stroke={mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'}
-                    strokeWidth={14}
-                    fill="none"
-                  />
-                  {usageChartTotal > 0 ? usageChartSegments.map((segment) => (
-                    <Circle
-                      key={segment.key}
-                      cx={62}
-                      cy={62}
-                      r={48}
-                      stroke={segment.color}
-                      strokeWidth={14}
-                      strokeDasharray={segment.dashArray}
-                      strokeDashoffset={segment.dashOffset}
-                      fill="none"
-                      strokeLinecap="round"
-                      transform="rotate(-90 62 62)"
-                    />
-                  )) : (
-                    /* Default state ring when 0m total */
-                    <Circle
-                      cx={62}
-                      cy={62}
-                      r={48}
-                      stroke={mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}
-                      strokeWidth={14}
-                      fill="none"
-                      strokeDasharray="1 6" // Dashed look for empty state
-                    />
-                  )}
+            <View style={styles.usageListDivider} />
+
+              <View style={styles.usageChartContainer}>
+                <Svg width={200} height={200} viewBox="0 0 200 200">
+                  {usageChartSegments.map((segment, idx) => {
+                    const strokeW = 24;
+                    const gap = 6;
+                    
+                    const segmentLen = (segment.visualPercent * usageChartCircumference);
+                    const dashLen = Math.max(0.1, segmentLen - strokeW - gap);
+                    const dashOffset = segment.dashOffset - (strokeW / 2) - (gap / 2);
+
+                    const startAngle = ((-segment.dashOffset) / usageChartCircumference) * 360 - 90;
+                    const sweepAngle = segment.visualPercent * 360;
+                    const midAngle = startAngle + (sweepAngle / 2);
+                    const rad = midAngle * (Math.PI / 180);
+
+                    const lineInner = chartRadius + 10;
+                    const lineOuter = chartRadius + 18;
+                    const isRight = Math.cos(rad) > 0;
+                    
+                    const x1 = 100 + lineInner * Math.cos(rad);
+                    const y1 = 100 + lineInner * Math.sin(rad);
+                    const x2 = 100 + lineOuter * Math.cos(rad);
+                    const y2 = 100 + lineOuter * Math.sin(rad);
+
+                    // Label offset
+                    const labelDist = lineOuter + 22;
+                    const labelX = 100 + labelDist * Math.cos(rad);
+                    const labelY = 100 + labelDist * Math.sin(rad);
+
+                    return (
+                      <React.Fragment key={`seg-${segment.key}`}>
+                        <Circle
+                          cx={100} cy={100} r={chartRadius}
+                          stroke={segment.color} strokeWidth={strokeW}
+                          strokeDasharray={`${dashLen} ${usageChartCircumference}`}
+                          strokeDashoffset={dashOffset}
+                          fill="none" strokeLinecap="round"
+                          opacity={segment.actualPercent > 0 ? 1 : (mode === 'dark' ? 0.25 : 0.2)}
+                          transform="rotate(-90 100 100)"
+                        />
+                        <Path
+                          d={`M ${x1} ${y1} L ${x2} ${y2}`}
+                          stroke={segment.color} strokeWidth={1}
+                          opacity={segment.actualPercent > 0 ? 0.7 : 0.3}
+                          fill="none"
+                        />
+                        <Text
+                          style={[
+                            styles.usagePercentLabel,
+                            { 
+                              color: segment.color, 
+                              opacity: segment.actualPercent > 0 ? 1 : 0.6,
+                              left: labelX - 30,
+                              top: labelY - 10,
+                              width: 60,
+                              textAlign: 'center',
+                            }
+                          ]}
+                        >
+                          {(segment.actualPercent * 100).toFixed(1)}%
+                        </Text>
+                      </React.Fragment>
+                    );
+                  })}
                 </Svg>
-                <Text style={styles.usageCenterValue}>
-                  {formatMinutes(usageChartTotal)}
-                </Text>
-                <Text style={styles.usageCenterLabel}>total</Text>
+
+                <View style={styles.usageCenterContainer}>
+                  <Text style={styles.usageCenterValue}>
+                    {usageChartTotal < 60 ? usageChartTotal : Math.floor(usageChartTotal / 60)}
+                    <Text style={styles.usageCenterValueSuffix}>{usageChartTotal < 60 ? 'm' : 'h'}</Text>
+                  </Text>
+                  <Text style={styles.usageCenterLabel}>Total</Text>
+                </View>
               </View>
             </View>
-
-            <View style={styles.usagePercentRow}>
-              {usageChartSegments.slice(0, 3).map((segment) => (
-                <Text key={segment.key} style={styles.usagePercentText}>
-                  {`${Math.round(segment.percent * 100)}%`}
-                </Text>
-              ))}
-            </View>
-          </View>
 
 
 

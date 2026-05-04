@@ -10,10 +10,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
-import { AppBrandIcon } from '../components/AppBrandIcon';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useControlStore } from '../stores/useControlStore';
 import { useFocusStore } from '../stores/useFocusStore';
@@ -27,7 +25,6 @@ import {
   darkPalette,
   lightPalette,
   ScreenPalette,
-  chartPalettes,
 } from '../styles/InsightsScreen.styles';
 import { AppControlTarget } from '../types/models';
 import { buildControlInsightsOverview } from '../utils/controlInsightsOverview';
@@ -98,7 +95,7 @@ export function InsightsScreen() {
       mode === 'dark'
         ? ({ ...darkPalette } as ScreenPalette)
         : ({ ...lightPalette } as ScreenPalette),
-    [mode]
+    [mode, darkPalette, lightPalette]
   );
   const styles = useMemo(() => createStyles(palette), [palette]);
   const controls = useControlStore((state) => state.controls);
@@ -445,7 +442,7 @@ export function InsightsScreen() {
           ))}
         </View>
 
-        <View style={[styles.detailCard, { marginTop: 24, backgroundColor: 'transparent', padding: 0 }]}>
+        <View style={{ marginTop: 24, backgroundColor: 'transparent', padding: 0 }}>
            <Text style={styles.summaryLabel}>Top App</Text>
            <Text style={[styles.summaryValue, { marginTop: 4 }]}>{controlOverview.facts.topApp.value || 'None'}</Text>
            <Text style={styles.summarySub}>No app usage recorded</Text>

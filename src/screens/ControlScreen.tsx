@@ -28,7 +28,6 @@ import { spacing } from "../theme/tokens";
 import {
   createControlStyles as createStyles,
   darkPalette,
-  fontFamily,
   lightPalette,
   ScreenPalette,
 } from "../styles/ControlScreen.styles";

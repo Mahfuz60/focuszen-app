@@ -273,12 +273,7 @@ export function PurifyScreen() {
             <Text style={styles.dayLabel}>{status.currentStreakLabel}</Text>
             <Text style={styles.timerLabel}>{ringTimerLabel}</Text>
             <View style={styles.walkIconCircle}>
-              <Pressable >
-
-                  <Ionicons name="walk" size={32} color={palette.iconColor} />
-              </Pressable>
-
-            
+              <Ionicons name="walk" size={32} color={palette.iconColor} />
             </View>
           </View>
              <Pressable

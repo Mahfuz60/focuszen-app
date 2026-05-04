@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Text, TextInput, Vibration } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -20,12 +20,12 @@ import { ensureAppMeta } from '../storage/storage';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useAlarmStore } from '../stores/useAlarmStore';
 import { useControlStore } from '../stores/useControlStore';
+import { useFocusStore } from '../stores/useFocusStore';
 import { NativeModules } from 'react-native';
 
 const { FocusZenSettings } = NativeModules;
 
-// Uncomment after running 'npx expo install expo-av'
-// import { Audio } from 'expo-av';
+
 
 const defaultTextStyle = { fontFamily: 'Roboto_400Regular' as const };
 const GlobalText = Text as any;
@@ -48,6 +48,8 @@ export function AppRoot() {
   const setAlarmFiring = useAlarmStore((s) => s.setAlarmFiring);
   const sessions = useAlarmStore((s) => s.sessions);
   const syncAllSettings = useControlStore((s) => s.syncAllSettings);
+  const deepWorkEnabled = useFocusStore((s) => s.deepWorkEnabled);
+  const activeFocusSession = useFocusStore((s) => s.activeSession);
 
   const activeSession = sessions.find(s => s.id === activeSessionId && !s.completedAt);
 
@@ -67,9 +69,13 @@ export function AppRoot() {
     ensureAppMeta();
     syncAllSettings();
     if (FocusZenSettings) {
-      FocusZenSettings.startService();
+      // Sync focus session state on startup
+      FocusZenSettings.setFocusSession(
+        activeFocusSession ? !activeFocusSession.paused : false, 
+        deepWorkEnabled
+      );
     }
-  }, [syncAllSettings]);
+  }, [syncAllSettings, activeFocusSession, deepWorkEnabled]);
 
   // Global Alarm Monitor
   useEffect(() => {

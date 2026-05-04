@@ -77,7 +77,7 @@ export function FocusScreen() {
           },
     [mode]
   );
-  const styles = useMemo(() => createStyles(palette), [palette]);
+  const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
 
   useEffect(() => {
     if (!isFocused || !activeSession || activeSession.paused) {
@@ -238,60 +238,49 @@ export function FocusScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}
         >
-          <View style={styles.topBar}>
-            <Pressable onPress={handleBack} style={styles.topIconButton}>
-              <Ionicons name="arrow-back" size={18} color={palette.text} />
-            </Pressable>
+          <View style={styles.focusHeaderContainer}>
+            <Text style={styles.subtitle}>Block distractions. Dive deep.</Text>
 
-            <Text style={styles.topTitle}>Focus</Text>
-
-            <Pressable
-              onPress={() => navigation.navigate('QuickStart')}
-              style={styles.topIconButton}
-            >
-              <Ionicons name="settings-outline" size={18} color={palette.text} />
-            </Pressable>
-          </View>
-
-          <Pressable
-            onPress={() => setShowModeMenu((current) => !current)}
-            style={styles.modeChip}
-          >
-            <Text style={styles.modeChipText}>{deepWorkEnabled ? 'Deep focus' : 'Focus'}</Text>
-            <Ionicons
-              name={showModeMenu ? 'chevron-up' : 'chevron-down'}
-              size={16}
-              color={palette.textMuted}
-            />
-          </Pressable>
-
-          {showModeMenu ? (
-            <View style={styles.modeMenu}>
+            <View style={{ zIndex: 100 }}>
               <Pressable
-                onPress={() => handleModeSelect(true)}
-                style={[
-                  styles.modeOption,
-                  deepWorkEnabled ? styles.modeOptionActive : null,
-                ]}
+                onPress={() => setShowModeMenu((current) => !current)}
+                style={styles.modeChip}
               >
-                <Text style={styles.modeOptionTitle}>Deep focus</Text>
-                <Text style={styles.modeOptionMeta}>Block harder. Stay locked in.</Text>
+                <Text style={styles.modeChipText}>{deepWorkEnabled ? 'Deep focus' : 'Focus'}</Text>
+                <Ionicons
+                  name={showModeMenu ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={palette.text}
+                />
               </Pressable>
 
-              <Pressable
-                onPress={() => handleModeSelect(false)}
-                style={[
-                  styles.modeOption,
-                  !deepWorkEnabled ? styles.modeOptionActive : null,
-                ]}
-              >
-                <Text style={styles.modeOptionTitle}>Focus mode</Text>
-                <Text style={styles.modeOptionMeta}>Lighter session. Same clean timer.</Text>
-              </Pressable>
+              {showModeMenu && (
+                <View style={styles.modeMenu}>
+                  <Pressable
+                    onPress={() => handleModeSelect(true)}
+                    style={[
+                      styles.modeOption,
+                      deepWorkEnabled ? styles.modeOptionActive : null,
+                    ]}
+                  >
+                    <Text style={styles.modeOptionTitle}>Deep focus</Text>
+                    <Text style={styles.modeOptionMeta}>Block harder. Stay locked in.</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => handleModeSelect(false)}
+                    style={[
+                      styles.modeOption,
+                      !deepWorkEnabled ? styles.modeOptionActive : null,
+                    ]}
+                  >
+                    <Text style={styles.modeOptionTitle}>Focus mode</Text>
+                    <Text style={styles.modeOptionMeta}>Lighter session. Same clean timer.</Text>
+                  </Pressable>
+                </View>
+              )}
             </View>
-          ) : null}
-
-          <Text style={styles.subtitle}>Block distractions. Dive deep.</Text>
+          </View>
 
           <View style={styles.ringSection}>
             <Svg

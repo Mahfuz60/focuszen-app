@@ -76,10 +76,14 @@ export function PermissionsSetupScreen() {
     [mode]
   );
 
-  const openSettings = async (action: string, key: string) => {
+  const openSettings = async (action: string, key: string, dataUri?: string) => {
     if (Platform.OS === 'android') {
       try {
-        await IntentLauncher.startActivityAsync(action);
+        if (dataUri) {
+          await IntentLauncher.startActivityAsync(action, { data: dataUri });
+        } else {
+          await IntentLauncher.startActivityAsync(action);
+        }
       } catch (e) {
         console.warn('Could not open settings', e);
       }
@@ -122,7 +126,8 @@ export function PermissionsSetupScreen() {
       title: 'Ignore Battery Restrictions',
       description: 'Keep the app running in the background for accurate tracking.',
       icon: 'battery-charging',
-      action: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+      action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+      dataUri: 'package:com.focuszen.app',
     },
   ];
 
@@ -158,7 +163,7 @@ export function PermissionsSetupScreen() {
                       shadowColor: palette.shadow,
                     },
                   ]}
-                  onPress={() => openSettings(p.action, p.id)}
+                  onPress={() => openSettings(p.action, p.id, (p as any).dataUri)}
                 >
                   <View style={[styles.iconBox, { backgroundColor: isCompleted ? palette.green : palette.iconBg }]}>
                     <Ionicons 

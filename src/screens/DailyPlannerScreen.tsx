@@ -459,7 +459,7 @@ export function DailyPlannerScreen() {
                 return (
                   <LinearGradient
                     key={task.id}
-                    colors={categoryGlows[task.category] || categoryGlows.Work}
+                    colors={(categoryGlows as any)[task.category] || categoryGlows.Work}
                     style={styles.taskCard}
                   >
                     <View style={styles.taskTop}>

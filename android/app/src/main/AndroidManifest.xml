@@ -46,6 +46,9 @@
         android:name=".FocusForegroundService"
         android:enabled="true"
         android:exported="false"
-        android:foregroundServiceType="specialUse" />
+        android:foregroundServiceType="specialUse">
+        <property android:name="android.app.PROPERTY_SPECIAL_USE_FQS_DESCRIPTION"
+                  android:value="FocusZen uses this to maintain real-time distraction blocking and usage tracking."/>
+    </service>
   </application>
 </manifest>

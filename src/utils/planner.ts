@@ -79,20 +79,37 @@ export function normalizePlannerNumberInput(value: string) {
   return value.replace(/[^0-9]/g, '');
 }
 
-export function createPlannerDraft(selectedDate: string) {
-  const baseDate = new Date(selectedDate);
-  const roundedMinutes = baseDate.getMinutes() <= 30 ? 30 : 0;
+export function parseTimeInput(timeStr: string): [number, number] {
+  const match = timeStr.trim().match(/^(0?[0-9]|1[0-9]|2[0-3]):([0-5][0-9])(?:\s*([AaPp][Mm]))?$/);
+  if (!match) throw new Error('Time must use HH:MM or HH:MM AM/PM');
+  
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const ampm = match[3]?.toUpperCase();
 
-  if (roundedMinutes === 0) {
-    baseDate.setHours(baseDate.getHours() + 1, 0, 0, 0);
-  } else {
-    baseDate.setMinutes(30, 0, 0);
+  if (ampm) {
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
   }
+  return [hours, minutes];
+}
+
+export function formatAmPm(date: Date) {
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  return `${padTime(hours)}:${padTime(minutes)} ${ampm}`;
+}
+
+export function createPlannerDraft(selectedDate: string) {
+  const now = new Date();
 
   return {
     title: '',
     category: 'Study' as const,
-    startTime: `${padTime(baseDate.getHours())}:${padTime(baseDate.getMinutes())}`,
+    startTime: formatAmPm(now),
     durationMinutes: '45',
     focusPresetMinutes: '45',
   };
@@ -130,16 +147,13 @@ export function buildPlannerTaskFromDraft(
     throw new Error('Task name is required');
   }
 
-  if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(draft.startTime)) {
-    throw new Error('Start time must use HH:MM');
-  }
+  const [hours, minutes] = parseTimeInput(draft.startTime);
 
   const durationMinutes = readPositiveMinutes(draft.durationMinutes, 'Duration');
   const focusPresetMinutes = draft.focusPresetMinutes.trim()
     ? readPositiveMinutes(draft.focusPresetMinutes, 'Focus time')
     : durationMinutes;
 
-  const [hours, minutes] = draft.startTime.split(':').map((value) => Number.parseInt(value, 10));
   const scheduledDate = new Date(selectedDate);
   scheduledDate.setUTCHours(hours, minutes, 0, 0);
 

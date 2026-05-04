@@ -1,6 +1,6 @@
 import { spacing } from '../theme/tokens';
 import { StyleSheet } from 'react-native';
-export type QuickActionTarget = 'DailyPlanner' | 'Control' | 'Insights';
+
 
 export const darkPalette = {
   backgroundTop: '#0d0b1a',
@@ -40,7 +40,7 @@ export const lightPalette = {
   stroke: 'rgba(0, 0, 0, 0.05)',
   text: '#0f172a',
   textMuted: '#475569',
-  textSoft: '#94a3b8',
+  textSoft: '#0d0d0eff',
   green: '#00c853',
   greenSoft: 'rgba(0, 200, 83, 0.15)',
   purple: '#aa00ff',
@@ -56,7 +56,7 @@ export const lightPalette = {
 
 export type ScreenPalette = typeof darkPalette;
 
-export function createHomeStyles(palette: ScreenPalette) {
+export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light') {
   return StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -104,7 +104,7 @@ export function createHomeStyles(palette: ScreenPalette) {
       borderColor: palette.backgroundTop,
     },
     heroRow: {
-      marginTop: spacing.xl,
+      marginTop: spacing.lg,
       flexDirection: 'row',
       gap: spacing.md,
     },
@@ -282,11 +282,11 @@ export function createHomeStyles(palette: ScreenPalette) {
       color: palette.textSoft,
     },
     sectionHeader: {
-      marginTop: spacing.xl,
+      marginTop: spacing.lg,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: spacing.sm,
+      marginBottom: spacing.xs,
     },
     sectionTitle: {
       fontSize: 20,
@@ -298,37 +298,6 @@ export function createHomeStyles(palette: ScreenPalette) {
       fontSize: 14,
       fontWeight: '600',
       color: palette.green,
-    },
-    quickActionsRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
-    },
-    quickActionItem: {
-      flex: 1,
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    quickActionIconWrap: {
-      width: 64,
-      height: 64,
-      borderRadius: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: palette.surfaceSoft,
-      borderWidth: 1,
-      borderColor: palette.stroke,
-      shadowColor: palette.shadow,
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 6 },
-    },
-    quickActionLabel: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: palette.textMuted,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
     },
     upNextCard: {
       marginTop: spacing.sm,
@@ -393,8 +362,8 @@ export function createHomeStyles(palette: ScreenPalette) {
       overflow: 'hidden',
     },
     qaInner: {
-      padding: 14,
-      paddingBottom: 10,
+      padding: 12,
+      paddingBottom: 6,
     },
     qaTopRow: {
       flexDirection: 'row',
@@ -402,191 +371,283 @@ export function createHomeStyles(palette: ScreenPalette) {
       justifyContent: 'space-between',
     },
     qaIconWrap: {
-      width: 50,
-      height: 50,
+      width: 46,
+      height: 46,
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
     },
     qaArrowBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
       backgroundColor: 'rgba(255,255,255,0.08)',
       alignItems: 'center',
       justifyContent: 'center',
     },
     qaLabelWrap: {
-      marginTop: 12,
-      gap: 3,
+      marginTop: 10,
+      gap: 2,
     },
     qaLabel: {
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: '800',
       letterSpacing: -0.3,
       color: palette.text,
     },
     qaSub: {
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '600',
-      lineHeight: 20,
+      lineHeight: 18,
       color: palette.textMuted,
     },
-    qaBarRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      gap: 4,
+    qaActionArea: {
       paddingHorizontal: 14,
-      paddingBottom: 12,
-      height: 36,
-    },
-    qaBarItem: {
-      flex: 1,
-      borderRadius: 3,
-      minHeight: 4,
-    },
-    qaBottomBar: {
-      height: 4,
-      width: '100%',
-    },
-
-    /* ── Daily Performance ── */
-    perfGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      paddingBottom: 14,
       gap: 10,
-      marginTop: spacing.sm,
     },
-    perfCard: {
-      width: '48.6%',
-      borderRadius: 24,
-      overflow: 'hidden',
-      minHeight: 120,
-    },
-    perfInner: {
-      padding: 16,
-      paddingBottom: 25,
-    },
-    perfTopRow: {
+    qaProgressHeader: {
       flexDirection: 'row',
+      justifyContent: 'space-between',
       alignItems: 'center',
-      gap: 12,
-      marginBottom: 14,
+      marginTop: 0,
     },
-    perfIconWrap: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
+    qaProgressLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: palette.textMuted,
+    },
+    qaProgressText: {
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    qaProgressTrack: {
+      height: 6,
+      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+      borderRadius: 3,
+      position: 'relative',
+      justifyContent: 'center',
+    },
+    qaProgressFill: {
+      height: 6,
+      borderRadius: 3,
+    },
+    qaSliderThumb: {
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      backgroundColor: '#ffffff',
+      position: 'absolute',
+      marginLeft: -7,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    qaSliderLabels: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: -4,
+    },
+    qaSliderLabelText: {
+      fontSize: 10,
+      color: palette.textSoft,
+      fontWeight: '600',
+    },
+    qaActionBtn: {
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(255,255,255,0.04)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.05)',
+      paddingVertical: 8,
+      borderRadius: 10,
+      gap: 6,
+      marginTop: 0,
     },
-    perfLabel: {
-      fontSize: 15,
+    qaActionBtnText: {
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    usageSectionTop: {
+      marginBottom: 16,
+      position: 'relative',
+    },
+    usageTopLabel: {
+      fontSize: 24,
       fontWeight: '800',
-      letterSpacing: -0.2,
       color: palette.text,
-    },
-    perfValue: {
-      fontSize: 32,
-      fontWeight: '900',
+      marginBottom: 8,
       letterSpacing: -0.5,
-      lineHeight: 36,
-      color: palette.text,
-    },
-    perfSub: {
-      fontSize: 14,
-      fontWeight: '600',
-      marginTop: 4,
-      marginBottom: 12,
-      color: palette.textMuted,
-    },
-    perfBottomBar: {
-      height: 4,
-      width: '100%',
-    },
-    usageDetailsCard: {
-      borderRadius: 22,
-      padding: spacing.md,
-      backgroundColor: palette.surfaceSoft,
-      borderWidth: 1,
-      borderColor: palette.stroke,
-      shadowColor: palette.shadow,
-      shadowOpacity: 0.14,
-      shadowRadius: 18,
-      shadowOffset: { width: 0, height: 8 },
-      elevation: 6,
     },
     usageHeaderRow: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-end',
       justifyContent: 'space-between',
-      marginBottom: spacing.sm,
     },
-    usageTitle: {
-      fontSize: 18,
+    usageTotalHero: {
+      fontSize: 68,
       fontWeight: '800',
       color: palette.text,
-      letterSpacing: -0.3,
+      letterSpacing: -2,
+      lineHeight: 74,
     },
-    usageDetailsBody: {
+    usageTotalSuffix: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: palette.text,
+      marginLeft: -2,
+      marginBottom: 8,
+    },
+    usageDelta: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: '#10b981',
+      marginTop: 2,
+    },
+    usageChartBtn: {
+      width: 54,
+      height: 54,
+      borderRadius: 18,
+      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.9)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 6,
+      borderWidth: 1,
+      borderColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)',
+    },
+    usageDetailsCard: {
+      borderRadius: 24,
+      padding: 20,
+      backgroundColor: mode === 'dark' ? '#121316' : '#ffffff',
+      borderWidth: mode === 'dark' ? 1 : 0,
+      borderColor: mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'transparent',
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.sm,
+      shadowColor: '#000',
+      shadowOpacity: mode === 'dark' ? 0.4 : 0.12,
+      shadowRadius: 40,
+      shadowOffset: { width: 0, height: 15 },
+      elevation: 20,
     },
-    usageLegend: {
+    usageList: {
       flex: 1,
-      gap: 8,
+      paddingRight: 16,
     },
-    usageLegendRow: {
+    usageListItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
     },
-    usageLegendDot: {
-      width: 14,
-      height: 14,
-      borderRadius: 2,
+    usageListItemNoBorder: {
+      borderBottomWidth: 0,
     },
-    usageLegendText: {
-      flex: 1,
-      fontSize: 14,
-      fontWeight: '600',
+    usageListLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    usageIconWrap: {
+      width: 46,
+      height: 46,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    usageIconInner: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+    },
+    usageListName: {
+      fontSize: 15,
+      fontWeight: '700',
       color: palette.text,
     },
-    usageChartWrap: {
-      width: 190,
-      height: 190,
+    usageListTime: {
+      fontSize: 13,
+      fontWeight: '500',
+      color: palette.textSoft,
+      marginTop: 2,
+    },
+    usageListDivider: {
+      width: 1,
+      height: '80%',
+      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+    },
+    usageChartContainer: {
+      flex: 1.2,
+      height: 220,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingLeft: 16,
+    },
+    usageCenterContainer: {
+      position: 'absolute',
       alignItems: 'center',
       justifyContent: 'center',
     },
     usageCenterValue: {
-      position: 'absolute',
-      fontSize: 20,
-      fontWeight: '900',
+      fontSize: 38,
+      fontWeight: '800',
       color: palette.text,
-      letterSpacing: -0.3,
+      letterSpacing: -1,
+    },
+    usageCenterValueSuffix: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: palette.textSoft,
     },
     usageCenterLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: palette.textSoft,
+      marginTop: -2,
+    },
+    usagePercentLabel: {
       position: 'absolute',
-      marginTop: 36,
       fontSize: 12,
       fontWeight: '700',
+    },
+    usageDropdownWrap: {
+      position: 'absolute',
+      top: 54,
+      right: 0,
+      width: 140,
+      backgroundColor: mode === 'dark' ? '#1a1b1e' : '#ffffff',
+      borderRadius: 18,
+      padding: 6,
+      borderWidth: 1,
+      borderColor: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+      zIndex: 100,
+      shadowColor: '#000',
+      shadowOpacity: 0.4,
+      shadowRadius: 15,
+      elevation: 10,
+    },
+    usageDropdownItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+    },
+    usageDropdownItemActive: {
+      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+    },
+    usageDropdownText: {
+      fontSize: 15,
+      fontWeight: '600',
       color: palette.textSoft,
-      textTransform: 'uppercase',
     },
-    usagePercentRow: {
-      marginTop: spacing.sm,
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-    },
-    usagePercentText: {
-      fontSize: 13,
+    usageDropdownTextActive: {
+      color: palette.text,
       fontWeight: '700',
-      color: palette.textMuted,
     },
   });
 }
@@ -616,18 +677,7 @@ export function qaArrowIconColor(mode: 'dark' | 'light') {
   return mode === 'dark' ? '#94a3b8' : '#64748b';
 }
 
-export function perfCardStyle(mode: 'dark' | 'light', color: string) {
-  return {
-    backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
-    borderWidth: 1 as const,
-    borderColor: mode === 'dark' ? `${color}50` : `${color}28`,
-    shadowColor: color,
-    shadowOpacity: mode === 'dark' ? 0.35 : 0.12,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 7,
-  };
-}
+
 
 export function brandZenStyle(mode: 'dark' | 'light', palette: ScreenPalette) {
   return {

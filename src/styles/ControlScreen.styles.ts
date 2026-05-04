@@ -53,15 +53,6 @@ export const lightPalette = {
 
 export type ScreenPalette = typeof darkPalette;
 
-export const fontFamily = {
-  regular: 'Roboto_400Regular',
-  medium: 'Roboto_500Medium',
-  semiBold: 'Roboto_600SemiBold',
-  bold: 'Roboto_700Bold',
-  extraBold: 'Roboto_800ExtraBold',
-  black: 'Roboto_900Black',
-} as const;
-
 export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dark') {
   return StyleSheet.create({
     safeArea: {
@@ -73,9 +64,9 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
       paddingTop: spacing.sm,
     },
     heroSection: {
-      minHeight: 190,
       overflow: 'hidden',
       position: 'relative',
+      paddingBottom: spacing.sm,
     },
     heroArt: {
       position: 'absolute',
@@ -131,20 +122,20 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     topTitle: {
       zIndex: 2,
       fontSize: 22,
-      fontFamily: fontFamily.extraBold,
+      fontWeight: '800',
       color: palette.text,
     },
     helperText: {
       zIndex: 2,
-      marginTop: spacing.xl,
+      marginTop: spacing.sm,
       maxWidth: 228,
       fontSize: 17,
       lineHeight: 29,
-      fontFamily: fontFamily.medium,
+      fontWeight: '500',
       color: palette.textSoft,
     },
     metricsRow: {
-      marginTop: spacing.md,
+      marginTop: 0,
       flexDirection: 'row',
       gap: spacing.sm,
     },
@@ -178,13 +169,13 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     metricValue: {
       fontSize: 26,
       lineHeight: 28,
-      fontFamily: fontFamily.black,
+      fontWeight: '900',
       letterSpacing: 0,
     },
     metricLabel: {
       marginTop: 3,
       fontSize: 10,
-      fontFamily: fontFamily.extraBold,
+      fontWeight: '800',
       color: palette.text,
       letterSpacing: 0,
       textTransform: 'uppercase',
@@ -192,11 +183,11 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     metricCaption: {
       marginTop: 4,
       fontSize: 10,
-      fontFamily: fontFamily.medium,
+      fontWeight: '500',
       color: palette.textSoft,
     },
     searchShell: {
-      marginTop: spacing.md,
+      marginTop: spacing.sm,
       minHeight: 64,
       borderRadius: 24,
       paddingHorizontal: spacing.md,
@@ -210,11 +201,11 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     searchInput: {
       flex: 1,
       fontSize: 17,
-      fontFamily: fontFamily.regular,
+      fontWeight: '400',
       color: palette.text,
     },
     card: {
-      marginTop: spacing.md,
+      marginTop: spacing.sm,
       borderRadius: 24,
       padding: spacing.md,
       backgroundColor: palette.surface,
@@ -228,7 +219,7 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     },
     sectionEyebrow: {
       fontSize: 13,
-      fontFamily: fontFamily.extraBold,
+      fontWeight: '800',
       color: palette.textSoft,
       letterSpacing: 0,
       textTransform: 'uppercase',
@@ -263,14 +254,14 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     },
     appTitle: {
       fontSize: 18,
-      fontFamily: fontFamily.extraBold,
+      fontWeight: '800',
       color: palette.text,
       letterSpacing: 0,
     },
     appSubtitle: {
       marginTop: 3,
       fontSize: 14,
-      fontFamily: fontFamily.semiBold,
+      fontWeight: '600',
     },
     appSubtitleAvailable: {
       color: palette.green,
@@ -314,7 +305,7 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
       flex: 1,
       fontSize: 16,
       lineHeight: 22,
-      fontFamily: fontFamily.semiBold,
+      fontWeight: '600',
       color: palette.text,
       textTransform: 'capitalize',
     },
@@ -346,13 +337,13 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     },
     viewAllText: {
       fontSize: 15,
-      fontFamily: fontFamily.extraBold,
+      fontWeight: '800',
       color: palette.green,
     },
     emptyText: {
       marginTop: spacing.md,
       fontSize: 14,
-      fontFamily: fontFamily.regular,
+      fontWeight: '400',
       color: palette.textMuted,
     },
     modeRow: {
@@ -388,14 +379,14 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     },
     modeTitle: {
       fontSize: 17,
-      fontFamily: fontFamily.extraBold,
+      fontWeight: '800',
       color: palette.text,
       letterSpacing: 0,
     },
     modeSubtitle: {
       marginTop: 2,
       fontSize: 14,
-      fontFamily: fontFamily.medium,
+      fontWeight: '500',
       color: palette.textSoft,
     },
     permissionCard: {
@@ -418,7 +409,7 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     permissionTitle: {
       marginTop: spacing.md,
       fontSize: 22,
-      fontFamily: fontFamily.extraBold,
+      fontWeight: '800',
       color: palette.text,
       letterSpacing: 0,
       textAlign: 'center',
@@ -427,7 +418,7 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
       marginTop: spacing.xs,
       fontSize: 14,
       lineHeight: 20,
-      fontFamily: fontFamily.medium,
+      fontWeight: '500',
       color: palette.textMuted,
       textAlign: 'center',
       paddingHorizontal: spacing.sm,
@@ -449,7 +440,7 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     },
     permissionBadgeText: {
       fontSize: 12,
-      fontFamily: fontFamily.bold,
+      fontWeight: '700',
     },
     permissionBtn: {
       width: '100%',
@@ -465,7 +456,7 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     },
     permissionBtnText: {
       fontSize: 16,
-      fontFamily: fontFamily.extraBold,
+      fontWeight: '800',
       color: '#03100a',
       letterSpacing: 0,
     },
