@@ -20,7 +20,7 @@ import { usePlannerStore } from '../stores/usePlannerStore';
 import { useProfileStore } from '../stores/useProfileStore';
 import { useStudyStore } from '../stores/useStudyStore';
 import { useUsageStore } from '../stores/useUsageStore';
-
+import { GradientBorderCard } from '../components/GradientBorderCard';
 import { spacing } from '../theme/tokens';
 import {
   createHomeStyles as createStyles,
@@ -77,6 +77,7 @@ export function HomeScreen() {
   const studySessions = useStudyStore((state) => state.sessions);
   const usageEntries = useUsageStore((state) => state.entries);
   const suggestions = useGoalsStore((state) => state.suggestions);
+  const dailyLimitMinutes = useUsageStore((state) => state.dailyLimitMinutes);
   const streak = useGoalsStore((state) => state.streak);
   const tasks = usePlannerStore((state) => state.tasks);
   const selectedDate = usePlannerStore((state) => state.selectedDate);
@@ -252,10 +253,12 @@ export function HomeScreen() {
   }
 
   const localQuickActions = [
-    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', image: require('../../assets/breathe.png'), target: 'Breathe', color: '#4f46e5', progressLabel: 'Session progress', progressText: '60%', progressPercent: 60, btnIcon: 'play', btnLabel: 'Start Session' },
-    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', image: require('../../assets/powerNap.png'), target: 'Alarm', color: '#f59e0b', progressLabel: 'Suggested time', progressText: '20 min', progressPercent: 50, btnIcon: 'timer-outline', btnLabel: 'Set Timer', isSlider: true },
-    { key: 'bodycare', label: 'Wellness', sub: 'Health & Hydration', image: require('../../assets/wellness.png'), target: 'BodyCare', color: '#22c55e', progressLabel: 'Daily goal', progressText: '75%', progressPercent: 75, btnIcon: 'water-outline', btnLabel: 'Log Water' },
-    { key: 'plan', label: 'Planner', sub: 'Daily tasks', image: require('../../assets/planner.png'), target: 'DailyPlanner', color: '#a855f7', progressLabel: 'Tasks completed', progressText: '6 / 8', progressPercent: 75, btnIcon: 'list', btnLabel: 'View Tasks' },
+    { key: 'focus', label: 'Deep Work', sub: 'Stay in the zone', image: require('../../assets/focus.png'), target: 'Focus', color: '#10b981' },
+    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', image: require('../../assets/breathe.png'), target: 'Breathe', color: '#4f46e5' },
+    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', image: require('../../assets/powerNap.png'), target: 'Alarm', color: '#f59e0b' },
+    { key: 'hydration', label: 'Hydration', sub: 'Water & Drinks', image: require('../../assets/wellness.png'), target: 'Hydration', color: '#0ea5e9' },
+    { key: 'eyewellness', label: 'Eye Care', sub: 'Rest & Exercises', image: require('../../assets/restEye.png'), target: 'EyeWellness', color: '#10b981' },
+    { key: 'plan', label: 'Planner', sub: 'Daily tasks', image: require('../../assets/planner.png'), target: 'DailyPlanner', color: '#a855f7' },
   ] as const;
 
   return (
@@ -354,165 +357,129 @@ export function HomeScreen() {
         </View>
       </View>
 
-      <Pressable onPress={handlePrimaryAction} style={[styles.focusCard, {
-            borderColor: mode === 'dark' ? `${palette.green}40` : `${palette.green}20`,
-            shadowColor: palette.green,
-            shadowOpacity: mode === 'dark' ? 0.35 : 0.1,
-            shadowRadius: 20,
-            shadowOffset: { width: 0, height: 8 },
-            elevation: 10,
-            borderWidth: 1.5,
-            backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.98)' : '#ffffff',
-          }]}>
-            <View style={[extraStyles.focusCardContent, { paddingRight: spacing.sm }]}>
-              <View style={styles.focusHeader}>
-                <View style={styles.focusEyebrowRow}>
-                  <Ionicons name="flash" size={14} color={palette.green} />
-                  <Text style={styles.focusEyebrow}>TODAY'S FOCUS</Text>
-                </View>
-              </View>
 
-              <Text style={styles.focusTitle}>{focusCardTitle}</Text>
-
-              <View style={styles.focusFooter}>
-                <View style={styles.focusTimerRow}>
-                  <Ionicons name="timer-outline" size={18} color={palette.green} />
-                  <Text style={styles.focusTimer}>{focusCardTime}</Text>
-                </View>
-                <View style={styles.focusFooterRight}>
-                  <Text style={styles.focusMeta}>Start with your next block</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.playGlowOuter}>
-              <View style={styles.playGlowInner}>
-                <Ionicons
-                  name={activeSession ? 'pause' : 'play'}
-                  size={32}
-                  color={palette.white}
-                  style={activeSession ? styles.playIconActive : styles.playIcon}
-                />
-              </View>
-            </View>
-          </Pressable>
 
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
           </View>
-
           <View style={styles.qaGrid}>
             {localQuickActions.map((action) => (
               <Pressable
                 key={action.key}
                 onPress={() => navigation.navigate(action.target)}
-                style={[styles.qaCard, qaCardStyle(mode, action.color)]}
+                style={styles.qaCardWrapper}
               >
-                <View style={styles.qaInner}>
-                  <View style={styles.qaTopRow}>
-                    <View style={[styles.qaIconWrap, { backgroundColor: `${action.color}25` }]}>
-                      <Image
-                        source={action.image}
-                        style={{ width: 48, height: 48 }}
-                        resizeMode="contain"
-                      />
+                <GradientBorderCard 
+                  colors={[action.color + '40', 'rgba(148, 163, 184, 0.1)']} 
+                  borderRadius={24}
+                  innerStyle={[styles.qaCard, { backgroundColor: mode === 'dark' ? 'rgba(15, 23, 42, 0.8)' : '#fff' }]}
+                >
+                  <View style={styles.qaIconContainer}>
+                    <View style={styles.qaIconWrap}>
+                      {action.key === 'focus' ? (
+                        <View style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: 'rgba(16, 185, 129, 0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                          <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#10b981', alignItems: 'center', justifyContent: 'center', shadowColor: '#10b981', shadowOpacity: 0.5, shadowRadius: 10, elevation: 5 }}>
+                            <Ionicons name="play" size={20} color="#fff" style={{ marginLeft: 2 }} />
+                          </View>
+                        </View>
+                      ) : (
+                        <View style={[styles.qaIconWrap, { backgroundColor: `${action.color}15` }]}>
+                           <Image source={action.image} style={styles.qaImage} />
+                        </View>
+                      )}
                     </View>
-                    <View style={[styles.qaArrowBtn, qaArrowBtnStyle(mode)]}>
-                      <Feather name="arrow-right" size={16} color={qaArrowIconColor(mode)} />
+                    <View style={styles.qaArrowHint}>
+                      <Feather name="arrow-up-right" size={14} color={action.color} />
                     </View>
                   </View>
-
-                  <View style={styles.qaLabelWrap}>
+                  
+                  <View style={styles.qaInfo}>
                     <Text style={styles.qaLabel}>{action.label}</Text>
                     <Text style={styles.qaSub}>{action.sub}</Text>
                   </View>
-                </View>
-
-                <View style={styles.qaActionArea}>
-                  <View style={styles.qaProgressHeader}>
-                    <Text style={styles.qaProgressLabel}>{action.progressLabel}</Text>
-                    <Text style={[styles.qaProgressText, { color: action.color }]}>{action.progressText}</Text>
-                  </View>
-
-                  <View style={styles.qaProgressTrack}>
-                    <View style={[styles.qaProgressFill, { backgroundColor: action.color, width: `${action.progressPercent}%` as any }]} />
-                    {(action as any).isSlider && (
-                      <View style={[styles.qaSliderThumb, { left: `${action.progressPercent}%` as any }]} />
-                    )}
-                  </View>
-
-                  {(action as any).isSlider && (
-                    <View style={styles.qaSliderLabels}>
-                      <Text style={styles.qaSliderLabelText}>10 min</Text>
-                      <Text style={styles.qaSliderLabelText}>20 min</Text>
-                      <Text style={styles.qaSliderLabelText}>30 min</Text>
-                    </View>
-                  )}
-
-                  <Pressable style={[styles.qaActionBtn, { backgroundColor: `${action.color}15` }]}>
-                    <Ionicons name={action.btnIcon as any} size={16} color={action.color} />
-                    <Text style={[styles.qaActionBtnText, { color: action.color }]}>{action.btnLabel}</Text>
-                  </Pressable>
-                </View>
+                </GradientBorderCard>
               </Pressable>
             ))}
           </View>
 
-          <View style={[styles.usageSectionTop, { marginTop: spacing.sm }]}>
-            <Text style={styles.usageTopLabel}>In-App Usage</Text>
-            <View style={styles.usageHeaderRow}>
-               <View>
-                 <Text style={styles.usageTotalHero}>
-                   {usageChartTotal < 60 ? usageChartTotal : Math.floor(usageChartTotal / 60)}
-                   <Text style={styles.usageTotalSuffix}>{usageChartTotal < 60 ? 'm' : 'h'}</Text>
-                 </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: -4 }}>
-                     <Ionicons 
-                       name={usageDeltaInfo.isUp ? "trending-up" : "trending-down"} 
-                       size={16} 
-                       color={usageDeltaInfo.isUp ? "#10b981" : "#ef4444"} 
-                     />
-                     <Text style={[styles.usageDelta, { color: usageDeltaInfo.isUp ? "#10b981" : "#ef4444" }]}>
-                       {usageDeltaInfo.percent}% vs yesterday
-                     </Text>
-                  </View>
-               </View>
+          <View style={[styles.sectionHeader, { marginTop: spacing.md }]}>
+            <Text style={styles.sectionTitle}>Analytics</Text>
+          </View>
 
-               <View>
-                 <Pressable 
-                   onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-                   style={styles.usageChartBtn}
-                 >
-                   <Ionicons name="stats-chart" size={24} color={palette.text} />
-                 </Pressable>
-                 
-                 {isDropdownOpen && (
-                   <View style={styles.usageDropdownWrap}>
-                     {['today', 'week', 'month', 'year'].map((t) => (
-                       <Pressable
-                         key={t}
-                         onPress={() => {
-                           setUsageTimeframe(t as any);
-                           setIsDropdownOpen(false);
-                         }}
-                         style={[
-                           styles.usageDropdownItem,
-                           usageTimeframe === t && styles.usageDropdownItemActive
-                         ]}
-                       >
-                         <Text style={[
-                           styles.usageDropdownText,
-                           usageTimeframe === t && styles.usageDropdownTextActive
-                         ]}>
-                           {t.charAt(0).toUpperCase() + t.slice(1)}
-                         </Text>
-                       </Pressable>
-                     ))}
-                   </View>
-                 )}
-               </View>
-            </View>
+          <View style={{ zIndex: 100 }}>
+            <GradientBorderCard
+              colors={['rgba(59, 130, 246, 0.4)', 'rgba(59, 130, 246, 0.1)']}
+              borderRadius={28}
+              innerStyle={[styles.usageMasterCard, { backgroundColor: mode === 'dark' ? 'rgba(10, 16, 26, 0.98)' : '#fff' }]}
+            >
+              <View style={styles.usageHeroRow}>
+                <View>
+                  <View style={styles.usageLabelRow}>
+                    <Ionicons name="time" size={16} color="#3b82f6" />
+                    <Text style={styles.usageHeroLabel}>DAILY USAGE</Text>
+                  </View>
+                  <Text style={styles.usageTotalHero}>
+                    {usageChartTotal < 60 ? usageChartTotal : Math.floor(usageChartTotal / 60)}
+                    <Text style={styles.usageTotalSuffix}>{usageChartTotal < 60 ? 'm' : 'h'}</Text>
+                  </Text>
+                  <View style={styles.usageDeltaRow}>
+                    <Ionicons 
+                      name={usageDeltaInfo.isUp ? "trending-up" : "trending-down"} 
+                      size={14} 
+                      color={usageDeltaInfo.isUp ? "#10b981" : "#ef4444"} 
+                    />
+                    <Text style={[styles.usageDeltaText, { color: usageDeltaInfo.isUp ? "#10b981" : "#ef4444" }]}>
+                      {usageDeltaInfo.percent}% vs yesterday
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.usageActionWrap}>
+                  <Pressable 
+                    onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                    style={styles.usageChartBtn}
+                  >
+                    <Ionicons name="stats-chart" size={20} color={palette.text} />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.usageProgressContainer}>
+                <View style={styles.usageProgressTrack}>
+                  <View style={[styles.usageProgressFill, { width: `${Math.min((usageChartTotal / dailyLimitMinutes) * 100, 100)}%` as any }]} />
+                </View>
+                <View style={styles.usageProgressLabels}>
+                  <Text style={styles.usageProgressSub}>Limit: {Math.floor(dailyLimitMinutes / 60)}h</Text>
+                  <Text style={styles.usageProgressPercent}>{Math.round((usageChartTotal / dailyLimitMinutes) * 100)}%</Text>
+                </View>
+              </View>
+            </GradientBorderCard>
+
+            {isDropdownOpen && (
+              <View style={[styles.usageDropdownWrap, { top: 60, right: 24 }]}>
+                {['today', 'week', 'month', 'year'].map((t) => (
+                  <Pressable
+                    key={t}
+                    onPress={() => {
+                      setUsageTimeframe(t as any);
+                      setIsDropdownOpen(false);
+                    }}
+                    style={[
+                      styles.usageDropdownItem,
+                      usageTimeframe === t && styles.usageDropdownItemActive
+                    ]}
+                  >
+                    <Text style={[
+                      styles.usageDropdownText,
+                      usageTimeframe === t && styles.usageDropdownTextActive
+                    ]}>
+                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </View>
 
           <View style={[styles.usageDetailsCard, {

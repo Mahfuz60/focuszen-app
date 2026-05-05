@@ -69,7 +69,7 @@ export function createFocusStyles(palette: ScreenPalette, mode: 'light' | 'dark'
   },
   content: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
+    paddingTop: spacing.xs,
   },
   topBar: {
     flexDirection: 'row',
@@ -95,8 +95,18 @@ export function createFocusStyles(palette: ScreenPalette, mode: 'light' | 'dark'
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.xs,
-    marginBottom: spacing.md,
+    marginTop: 0,
+    marginBottom: spacing.sm,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.surfaceSoft,
+    borderWidth: 1,
+    borderColor: palette.stroke,
   },
   modeChip: {
     minHeight: 38,
@@ -153,11 +163,15 @@ export function createFocusStyles(palette: ScreenPalette, mode: 'light' | 'dark'
     color: palette.text,
   },
   subtitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: palette.textMuted,
+    fontSize: 16,
+    fontWeight: '900',
+    color: palette.text,
     flex: 1,
     textAlign: 'left',
+    letterSpacing: -0.4,
+  },
+  subtitleAccent: {
+    color: palette.green,
   },
   ringSection: {
     marginTop: spacing.sm,

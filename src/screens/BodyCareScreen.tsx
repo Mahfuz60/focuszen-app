@@ -2,21 +2,28 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import {
+  Animated,
   Pressable,
   ScrollView,
   StatusBar,
   Text,
-  TextInput,
   View,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Path } from 'react-native-svg';
+import * as Haptics from 'expo-haptics';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
-import { useBodyCareStore, WATER_PRESETS_ML, computeTodayWater } from '../stores/useBodyCareStore';
+import { 
+  useBodyCareStore, 
+  WATER_PRESETS_ML, 
+  DRINK_TYPES, 
+  computeTodayWater,
+  DrinkType,
+  EyeRestLog
+} from '../stores/useBodyCareStore';
 import { spacing } from '../theme/tokens';
-import * as Haptics from 'expo-haptics';
-import { Animated, Easing } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
 import {
   createBodyCareStyles,
   darkPalette,
@@ -24,7 +31,29 @@ import {
   ScreenPalette,
 } from '../styles/BodyCareScreen.styles';
 
-const EYE_REST_INTERVAL_MS = 20 * 60 * 1000; // 20 minutes
+const { width } = Dimensions.get('window');
+
+const EYE_EXERCISES: { id: EyeRestLog['type']; title: string; desc: string; duration: string; icon: string }[] = [
+  { id: '20-20-20', title: '20-20-20 Rule', desc: 'Look 20ft away for 20s', duration: '20s', icon: 'eye' },
+  { id: 'rapid-blink', title: 'Rapid Blink', desc: 'Re-moisten eyes quickly', duration: '15s', icon: 'flash' },
+  { id: 'palming', title: 'Palming', desc: 'Relax eyes in darkness', duration: '30s', icon: 'hand-left' },
+  { id: 'figure-8', title: 'Figure-8 Focus', desc: 'Trace infinity with eyes', duration: '30s', icon: 'infinite' },
+  { id: 'near-far', title: 'Near-Far Focus', desc: 'Alternate depth focus', duration: '30s', icon: 'expand' },
+];
+
+function WaterMascot({ color }: { color: string }) {
+  return (
+    <Svg width="50" height="50" viewBox="0 0 24 24">
+      <Path
+        d="M12,2C12,2 6,8.5 6,12C6,15.31 8.69,18 12,18C15.31,18 18,15.31 18,12C18,8.5 12,2 12,2Z"
+        fill={color}
+      />
+      <Circle cx="9.5" cy="12" r="1" fill="#ffffff" />
+      <Circle cx="14.5" cy="12" r="1" fill="#ffffff" />
+      <Path d="M10,14.5 Q12,16 14,14.5" stroke="#ffffff" strokeWidth="1" fill="none" />
+    </Svg>
+  );
+}
 
 export function BodyCareScreen() {
   const { mode } = useAppTheme();
@@ -32,11 +61,8 @@ export function BodyCareScreen() {
 
   const waterGoalMl = useBodyCareStore((s) => s.waterGoalMl);
   const waterEntries = useBodyCareStore((s) => s.waterEntries);
-  const eyeRestLogs = useBodyCareStore((s) => s.eyeRestLogs);
   const logWater = useBodyCareStore((s) => s.logWater);
   const logEyeRest = useBodyCareStore((s) => s.logEyeRest);
-  const deleteWaterEntry = useBodyCareStore((s) => s.deleteWaterEntry);
-  const setWaterGoal = useBodyCareStore((s) => s.setWaterGoal);
 
   const palette = useMemo(
     () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
@@ -45,188 +71,58 @@ export function BodyCareScreen() {
   const styles = useMemo(() => createBodyCareStyles(palette), [palette]);
 
   const [currentDay, setCurrentDay] = useState(new Date().toDateString());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const todayStr = new Date().toDateString();
-      if (todayStr !== currentDay) {
-        setCurrentDay(todayStr);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    }, 1000 * 60); // Check every minute
-    return () => clearInterval(timer);
-  }, [currentDay]);
-
-  const totalWaterToday = useMemo(() => computeTodayWater(waterEntries), [waterEntries, currentDay]);
-  const waterProgress = Math.min(totalWaterToday / waterGoalMl, 1);
-  const progressPercent = Math.round(waterProgress * 100);
-
-  const hydrationAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(hydrationAnim, {
-      toValue: waterProgress,
-      useNativeDriver: false,
-      tension: 20,
-      friction: 7,
-    }).start();
-  }, [waterProgress]);
-
-  const handleLogWater = (ml: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    logWater(ml);
-  };
-
-  const [isEditingGoal, setIsEditingGoal] = useState(false);
-  const [goalInput, setGoalInput] = useState(waterGoalMl.toString());
-
-  const handleUpdateGoal = () => {
-    const val = parseInt(goalInput, 10);
-    if (!isNaN(val) && val > 0) {
-      setWaterGoal(val);
-      setIsEditingGoal(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const isGoalReached = totalWaterToday >= waterGoalMl;
-
-  useEffect(() => {
-    if (isGoalReached) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  }, [isGoalReached]);
-
-  const [eyeRestCountdown, setEyeRestCountdown] = useState(EYE_REST_INTERVAL_MS / 1000);
-  const [eyeRestActive, setEyeRestActive] = useState(false);
-  const [eyeRestTimer, setEyeRestTimer] = useState(20); // 20 second active timer
-  const eyeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const eyeActiveRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const todayEyeRests = useMemo(() => {
+  const todayEntries = useMemo(() => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    return eyeRestLogs.filter((l) => new Date(l.completedAt) >= todayStart).length;
-  }, [eyeRestLogs, currentDay]);
+    return waterEntries.filter((e) => new Date(e.loggedAt) >= todayStart);
+  }, [waterEntries, currentDay]);
 
-  const [chartFilter, setChartFilter] = useState<'week' | 'month' | 'year'>('week');
-
-  const chartData = useMemo(() => {
-    const data = [];
-    if (chartFilter === 'week') {
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        d.setHours(0, 0, 0, 0);
-        const nextD = new Date(d);
-        nextD.setDate(d.getDate() + 1);
-        const dayTotal = waterEntries.filter(e => {
-          const logDate = new Date(e.loggedAt);
-          return logDate >= d && logDate < nextD;
-        }).reduce((sum, e) => sum + e.amountMl, 0);
-        data.push({ label: d.toLocaleDateString([], { weekday: 'short' })[0], value: dayTotal, fullDate: d.toDateString() });
-      }
-    } else if (chartFilter === 'month') {
-      // Last 4 weeks
-      for (let i = 3; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - (i * 7));
-        const weekTotal = waterEntries.filter(e => {
-          const logDate = new Date(e.loggedAt);
-          const diff = (new Date().getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24);
-          return diff >= (i * 7) && diff < ((i + 1) * 7);
-        }).reduce((sum, e) => sum + e.amountMl, 0);
-        data.push({ label: `W${4-i}`, value: weekTotal / 7, fullDate: '' }); // Average per day
-      }
-    } else {
-      // Last 12 months
-      for (let i = 11; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        const monthTotal = waterEntries.filter(e => {
-          const logDate = new Date(e.loggedAt);
-          return logDate.getMonth() === d.getMonth() && logDate.getFullYear() === d.getFullYear();
-        }).reduce((sum, e) => sum + e.amountMl, 0);
-        data.push({ label: d.toLocaleDateString([], { month: 'short' })[0], value: monthTotal / 30, fullDate: '' });
-      }
-    }
-    return data;
-  }, [waterEntries, currentDay, chartFilter]);
-
-  const startEyeRestCycle = useCallback(() => {
-    if (eyeIntervalRef.current) clearInterval(eyeIntervalRef.current);
-    let countdown = EYE_REST_INTERVAL_MS / 1000;
-    setEyeRestCountdown(countdown);
-
-    eyeIntervalRef.current = setInterval(() => {
-      countdown -= 1;
-      setEyeRestCountdown(countdown);
-      if (countdown <= 0) {
-        if (eyeIntervalRef.current) clearInterval(eyeIntervalRef.current);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setEyeRestActive(true);
-        setEyeRestTimer(20);
-        let active = 20;
-        eyeActiveRef.current = setInterval(() => {
-          active -= 1;
-          setEyeRestTimer(active);
-          if (active <= 0) {
-            if (eyeActiveRef.current) clearInterval(eyeActiveRef.current);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            logEyeRest();
-            setEyeRestActive(false);
-            startEyeRestCycle();
-          }
-        }, 1000);
-      }
-    }, 1000);
-  }, [logEyeRest]);
-
-  const handleManualEyeRest = () => {
-    if (!eyeRestActive) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      if (eyeIntervalRef.current) clearInterval(eyeIntervalRef.current);
-      setEyeRestActive(true);
-      setEyeRestTimer(20);
-      let active = 20;
-      eyeActiveRef.current = setInterval(() => {
-        active -= 1;
-        setEyeRestTimer(active);
-        if (active <= 0) {
-          if (eyeActiveRef.current) clearInterval(eyeActiveRef.current);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          logEyeRest();
-          setEyeRestActive(false);
-          startEyeRestCycle();
-        }
-      }, 1000);
-    }
-  };
-
-  useEffect(() => {
-    startEyeRestCycle();
-    return () => {
-      if (eyeIntervalRef.current) clearInterval(eyeIntervalRef.current);
-      if (eyeActiveRef.current) clearInterval(eyeActiveRef.current);
+  const drinkBreakdown = useMemo(() => {
+    const counts: Record<DrinkType, number> = {
+      water: 0, coffee: 0, tea: 0, juice: 0, milk: 0, soda: 0
     };
-  }, [startEyeRestCycle]);
+    todayEntries.forEach(e => {
+      counts[e.type] = (counts[e.type] || 0) + e.amountMl;
+    });
+    return counts;
+  }, [todayEntries]);
 
-  const formatCountdown = (sec: number) => {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m}m ${s}s`;
+  const totalWaterToday = useMemo(() => Object.values(drinkBreakdown).reduce((a, b) => a + b, 0), [drinkBreakdown]);
+  const progress = Math.min(totalWaterToday / waterGoalMl, 1);
+
+  const [activeExercise, setActiveExercise] = useState<typeof EYE_EXERCISES[0] | null>(null);
+  const [exerciseTimer, setExerciseTimer] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startExercise = (ex: typeof EYE_EXERCISES[0]) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setActiveExercise(ex);
+    const duration = parseInt(ex.duration);
+    setExerciseTimer(duration);
+    
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setExerciseTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current!);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          logEyeRest(ex.id);
+          setActiveExercise(null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
-  const formatMl = (ml: number) => {
-    if (ml >= 1000) return `${(ml / 1000).toFixed(1)}L`;
-    return `${ml}ml`;
+  const handleLogWater = (ml: number, type: DrinkType = 'water') => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    logWater(ml, type);
   };
-
-  const statusBarStyle = mode === 'dark' ? 'light-content' : 'dark-content';
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle={statusBarStyle} backgroundColor={palette.backgroundTop} />
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
       <AnimatedThemeBackdrop
         colors={[palette.backgroundTop, palette.backgroundBottom]}
         mode={mode}
@@ -234,288 +130,206 @@ export function BodyCareScreen() {
         secondaryGlow={palette.secondaryGlow}
         accentGlow={palette.accentGlow}
       >
-        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: spacing.xxl }]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Top bar */}
           <View style={styles.topBar}>
             <Pressable onPress={() => navigation.goBack()} style={styles.topIconButton}>
               <Ionicons name="arrow-back" size={22} color={palette.text} />
             </Pressable>
-            <Text style={styles.topTitle}>Wellness</Text>
+            <Text style={styles.topTitle}>Body Care</Text>
             <View style={styles.topIconButton}>
-              <Ionicons name="settings-outline" size={20} color={palette.text} />
+              <Ionicons name="notifications-outline" size={20} color={palette.text} />
             </View>
+          </View>
+
+          {/* Mascot & Greeting */}
+          <View style={styles.bubbleContainer}>
+             <WaterMascot color={palette.blue} />
+             <View style={styles.speechBubble}>
+                <Text style={styles.bubbleText}>Let's drink some water!</Text>
+             </View>
           </View>
 
           {/* ── Hydration Card ── */}
-          <View style={[styles.sectionCard, isGoalReached && styles.cardSuccess]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.cardIconWrap, isGoalReached && { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
-                <Ionicons name={isGoalReached ? "checkmark-circle" : "water"} size={24} color={isGoalReached ? '#10b981' : palette.blue} />
-              </View>
-              <View style={styles.cardHeaderMain}>
-                <Text style={styles.cardTitle}>Hydration</Text>
-                {isEditingGoal ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <TextInput
-                      style={styles.goalInput}
-                      value={goalInput}
-                      onChangeText={setGoalInput}
-                      keyboardType="number-pad"
-                      autoFocus
-                      onBlur={handleUpdateGoal}
-                      onSubmitEditing={handleUpdateGoal}
-                    />
-                    <Text style={styles.cardMeta}>ml goal</Text>
-                  </View>
-                ) : (
-                  <View>
-                    <Pressable onPress={() => { setIsEditingGoal(true); setGoalInput(waterGoalMl.toString()); }}>
-                      <Text style={styles.cardMeta}>{formatMl(totalWaterToday)} of {formatMl(waterGoalMl)} goal</Text>
-                    </Pressable>
-                    {isGoalReached && (
-                      <View style={styles.successBadge}>
-                        <Ionicons name="trophy" size={12} color="#ffffff" />
-                        <Text style={styles.successBadgeText}>Goal Reached!</Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
-              <Text style={[styles.cardPercent, isGoalReached && { color: '#10b981' }]}>{progressPercent}%</Text>
-            </View>
-
-            <View style={styles.waterTrack}>
-              <Animated.View 
-                style={[
-                  styles.waterFill, 
-                  { 
-                    width: hydrationAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', '100%']
-                    }) 
-                  }
-                ]} 
-              />
-            </View>
-
-            <View style={styles.waterPresets}>
-              {WATER_PRESETS_ML.map((ml) => (
-                <Pressable key={ml} onPress={() => handleLogWater(ml)} style={styles.waterChip}>
-                  <Text style={styles.waterChipText}>+ {ml}ml</Text>
-                </Pressable>
-              ))}
-            </View>
-
-            {/* Recent History */}
-            {waterEntries.length > 0 && (
-              <View style={styles.historySection}>
-                <Text style={styles.historyTitle}>Recent Logs</Text>
-                {waterEntries.slice(0, 3).map((entry) => (
-                  <View key={entry.id} style={styles.logRow}>
-                    <View style={styles.logIconWrap}>
-                      <Ionicons name="water" size={16} color={palette.blue} />
-                    </View>
-                    <View style={styles.logInfo}>
-                      <Text style={styles.logAmount}>+ {entry.amountMl}ml</Text>
-                      <Text style={styles.logTime}>
-                        {new Date(entry.loggedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </Text>
-                    </View>
-                    <Pressable 
-                      onPress={() => {
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                        deleteWaterEntry(entry.id);
-                      }} 
-                      style={styles.logDelete}
-                    >
-                      <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-
-          {/* ── Eye Rest Card ── */}
-          <Pressable 
-            onPress={handleManualEyeRest}
-            style={[styles.sectionCard, eyeRestActive && styles.sectionCardAlert]}
-          >
-            <View style={styles.cardHeader}>
-              <View style={[styles.cardIconWrap, { backgroundColor: palette.greenSoft }]}>
-                <Ionicons name="eye" size={24} color={palette.green} />
-              </View>
-              <View style={styles.cardHeaderMain}>
-                <Text style={styles.cardTitle}>20-20-20 Eye Rest</Text>
-                <Text style={styles.cardMeta}>{todayEyeRests} rests completed today</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={palette.textSoft} style={styles.eyeChevron} />
-            </View>
-                  
-            {eyeRestActive ? (
-              <View style={styles.eyeActiveCard}>
-                <Text style={styles.eyeActiveTitle}>Look 20 feet away</Text>
-                <View style={styles.eyeTimerShell}>
-                   <Svg width="100" height="100" viewBox="0 0 100 100">
-                      <Circle
-                        cx="50"
-                        cy="50"
-                        r="44"
-                        stroke={palette.surfaceSoft}
-                        strokeWidth="6"
-                        fill="transparent"
-                      />
-                      <Circle
-                        cx="50"
-                        cy="50"
-                        r="44"
-                        stroke={palette.green}
-                        strokeWidth="6"
-                        fill="transparent"
-                        strokeDasharray={276}
-                        strokeDashoffset={276 * (1 - eyeRestTimer / 20)}
-                        strokeLinecap="round"
-                        transform="rotate(-90 50 50)"
-                      />
-                   </Svg>
-                   <Text style={styles.eyeActiveTimer}>{eyeRestTimer}s</Text>
-                </View>
-                <Text style={styles.eyeActiveDesc}>Focus on something far away to relax your eyes</Text>
-              </View>
-            ) : (
-              <View style={styles.eyeNextRow}>
-                <Ionicons name="time-outline" size={16} color={palette.green} />
-                <Text style={styles.eyeNextText}>Next reminder in</Text>
-                <Text style={styles.eyeNextValue}>{formatCountdown(eyeRestCountdown)}</Text>
-              </View>
-            )}
-          </Pressable>
-
-          {/* ── Stand & Stretch Illustration Card ── */}
-          <View style={styles.standCard}>
-            <View style={styles.standContent}>
-              <Text style={styles.standTitle}>Stand and stretch</Text>
-              <Text style={styles.standDesc}>
-                every 45 minutes for better circulation and focus.
-              </Text>
-            </View>
-            <View style={styles.standImageWrap}>
-               <View style={{ position: 'absolute', right: -20, bottom: -10, opacity: 0.2 }}>
-                  <Ionicons name="body" size={180} color={palette.blue} />
-               </View>
-               <View style={{ flex: 1, backgroundColor: palette.blueSoft, borderTopLeftRadius: 100, borderBottomLeftRadius: 20 }} />
-            </View>
-          </View>
-
-          {/* ── Activity Insights Chart ── */}
-          <View style={styles.chartContainer}>
-            <View style={styles.chartHeader}>
-               <View>
-                  <Text style={styles.chartTitle}>Activity Insights</Text>
-                  <Text style={styles.chartSub}>Hydration tracking</Text>
-               </View>
-               <Ionicons name="stats-chart" size={18} color={palette.blue} />
-            </View>
-
-            <View style={styles.chartTabs}>
-              {(['week', 'month', 'year'] as const).map((tab) => (
-                <Pressable 
-                  key={tab} 
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setChartFilter(tab);
-                  }}
-                  style={[styles.chartTab, chartFilter === tab && styles.chartTabActive]}
-                >
-                  <Text style={[styles.chartTabText, chartFilter === tab && styles.chartTabTextActive]}>
-                    {tab}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <View style={styles.chartBody}>
-              <View style={styles.chartGrid}>
-                <View style={styles.chartGridLine} />
-                <View style={styles.chartGridLine} />
-                <View style={styles.chartGridLine} />
-              </View>
-              <View style={styles.chartBars}>
-                {chartData.map((day, idx) => {
-                  const isToday = day.fullDate === currentDay;
-                  // If month/year, use average goal or scaled value
-                  const barHeight = Math.min((day.value / waterGoalMl) * 100, 100);
+          <View style={styles.hydrationCard}>
+             {/* Segmented Progress Bar at the Top of Card */}
+             <View style={styles.segmentedBar}>
+                {DRINK_TYPES.map(d => {
+                  const amount = drinkBreakdown[d.type];
+                  if (amount === 0) return null;
+                  const widthPct = (amount / waterGoalMl) * 100;
                   return (
-                    <View key={idx} style={styles.chartBarWrap}>
-                      <View 
-                        style={[
-                          styles.chartBar, 
-                          { 
-                            height: Math.max(barHeight, 6),
-                            width: chartFilter === 'year' ? 10 : 14 
-                          },
-                          isToday && styles.chartBarActive
-                        ]} 
-                      />
-                      <Text style={[styles.chartLabel, isToday && { color: palette.text, fontWeight: '900' }]}>
-                        {day.label}
-                      </Text>
-                    </View>
+                    <View 
+                      key={d.type} 
+                      style={{ 
+                        width: `${widthPct}%`, 
+                        height: '100%', 
+                        backgroundColor: d.color,
+                        borderRadius: 4,
+                        marginRight: 1
+                      }} 
+                    />
                   );
                 })}
-              </View>
-            </View>
+             </View>
+
+             <View style={styles.circleWrapper}>
+                <Svg width="200" height="200" viewBox="0 0 100 100">
+                  <Circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    stroke={palette.surfaceSoft}
+                    strokeWidth="8"
+                    fill="none"
+                  />
+                  <Circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    stroke={palette.blue}
+                    strokeWidth="8"
+                    fill="none"
+                    strokeDasharray={283}
+                    strokeDashoffset={283 * (1 - progress)}
+                    strokeLinecap="round"
+                    transform="rotate(-90 50 50)"
+                  />
+                </Svg>
+                <View style={styles.circleInfo}>
+                   <Text style={styles.circleValue}>{totalWaterToday}/{waterGoalMl}ml</Text>
+                   <Text style={styles.circleGoal}>Total Intake</Text>
+                </View>
+             </View>
+
+             {/* Drink Breakdown Labels */}
+             <View style={styles.breakdownLabels}>
+                {DRINK_TYPES.filter(d => drinkBreakdown[d.type] > 0).map(d => (
+                  <View key={d.type} style={styles.breakdownItem}>
+                     <View style={[styles.dot, { backgroundColor: d.color }]} />
+                     <Text style={styles.breakdownText}>{d.label}: {drinkBreakdown[d.type]}ml</Text>
+                  </View>
+                ))}
+             </View>
+
+             <View style={styles.quickAdd}>
+                {WATER_PRESETS_ML.slice(1).map((ml) => (
+                  <Pressable key={ml} onPress={() => handleLogWater(ml)} style={styles.quickAddBtn}>
+                     <Text style={styles.quickAddText}>+ {ml}ml</Text>
+                  </Pressable>
+                ))}
+             </View>
           </View>
 
-          {/* ── Today's Summary Grid ── */}
-          <View style={styles.summarySection}>
-            <Text style={styles.sectionTitle}>Today's Summary</Text>
-            <View style={styles.summaryGrid}>
-              <View style={[styles.summaryCard, {
-                borderColor: mode === 'dark' ? `${palette.blue}30` : `${palette.blue}12`,
-                shadowColor: palette.blue,
-                shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
-                shadowRadius: 15,
-                elevation: 6,
-                backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
-                borderWidth: 1,
-              }]}>
-                 <View style={[styles.summaryIcon, { backgroundColor: palette.blueSoft }]}>
-                    <Ionicons name="water-outline" size={20} color={palette.blue} />
-                 </View>
-                 <Text style={styles.summaryValue}>{formatMl(totalWaterToday)}</Text>
-                 <Text style={styles.summaryLabel}>Water Intake</Text>
-              </View>
-              <View style={[styles.summaryCard, {
-                borderColor: mode === 'dark' ? `${palette.green}30` : `${palette.green}12`,
-                shadowColor: palette.green,
-                shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
-                shadowRadius: 15,
-                elevation: 6,
-                backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
-                borderWidth: 1,
-              }]}>
-                 <View style={[styles.summaryIcon, { backgroundColor: palette.greenSoft }]}>
-                    <Ionicons name="eye-outline" size={20} color={palette.green} />
-                 </View>
-                 <Text style={styles.summaryValue}>{todayEyeRests}</Text>
-                 <Text style={styles.summaryLabel}>Eye Rests</Text>
-              </View>
-            </View>
+
+          {/* ── Other Drinks ── */}
+          <Text style={styles.sectionTitle}>Track other drinks</Text>
+          <View style={styles.drinksGrid}>
+             {DRINK_TYPES.map((d) => (
+               <Pressable 
+                 key={d.type} 
+                 onPress={() => handleLogWater(250, d.type)}
+                 style={styles.drinkCard}
+               >
+                  <View style={[styles.drinkIconWrap, { backgroundColor: `${d.color}20` }]}>
+                     <Ionicons name={d.icon as any} size={24} color={d.color} />
+                  </View>
+                  <Text style={styles.drinkLabel}>{d.label}</Text>
+               </Pressable>
+             ))}
           </View>
 
-          {/* ── Motivation Card ── */}
-          <View style={styles.motivationCard}>
-             <View style={[styles.motivationIcon, { backgroundColor: palette.blueSoft }]}>
-                <Ionicons name="heart" size={22} color={palette.blue} />
-             </View>
-             <View style={{ flex: 1 }}>
-                <Text style={styles.motivationTitle}>Keep going!</Text>
-                <Text style={styles.motivationSub}>Small steps today, big changes tomorrow.</Text>
-             </View>
-             <Ionicons name="chevron-forward" size={18} color={palette.textSoft} style={{ opacity: 0.3 }} />
+          {/* ── History Timeline ── */}
+          <Text style={styles.sectionTitle}>Hydration Timeline</Text>
+          <View style={styles.timeline}>
+             {waterEntries.slice(0, 4).map((entry, idx) => {
+                const drink = DRINK_TYPES.find(d => d.type === entry.type) || DRINK_TYPES[0];
+                return (
+                  <View key={entry.id} style={styles.timelineItem}>
+                     <View style={styles.timelineLeft}>
+                        <View style={[styles.timelineIcon, { backgroundColor: `${drink.color}20` }]}>
+                           <Ionicons name={drink.icon as any} size={16} color={drink.color} />
+                        </View>
+                        {idx !== 3 && <View style={styles.timelineLine} />}
+                     </View>
+                     <View style={styles.timelineContent}>
+                        <Text style={styles.timelineTime}>
+                           {new Date(entry.loggedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                        <Text style={styles.timelineAmount}>{entry.amountMl}ml {drink.label}</Text>
+                     </View>
+                  </View>
+                );
+             })}
           </View>
+
+          {/* ── Eye Exercises ── */}
+          <Text style={styles.sectionTitle}>Eye Wellness</Text>
+          {EYE_EXERCISES.map((ex) => (
+            <Pressable 
+              key={ex.id} 
+              onPress={() => startExercise(ex)}
+              style={styles.exerciseCard}
+            >
+               <View style={styles.exerciseIcon}>
+                  <Ionicons name={ex.icon as any} size={24} color={palette.green} />
+               </View>
+               <View style={styles.exerciseInfo}>
+                  <Text style={styles.exerciseTitle}>{ex.title}</Text>
+                  <Text style={styles.exerciseSub}>{ex.desc}</Text>
+                  <Text style={styles.exerciseMeta}>{ex.duration} duration</Text>
+               </View>
+               <Ionicons name="play-circle" size={32} color={palette.green} />
+            </Pressable>
+          ))}
+
+          <View style={{ height: 100 }} />
         </ScrollView>
+
+        {/* ── Exercise Timer Overlay ── */}
+        {activeExercise && (
+          <View style={styles.timerOverlay}>
+             <View style={styles.timerCircle}>
+                <Svg width="240" height="240" viewBox="0 0 100 100">
+                  <Circle
+                    cx="50"
+                    cy="50"
+                    r="48"
+                    stroke="rgba(255,255,255,0.1)"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <Circle
+                    cx="50"
+                    cy="50"
+                    r="48"
+                    stroke={palette.green}
+                    strokeWidth="4"
+                    fill="none"
+                    strokeDasharray={301}
+                    strokeDashoffset={301 * (1 - exerciseTimer / parseInt(activeExercise.duration))}
+                    strokeLinecap="round"
+                    transform="rotate(-90 50 50)"
+                  />
+                </Svg>
+                <View style={{ position: 'absolute', alignItems: 'center' }}>
+                   <Text style={styles.timerText}>{exerciseTimer}</Text>
+                </View>
+             </View>
+             <Text style={styles.timerInstruction}>{activeExercise.title}</Text>
+             <Text style={styles.timerSub}>{activeExercise.desc}</Text>
+             
+             <Pressable 
+               onPress={() => {
+                 if (timerRef.current) clearInterval(timerRef.current);
+                 setActiveExercise(null);
+               }}
+               style={{ marginTop: 60, padding: 20 }}
+             >
+                <Text style={{ color: '#ffffff', fontWeight: '800', opacity: 0.6 }}>Cancel Exercise</Text>
+             </Pressable>
+          </View>
+        )}
       </AnimatedThemeBackdrop>
     </SafeAreaView>
   );

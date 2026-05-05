@@ -9,8 +9,10 @@ import { calculateComparison } from '../utils/comparison';
 type UsageState = {
   entries: UsageEntry[];
   comparison: UsageComparison;
+  dailyLimitMinutes: number;
   addUsageEntry: (entry: UsageEntry) => void;
   refreshComparison: () => void;
+  setDailyLimit: (limit: number) => void;
 };
 
 export const useUsageStore = create<UsageState>()(
@@ -18,6 +20,7 @@ export const useUsageStore = create<UsageState>()(
     (set) => ({
       entries: seedUsageEntries,
       comparison: seedComparison,
+      dailyLimitMinutes: 120,
       addUsageEntry: (entry) =>
         set((state) => ({
           entries: [entry, ...state.entries],
@@ -27,6 +30,7 @@ export const useUsageStore = create<UsageState>()(
         set((state) => ({
           comparison: calculateComparison(state.entries, seedComparison),
         })),
+      setDailyLimit: (dailyLimitMinutes) => set({ dailyLimitMinutes }),
     }),
     {
       name: STORAGE_KEYS.usage,

@@ -14,35 +14,35 @@ export const darkPalette = {
   text: '#ffffff',
   textMuted: '#f1f5f9',
   textSoft: '#94a3b8',
-  blue: '#38bdf8',
+  blue: '#0ea5e9',
   blueSoft: 'rgba(56, 189, 248, 0.16)',
   green: '#10b981',
   greenSoft: 'rgba(16, 185, 129, 0.16)',
   accent: '#38bdf8',
   accentSoft: 'rgba(56, 189, 248, 0.12)',
-  shadow: 'rgba(93, 91, 91, 0.8)',
+  shadow: 'rgba(0, 0, 0, 0.5)',
 };
 
 export const lightPalette = {
   backgroundTop: '#f0f9ff',
-  backgroundBottom: '#f8fafc',
-  primaryGlow: 'rgba(2, 132, 199, 0.12)',
-  secondaryGlow: 'rgba(5, 150, 105, 0.1)',
-  accentGlow: 'rgba(2, 132, 199, 0.06)',
-  surface: 'rgba(255, 255, 255, 0.95)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.75)',
-  stroke: 'rgba(2, 132, 199, 0.12)',
-  strokeAlert: 'rgba(2, 132, 199, 0.45)',
+  backgroundBottom: '#ffffff',
+  primaryGlow: 'rgba(2, 132, 199, 0.08)',
+  secondaryGlow: 'rgba(5, 150, 105, 0.06)',
+  accentGlow: 'rgba(2, 132, 199, 0.04)',
+  surface: '#ffffff',
+  surfaceSoft: '#f1f5f9',
+  stroke: 'rgba(0, 0, 0, 0.06)',
+  strokeAlert: 'rgba(2, 132, 199, 0.3)',
   text: '#0f172a',
-  textMuted: '#475569',
+  textMuted: '#334155',
   textSoft: '#64748b',
-  blue: '#0284c7',
-  blueSoft: 'rgba(2, 132, 199, 0.08)',
-  green: '#059669',
-  greenSoft: 'rgba(5, 150, 105, 0.08)',
-  accent: '#0284c7',
-  accentSoft: 'rgba(2, 132, 199, 0.06)',
-  shadow: 'rgba(0, 0, 0, 0.04)',
+  blue: '#0369a1',
+  blueSoft: 'rgba(14, 165, 233, 0.1)',
+  green: '#10b981',
+  greenSoft: 'rgba(16, 185, 129, 0.1)',
+  accent: '#0ea5e9',
+  accentSoft: 'rgba(14, 165, 233, 0.08)',
+  shadow: 'rgba(0, 0, 0, 0.05)',
 };
 
 export type ScreenPalette = typeof darkPalette;
@@ -50,127 +50,231 @@ export type ScreenPalette = typeof darkPalette;
 export function createBodyCareStyles(palette: ScreenPalette) {
   return StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: palette.backgroundTop },
-    content: { paddingHorizontal: spacing.md, paddingTop: spacing.sm },
-    topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
+    content: { paddingHorizontal: spacing.md, paddingTop: 8, paddingBottom: 60 },
+    topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
     topIconButton: {
       width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
       backgroundColor: palette.surfaceSoft, borderWidth: 1, borderColor: palette.stroke,
     },
-    topTitle: { fontSize: 20, fontWeight: '900', color: palette.text, letterSpacing: 0.5, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
-    sectionCard: {
-      marginTop: spacing.md, padding: spacing.lg, borderRadius: 28,
-      backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
-      shadowColor: palette.blue, shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 12 },
-      elevation: 10,
+    topTitle: { fontSize: 20, fontWeight: '900', color: palette.text },
+
+    header: { paddingVertical: 12 },
+    greeting: { fontSize: 15, color: palette.textSoft, fontWeight: '600', marginBottom: 4 },
+    mainTitle: { fontSize: 32, fontWeight: '900', color: palette.text, letterSpacing: -0.5 },
+    mainTitleAccent: { color: palette.blue },
+
+    // Goal Card
+    goalCard: { 
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      padding: 16, borderRadius: 20,
+      backgroundColor: palette.surface,
+      marginBottom: 12,
     },
-    sectionCardAlert: { borderColor: palette.strokeAlert, backgroundColor: palette.blueSoft },
-    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md },
-    cardIconWrap: {
-      width: 52, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+    goalInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    goalIcon: {
+      width: 40, height: 40, borderRadius: 12,
       backgroundColor: palette.blueSoft,
+      alignItems: 'center', justifyContent: 'center',
     },
-    cardHeaderMain: { flex: 1 },
-    cardTitle: { fontSize: 18, fontWeight: '800', color: palette.text },
-    cardMeta: { fontSize: 14, color: palette.textSoft, fontWeight: '600' },
-    cardPercent: { fontSize: 24, fontWeight: '900', color: palette.blue },
-    waterTrack: {
-      height: 10, borderRadius: 5, backgroundColor: palette.surfaceSoft,
-      marginVertical: spacing.sm, overflow: 'hidden',
+    goalLabel: { fontSize: 12, fontWeight: '700', color: palette.textSoft },
+    goalValue: { fontSize: 18, fontWeight: '900', color: palette.text },
+    editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    editBtnText: { fontSize: 13, fontWeight: '800', color: palette.blue },
+
+    // Hero Progress
+    heroContainer: { alignItems: 'center', marginTop: 12, marginBottom: 16, position: 'relative' },
+    waterCircle: { 
+      width: 280, height: 280, borderRadius: 140, 
+      alignItems: 'center', justifyContent: 'center',
+      backgroundColor: 'rgba(15, 23, 42, 0.62)',
+      borderWidth: 2, borderColor: 'rgba(56, 189, 248, 0.18)',
+      overflow: 'hidden',
+      shadowColor: palette.blue, shadowOpacity: 0.2, shadowRadius: 18, elevation: 8,
     },
-    waterFill: { height: '100%', backgroundColor: palette.blue, borderRadius: 5 },
-    waterPresets: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
-    waterChip: {
-      flex: 1, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
-      backgroundColor: palette.surfaceSoft, borderWidth: 1, borderColor: palette.stroke,
+    circleContent: { position: 'absolute', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', zIndex: 10 },
+    currentIntake: { fontSize: 64, fontWeight: '900', color: palette.text, textAlign: 'center' },
+    intakeUnit: { fontSize: 28, fontWeight: '800' },
+    goalSuffix: { fontSize: 16, fontWeight: '700', color: palette.textSoft, marginTop: 4 },
+    percentText: { fontSize: 14, fontWeight: '800', color: palette.textSoft, marginTop: 16 },
+    heroSpacer: { height: 4 },
+
+    addDrinkBtn: {
+      backgroundColor: palette.blue,
+      paddingHorizontal: 40, paddingVertical: 18,
+      borderRadius: 30, flexDirection: 'row', alignItems: 'center', gap: 10,
+       zIndex: 20,
+      shadowColor: palette.blue, shadowOpacity: 0.6, shadowRadius: 16, elevation: 12,
     },
-    waterChipText: { fontSize: 13, fontWeight: '800', color: palette.textMuted },
+    addDrinkText: { fontSize: 18, fontWeight: '900', color: '#fff' },
+
+    // Sections
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, marginBottom: 8 },
+    sectionTitle: { fontSize: 18, fontWeight: '900', color: palette.text },
+    viewAll: { fontSize: 14, fontWeight: '700', color: palette.blue },
+
+    // Quick Add
+    quickAddGrid: { flexDirection: 'row', gap: 10, marginTop: 14 },
+    quickAddPressable: { flex: 1 },
+    quickAddBox: {
+      flex: 1, aspectRatio: 0.9, backgroundColor: palette.surface,
+      borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+    },
+    quickAddVal: { fontSize: 15, fontWeight: '900', color: palette.text, marginTop: 10 },
+
+    // Drink Types
+    horizontalScroll: { marginHorizontal: -spacing.md, paddingHorizontal: spacing.md },
+    drinkTypeBox: {
+      alignItems: 'center', marginRight: 24,
+    },
+    drinkIconCircle: {
+      width: 58, height: 58, borderRadius: 22,
+      alignItems: 'center', justifyContent: 'center',
+    },
+    drinkImageIcon: { width: 34, height: 34 },
+    drinkTypeLabel: { fontSize: 13, fontWeight: '800', color: palette.text, marginTop: 8 },
+    drinkTypeEditBtn: {
+      position: 'absolute', top: -4, right: -4,
+      width: 22, height: 22, borderRadius: 11,
+      backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center',
+      borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)',
+      zIndex: 10,
+    },
+    drinkTypeBadge: {
+      marginTop: 4, paddingHorizontal: 6, paddingVertical: 2,
+      borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.05)',
+      borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    },
+    drinkTypeBadgeText: { fontSize: 9, fontWeight: '900', color: palette.textSoft, textTransform: 'uppercase' },
+
+    // Cards Row (Tips)
+    cardsRow: { flexDirection: 'row', gap: 12, marginTop: 20 },
+    tipCard: {
+      flex: 1, backgroundColor: palette.surface, padding: 16, borderRadius: 24,
+    },
+    tipIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+    tipTitle: { fontSize: 12, fontWeight: '800', color: palette.textSoft },
+    tipVal: { fontSize: 15, fontWeight: '900', color: palette.text, marginTop: 4 },
+    tipSub: { fontSize: 11, fontWeight: '700', color: palette.textSoft, marginTop: 4 },
+    tipMascot: { position: 'absolute', bottom: 10, right: 10, opacity: 0.6 },
+
+    // Overview Stats
+    overviewGrid: {
+      flexDirection: 'row', backgroundColor: palette.surface, borderRadius: 28,
+      padding: 20, justifyContent: 'space-between',
+    },
+    statItem: { alignItems: 'center', flex: 1 },
+    statIcon: { marginBottom: 4 },
+    statVal: { fontSize: 18, fontWeight: '900', color: palette.text },
+    statLab: { fontSize: 10, fontWeight: '700', color: palette.textSoft, marginTop: 4 },
+
+    // Timeline
+    timelineCard: {
+      backgroundColor: palette.surface, borderRadius: 28, padding: 12,
+    },
+    timelineItem: { flexDirection: 'row', alignItems: 'center', padding: 12 },
+    timelineTime: { width: 70, fontSize: 12, fontWeight: '800', color: palette.textSoft },
+    timelineLeft: { alignItems: 'center', width: 40 },
+    timelineDot: { width: 36, height: 36, borderRadius: 14, alignItems: 'center', justifyContent: 'center', zIndex: 10 },
+    timelineConnector: { position: 'absolute', top: 40, width: 2, bottom: -40, backgroundColor: palette.stroke },
+    timelineContent: { flex: 1, marginLeft: 12 },
+    timelineTitle: { fontSize: 15, fontWeight: '800', color: palette.text },
+    timelineSub: { fontSize: 12, color: palette.textSoft, marginTop: 2 },
+    timelineAdd: { width: 32, height: 32, borderRadius: 10, backgroundColor: palette.surfaceSoft, alignItems: 'center', justifyContent: 'center' },
+    emptyText: { color: palette.textSoft, fontSize: 13, fontWeight: '700', padding: 16, textAlign: 'center' },
+
+    // Modals
+    overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+    goalModal: {
+      width: '86%', maxWidth: 360,
+      padding: 22, borderRadius: 24,
+      alignItems: 'center', alignSelf: 'center',
+      backgroundColor: '#111827',
+      borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.22)',
+      shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 18, elevation: 12,
+    },
+    modalTitle: { fontSize: 22, fontWeight: '900', marginBottom: 8 },
+    modalSub: { fontSize: 13, fontWeight: '600', marginBottom: 20 },
+    inputBox: { 
+      flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%',
+      paddingHorizontal: 18, paddingVertical: 14, borderRadius: 18, borderWidth: 1, backgroundColor: 'rgba(255,255,255,0.02)',
+      marginBottom: 22,
+    },
+    inputText: { flex: 1, fontSize: 34, fontWeight: '900', padding: 0, textAlign: 'center' },
+    modalBtns: { flexDirection: 'row', gap: 12, width: '100%', alignItems: 'center' },
+    modalCancel: { flex: 1, height: 52, alignItems: 'center', justifyContent: 'center' },
+    modalCancelText: { fontSize: 15, fontWeight: '800' },
+    modalSave: { flex: 1.6, height: 52, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+    modalSaveText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+    bottomSpacer: { height: 40 },
+  });
+}
+
+export function createHydrationAddModalStyles(palette: ScreenPalette, width: number, height: number) {
+  return StyleSheet.create({
+    overlay: { flex: 1, backgroundColor: 'rgba(2, 6, 23, 0.9)', justifyContent: 'center', padding: 12 },
+    sheet: {
+      borderRadius: 32,
+      backgroundColor: '#0f172a',
+      borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.12)',
+      paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16,
+      width: '100%', maxWidth: 420, alignSelf: 'center',
+      shadowColor: '#000', shadowOpacity: 0.6, shadowRadius: 30, elevation: 20,
+    },
+    handle: { display: 'none' },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+    title: { fontSize: 22, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+    closeBtn: {
+      width: 36, height: 36, borderRadius: 18,
+      backgroundColor: 'rgba(255,255,255,0.06)',
+      alignItems: 'center', justifyContent: 'center',
+      borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    },
+    typeScroll: { marginBottom: 14 },
+    typeScrollContent: { paddingRight: 12, alignItems: 'center' },
+    typeItem: {
+      alignItems: 'center', marginRight: 10, width: 62,
+    },
+    typeIconShell: {
+      width: 46, height: 46, borderRadius: 16,
+      alignItems: 'center', justifyContent: 'center',
+      borderWidth: 1.5, backgroundColor: 'rgba(255,255,255,0.03)',
+    },
+    typeIconShellActive: { 
+      borderWidth: 2,
+      backgroundColor: 'rgba(255,255,255,0.08)',
+    },
+    typeImageIcon: { width: 28, height: 28 },
+    typeLabel: { fontSize: 10, fontWeight: '800', marginTop: 6 },
     
-    eyeActionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md },
-    eyeChevron: { opacity: 0.5 },
-    eyeNextRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: palette.stroke },
-    eyeNextText: { fontSize: 14, fontWeight: '700', color: palette.textSoft },
-    eyeNextValue: { fontSize: 14, fontWeight: '800', color: palette.green },
-    eyeActiveCard: { marginTop: spacing.md, alignItems: 'center', padding: spacing.md },
-    eyeActiveTitle: { fontSize: 18, fontWeight: '800', color: palette.blue },
-    eyeActiveTimer: { fontSize: 44, fontWeight: '900', color: palette.text, position: 'absolute' },
-    eyeActiveDesc: { fontSize: 13, color: palette.textSoft, marginTop: spacing.sm, textAlign: 'center' },
-    eyeTimerShell: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center', marginVertical: spacing.md },
-
-    standCard: {
-      marginTop: spacing.md, borderRadius: 28, backgroundColor: palette.surface,
-      borderWidth: 1.5, borderColor: palette.stroke, overflow: 'hidden',
-      flexDirection: 'row', height: 160,
-      shadowColor: palette.blue, shadowOpacity: 0.2, shadowRadius: 15, shadowOffset: { width: 0, height: 8 },
-      elevation: 8,
+    visualContainer: { marginBottom: 12 },
+    amountCard: {
+      borderRadius: 24, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.08)',
+      backgroundColor: 'rgba(255,255,255,0.02)',
+      paddingTop: 16, paddingBottom: 10,
+      overflow: 'hidden',
     },
-    standContent: { flex: 1.2, padding: spacing.lg, justifyContent: 'center' },
-    standTitle: { fontSize: 18, fontWeight: '800', color: palette.blue, marginBottom: 8 },
-    standDesc: { fontSize: 13, color: palette.textMuted, lineHeight: 18, fontWeight: '600' },
-    standImageWrap: { flex: 1, position: 'relative' },
-    standImage: { width: '100%', height: '100%', opacity: 0.8 },
-
-    summarySection: { marginTop: spacing.xl },
-    sectionTitle: { fontSize: 15, fontWeight: '900', color: palette.text, textTransform: 'uppercase', letterSpacing: 1, marginBottom: spacing.md },
-    summaryGrid: { flexDirection: 'row', gap: spacing.md },
-    summaryCard: {
-      flex: 1, padding: spacing.lg, borderRadius: 24,
-      backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
-      shadowColor: palette.blue, shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 10 },
-      elevation: 6,
-    },
-    summaryIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
-    summaryValue: { fontSize: 22, fontWeight: '900', color: palette.text },
-    summaryLabel: { fontSize: 12, fontWeight: '700', color: palette.textSoft, marginTop: 2 },
-
-    motivationCard: {
-      marginTop: spacing.md, padding: spacing.lg, borderRadius: 24,
-      backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
-      flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-      shadowColor: palette.blue, shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
-    },
-    motivationIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-    motivationTitle: { fontSize: 16, fontWeight: '800', color: palette.text },
-    motivationSub: { fontSize: 13, color: palette.textSoft, marginTop: 2, fontWeight: '600' },
+    amountRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24 },
+    glassFrame: { alignItems: 'center', justifyContent: 'center' },
+    volumeBadge: { alignItems: 'center', minWidth: 90 },
+    volumeVal: { fontSize: 40, fontWeight: '900', color: '#fff', letterSpacing: -1 },
+    volumeUnit: { fontSize: 15, fontWeight: '800', color: palette.blue, marginTop: -6 },
+    drinkName: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.35)', marginTop: 8, textTransform: 'uppercase' },
     
-    // Hydration specific
-    goalInput: { fontSize: 14, fontWeight: '700', color: palette.blue, padding: 0, margin: 0, minWidth: 40 },
-    historySection: { marginTop: spacing.xl, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 20, padding: spacing.md, borderWidth: 1, borderColor: palette.stroke },
-    historyTitle: { fontSize: 11, fontWeight: '900', color: palette.textSoft, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: spacing.md, marginLeft: 4 },
-    logRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.sm, marginBottom: 8, backgroundColor: palette.surfaceSoft, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
-    logIconWrap: { width: 36, height: 36, borderRadius: 12, backgroundColor: 'rgba(56, 189, 248, 0.1)', alignItems: 'center', justifyContent: 'center' },
-    logInfo: { flex: 1 },
-    logAmount: { fontSize: 15, fontWeight: '800', color: palette.text },
-    logTime: { fontSize: 11, fontWeight: '600', color: palette.textSoft, marginTop: 2 },
-    logDelete: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(239, 68, 68, 0.08)' },
-    
-    // Celebration
-    cardSuccess: { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.08)' },
-    successBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10b981', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 8 },
-    successBadgeText: { fontSize: 10, fontWeight: '900', color: '#ffffff', textTransform: 'uppercase' },
-
-    // Chart styles
-    chartContainer: { 
-      marginTop: spacing.md, padding: spacing.lg, borderRadius: 28,
-      backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
-      shadowColor: palette.blue, shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 12 },
-      elevation: 10,
+    rulerContainer: { height: 80, marginTop: 12, position: 'relative', overflow: 'hidden' },
+    rulerContent: { paddingHorizontal: 200 }, // Fixed large padding for centering
+    indicator: {
+      position: 'absolute', left: '50%', marginLeft: -2, top: 0, width: 4, height: 42,
+      zIndex: 10, borderRadius: 2,
+      shadowOpacity: 0.8, shadowRadius: 10,
     },
-    chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl },
-    chartTitle: { fontSize: 16, fontWeight: '800', color: palette.text },
-    chartSub: { fontSize: 12, fontWeight: '600', color: palette.textSoft },
-    chartTabs: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.lg, backgroundColor: palette.surfaceSoft, padding: 4, borderRadius: 12 },
-    chartTab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 10 },
-    chartTabActive: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.stroke },
-    chartTabText: { fontSize: 11, fontWeight: '800', color: palette.textSoft, textTransform: 'uppercase' },
-    chartTabTextActive: { color: palette.blue },
-    chartBody: { position: 'relative' },
-    chartGrid: { position: 'absolute', width: '100%', height: 100, justifyContent: 'space-between' },
-    chartGridLine: { height: 1, backgroundColor: palette.stroke, opacity: 0.5 },
-    chartBars: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingHorizontal: spacing.xs, zIndex: 1 },
-    chartBarWrap: { alignItems: 'center', gap: 8 },
-    chartBar: { width: 14, borderRadius: 7, backgroundColor: palette.blueSoft },
-    chartBarActive: { backgroundColor: palette.blue, shadowColor: palette.blue, shadowOpacity: 0.5, shadowRadius: 10, elevation: 4 },
-    chartLabel: { fontSize: 10, fontWeight: '800', color: palette.textSoft },
+    markingWrapper: { width: 10, alignItems: 'center' },
+    mark: { width: 1.5, borderRadius: 1 },
+    markText: { fontSize: 10, fontWeight: '900', marginTop: 38, position: 'absolute', width: 40, textAlign: 'center' },
+    
+    addBtn: {
+      height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
+      shadowOpacity: 0.4, shadowRadius: 12, elevation: 8,
+    },
+    addBtnText: { color: '#fff', fontSize: 17, fontWeight: '900', letterSpacing: 0.4 },
   });
 }

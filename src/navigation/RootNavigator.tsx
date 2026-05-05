@@ -1,13 +1,17 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  NameSetupScreen,
+  PermissionsSetupScreen,
+  DailyPlannerScreen,
+  BreatheScreen,
+  AlarmScreen,
+  BodyCareScreen,
+  HydrationScreen,
+  EyeWellnessScreen,
+} from '../screens';
 import { MainTabs } from './MainTabs';
-import { DailyPlannerScreen } from '../screens/DailyPlannerScreen';
-import { NameSetupScreen } from '../screens/NameSetupScreen';
-import { PermissionsSetupScreen } from '../screens/PermissionsSetupScreen';
-import { BreatheScreen } from '../screens/BreatheScreen';
-import { AlarmScreen } from '../screens/AlarmScreen';
-import { BodyCareScreen } from '../screens/BodyCareScreen';
 import { RootStackParamList } from '../types/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useProfileStore } from '../stores/useProfileStore';
@@ -53,6 +57,8 @@ export function RootNavigator() {
         <Stack.Screen name="Breathe" component={BreatheScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Alarm" component={AlarmScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="BodyCare" component={BodyCareScreen} options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="Hydration" component={HydrationScreen} options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="EyeWellness" component={EyeWellnessScreen} options={{ animation: 'slide_from_bottom' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

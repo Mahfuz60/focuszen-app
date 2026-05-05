@@ -35,158 +35,190 @@ const tabIcons: Record<
 const tabAccentPalettes = {
   Home: {
     activeIcon: '#1fa55b',
-    activeBg: 'rgba(31, 165, 91, 0.14)',
-    activeBorder: 'rgba(31, 165, 91, 0.24)',
-    activeGlow: 'rgba(31, 165, 91, 0.18)',
+    activeBg: 'rgba(31, 165, 91, 0.12)',
+    activeBorder: 'rgba(31, 165, 91, 0.18)',
+    activeGlow: 'rgba(31, 165, 91, 0.14)',
   },
   Control: {
-    activeIcon: '#22e45e',
-    activeBg: 'rgba(34, 228, 94, 0.14)',
-    activeBorder: 'rgba(34, 228, 94, 0.24)',
-    activeGlow: 'rgba(34, 228, 94, 0.18)',
+    activeIcon: '#10b981',
+    activeBg: 'rgba(16, 185, 129, 0.12)',
+    activeBorder: 'rgba(16, 185, 129, 0.18)',
+    activeGlow: 'rgba(16, 185, 129, 0.14)',
   },
   Focus: {
-    activeIcon: '#18b874',
-    activeBg: 'rgba(24, 184, 116, 0.14)',
-    activeBorder: 'rgba(24, 184, 116, 0.24)',
-    activeGlow: 'rgba(24, 184, 116, 0.18)',
+    activeIcon: '#059669',
+    activeBg: 'rgba(5, 150, 105, 0.12)',
+    activeBorder: 'rgba(5, 150, 105, 0.18)',
+    activeGlow: 'rgba(5, 150, 105, 0.14)',
   },
   Purify: {
-    activeIcon: '#8c5cff',
-    activeBg: 'rgba(140, 92, 255, 0.14)',
-    activeBorder: 'rgba(140, 92, 255, 0.24)',
-    activeGlow: 'rgba(140, 92, 255, 0.18)',
+    activeIcon: '#8b5cf6',
+    activeBg: 'rgba(139, 92, 246, 0.12)',
+    activeBorder: 'rgba(139, 92, 246, 0.18)',
+    activeGlow: 'rgba(139, 92, 246, 0.14)',
   },
   Insights: {
-    activeIcon: '#6b86ff',
-    activeBg: 'rgba(107, 134, 255, 0.14)',
-    activeBorder: 'rgba(107, 134, 255, 0.24)',
-    activeGlow: 'rgba(107, 134, 255, 0.18)',
+    activeIcon: '#3b82f6',
+    activeBg: 'rgba(59, 130, 246, 0.12)',
+    activeBorder: 'rgba(59, 130, 246, 0.18)',
+    activeGlow: 'rgba(59, 130, 246, 0.14)',
   },
 } as const;
 
 function MultilineTabLabel({
   color,
   text,
+  focused,
 }: {
   color: string;
   text: string;
+  focused: boolean;
 }) {
-  return <Text style={[styles.multilineLabel, { color }]}>{text}</Text>;
+  return (
+    <Text 
+      style={[
+        styles.multilineLabel, 
+        { color, opacity: focused ? 1 : 0.7, transform: [{ translateY: focused ? -1 : 0 }] }
+      ]}
+    >
+      {text}
+    </Text>
+  );
 }
 
 export function MainTabs() {
   const { colors, mode } = useAppTheme();
+  const isDark = mode === 'dark';
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => {
         const routeName = route.name as keyof MainTabParamList;
         const accent = tabAccentPalettes[routeName];
-        const useDarkTab = mode === 'dark' || routeName === 'Control';
 
         return {
           headerShown: false,
           tabBarActiveTintColor: accent.activeIcon,
-          tabBarInactiveTintColor: useDarkTab ? '#94a3b8' : colors.textMuted,
+          tabBarInactiveTintColor: isDark ? '#94a3b8' : colors.textMuted,
           tabBarStyle: {
-            backgroundColor: useDarkTab
-              ? 'rgba(14, 23, 27, 0.94)'
-              : 'rgba(255, 255, 255, 0.96)',
-            borderTopWidth: 1,
-            borderTopColor: useDarkTab ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-            height: 92,
-            paddingTop: spacing.xs,
-            paddingBottom: spacing.sm,
-            paddingHorizontal: spacing.sm,
-            marginHorizontal: spacing.md,
-            marginBottom: spacing.sm,
-            borderRadius: 30,
+            backgroundColor: isDark ? '#111d17' : '#ffffff',
+            borderTopWidth: 0,
+            height: 84,
+            paddingBottom: 24,
+            paddingTop: 12,
+            marginHorizontal: 16,
+            marginBottom: 16,
+            borderRadius: 32,
             position: 'absolute',
-            shadowColor: useDarkTab ? '#000000' : 'rgba(19,32,24,0.14)',
-            shadowOpacity: useDarkTab ? 0.34 : 0.12,
-            shadowRadius: 22,
-            shadowOffset: { width: 0, height: 10 },
-            elevation: 14,
+            shadowColor: '#000',
+            shadowOpacity: isDark ? 0.4 : 0.08,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 8 },
+            elevation: 10,
+            borderWidth: 1,
+            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
           },
           tabBarItemStyle: {
-            marginHorizontal: 3,
-            borderRadius: 24,
-            paddingVertical: 4,
+            height: 60,
           },
           tabBarLabelStyle: {
-            fontSize: 10.5,
+            fontSize: 10,
             fontFamily: fontFamily.black,
-            letterSpacing: 0,
-            marginTop: 4,
+            marginTop: 2,
             textTransform: 'uppercase',
-          },
-          tabBarIconStyle: {
-            marginTop: 4,
           },
           tabBarIcon: ({ color, focused }) => (
             <View
               style={[
                 styles.tabBarIconShell,
-                focused
-                  ? {
-                      backgroundColor: accent.activeBg,
-                      borderColor: accent.activeBorder,
-                      shadowColor: accent.activeGlow,
-                      shadowOpacity: 0.18,
-                    }
-                  : {
-                      backgroundColor: 'transparent',
-                      borderColor: 'transparent',
-                      shadowOpacity: 0,
-                    },
+                {
+                  backgroundColor: focused ? accent.activeBg : 'transparent',
+                  borderColor: focused ? accent.activeBorder : 'transparent',
+                }
               ]}
             >
               <Ionicons
                 name={focused ? tabIcons[routeName].active : tabIcons[routeName].inactive}
                 color={focused ? accent.activeIcon : color}
-                size={focused ? 21 : 20}
+                size={22}
               />
             </View>
           ),
         };
       }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{
+          tabBarLabel: ({ color, focused }) => (
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>HOME</Text>
+          ),
+        }}
+      />
       <Tab.Screen
         name="Control"
         component={ControlScreen}
         options={{
-          tabBarLabel: ({ color }) => (
-            <MultilineTabLabel color={color} text={'App\nControl'} />
+          tabBarLabel: ({ color, focused }) => (
+            <MultilineTabLabel color={color} text={'APP\nCONTROL'} focused={focused} />
           ),
         }}
       />
-      <Tab.Screen name="Focus" component={FocusScreen} />
-      <Tab.Screen name="Purify" component={PurifyScreen} />
-      <Tab.Screen name="Insights" component={InsightsScreen} />
+      <Tab.Screen 
+        name="Focus" 
+        component={FocusScreen} 
+        options={{
+          tabBarLabel: ({ color, focused }) => (
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>FOCUS</Text>
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Purify" 
+        component={PurifyScreen} 
+        options={{
+          tabBarLabel: ({ color, focused }) => (
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>PURIFY</Text>
+          ),
+        }}
+      />
+      <Tab.Screen 
+        name="Insights" 
+        component={InsightsScreen} 
+        options={{
+          tabBarLabel: ({ color, focused }) => (
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>INSIGHTS</Text>
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
-  multilineLabel: {
+  label: {
     fontSize: 10,
-    fontFamily: fontFamily.extraBold,
+    fontFamily: fontFamily.black,
     letterSpacing: 0,
-    marginTop: 4,
-    lineHeight: 12,
+    marginTop: 2,
     textAlign: 'center',
-    textTransform: 'uppercase',
+  },
+  multilineLabel: {
+    fontSize: 9,
+    fontFamily: fontFamily.black,
+    letterSpacing: 0,
+    marginTop: 1,
+    lineHeight: 10,
+    textAlign: 'center',
   },
   tabBarIconShell: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
+    width: 44,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
+    marginBottom: 2,
   },
 });

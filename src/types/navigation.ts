@@ -6,6 +6,8 @@ export type RootStackParamList = {
   Breathe: undefined;
   Alarm: undefined;
   BodyCare: undefined;
+  Hydration: undefined;
+  EyeWellness: undefined;
 };
 
 export type MainTabParamList = {

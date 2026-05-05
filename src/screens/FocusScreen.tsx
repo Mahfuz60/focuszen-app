@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import {
@@ -239,7 +239,17 @@ export function FocusScreen() {
           contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}
         >
           <View style={styles.focusHeaderContainer}>
-            <Text style={styles.subtitle}>Block distractions. Dive deep.</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+              <Pressable 
+                onPress={handleBack}
+                style={styles.backButton}
+              >
+                <Feather name="arrow-left" size={22} color={palette.text} />
+              </Pressable>
+              <Text style={styles.subtitle}>
+                Block distractions. <Text style={styles.subtitleAccent}>Dive deep.</Text>
+              </Text>
+            </View>
 
             <View style={{ zIndex: 100 }}>
               <Pressable

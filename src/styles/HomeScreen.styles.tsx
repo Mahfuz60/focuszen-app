@@ -353,171 +353,152 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
     qaGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 10,
+      gap: 12,
       marginTop: spacing.sm,
     },
+    qaCardWrapper: {
+      width: '48.3%',
+    },
     qaCard: {
-      width: '48%',
-      borderRadius: 20,
-      overflow: 'hidden',
+      padding: 14,
+      height: 135,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 24,
     },
-    qaInner: {
-      padding: 12,
-      paddingBottom: 6,
-    },
-    qaTopRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
+    qaIconContainer: {
+      alignItems: 'center',
+      marginBottom: 8,
     },
     qaIconWrap: {
-      width: 46,
-      height: 46,
-      borderRadius: 14,
+      width: 54,
+      height: 54,
+      borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    qaArrowBtn: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: 'rgba(255,255,255,0.08)',
-      alignItems: 'center',
-      justifyContent: 'center',
+    qaImage: {
+      width: 42,
+      height: 42,
     },
-    qaLabelWrap: {
-      marginTop: 10,
+    qaArrowHint: {
+      position: 'absolute',
+      top: -4,
+      right: -48,
+    },
+    qaInfo: {
+      alignItems: 'center',
       gap: 2,
     },
     qaLabel: {
       fontSize: 16,
       fontWeight: '800',
-      letterSpacing: -0.3,
       color: palette.text,
+      textAlign: 'center',
     },
     qaSub: {
-      fontSize: 13,
-      fontWeight: '600',
-      lineHeight: 18,
-      color: palette.textMuted,
-    },
-    qaActionArea: {
-      paddingHorizontal: 14,
-      paddingBottom: 14,
-      gap: 10,
-    },
-    qaProgressHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: 0,
-    },
-    qaProgressLabel: {
       fontSize: 12,
       fontWeight: '600',
-      color: palette.textMuted,
-    },
-    qaProgressText: {
-      fontSize: 12,
-      fontWeight: '800',
-    },
-    qaProgressTrack: {
-      height: 6,
-      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-      borderRadius: 3,
-      position: 'relative',
-      justifyContent: 'center',
-    },
-    qaProgressFill: {
-      height: 6,
-      borderRadius: 3,
-    },
-    qaSliderThumb: {
-      width: 14,
-      height: 14,
-      borderRadius: 7,
-      backgroundColor: '#ffffff',
-      position: 'absolute',
-      marginLeft: -7,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 3,
-      elevation: 2,
-    },
-    qaSliderLabels: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: -4,
-    },
-    qaSliderLabelText: {
-      fontSize: 10,
       color: palette.textSoft,
-      fontWeight: '600',
+      textAlign: 'center',
+      opacity: 0.8,
     },
-    qaActionBtn: {
+    usageMasterCard: {
+      padding: 24,
+      borderRadius: 28,
+      marginBottom: 16,
+    },
+    usageFullDivider: {
+      height: 1,
+      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+      marginVertical: 20,
+      width: '100%',
+    },
+    usageHeroRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    usageLabelRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      borderRadius: 10,
       gap: 6,
-      marginTop: 0,
+      marginBottom: 4,
     },
-    qaActionBtnText: {
-      fontSize: 13,
-      fontWeight: '700',
-    },
-    usageSectionTop: {
-      marginBottom: 16,
-      position: 'relative',
-    },
-    usageTopLabel: {
-      fontSize: 24,
+    usageHeroLabel: {
+      fontSize: 12,
       fontWeight: '800',
-      color: palette.text,
-      marginBottom: 8,
-      letterSpacing: -0.5,
-    },
-    usageHeaderRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      justifyContent: 'space-between',
+      color: palette.blue,
+      letterSpacing: 1,
     },
     usageTotalHero: {
-      fontSize: 68,
+      fontSize: 52,
       fontWeight: '800',
       color: palette.text,
       letterSpacing: -2,
-      lineHeight: 74,
+      lineHeight: 58,
     },
     usageTotalSuffix: {
-      fontSize: 24,
+      fontSize: 22,
       fontWeight: '700',
       color: palette.text,
       marginLeft: -2,
-      marginBottom: 8,
     },
-    usageDelta: {
-      fontSize: 15,
-      fontWeight: '700',
-      color: '#10b981',
+    usageDeltaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
       marginTop: 2,
     },
+    usageDeltaText: {
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    usageActionWrap: {
+      position: 'relative',
+    },
     usageChartBtn: {
-      width: 54,
-      height: 54,
-      borderRadius: 18,
-      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.9)',
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: '#3b82f6',
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 6,
       borderWidth: 1,
-      borderColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)',
+      borderColor: 'rgba(255,255,255,0.1)',
+      shadowColor: '#3b82f6',
+      shadowOpacity: mode === 'dark' ? 0.5 : 0.2,
+      shadowRadius: 10,
+      elevation: 5,
+    },
+    usageProgressContainer: {
+      marginTop: 20,
+    },
+    usageProgressTrack: {
+      height: 8,
+      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    usageProgressFill: {
+      height: '100%',
+      backgroundColor: palette.blue,
+      borderRadius: 4,
+    },
+    usageProgressLabels: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 8,
+    },
+    usageProgressSub: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: palette.textSoft,
+    },
+    usageProgressPercent: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: palette.blue,
     },
     usageDetailsCard: {
       borderRadius: 24,
@@ -618,7 +599,7 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
     },
     usageDropdownWrap: {
       position: 'absolute',
-      top: 54,
+      top: 48,
       right: 0,
       width: 140,
       backgroundColor: mode === 'dark' ? '#1a1b1e' : '#ffffff',
@@ -633,7 +614,7 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
       elevation: 10,
     },
     usageDropdownItem: {
-      paddingVertical: 10,
+      paddingVertical: 8,
       paddingHorizontal: 16,
       borderRadius: 12,
     },
@@ -641,7 +622,7 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
       backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
     },
     usageDropdownText: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: '600',
       color: palette.textSoft,
     },
@@ -653,30 +634,6 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
 }
 
 /* ── Dynamic style helpers (mode + color) ── */
-
-export function qaCardStyle(mode: 'dark' | 'light', color: string) {
-  return {
-    backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
-    borderWidth: 1 as const,
-    borderColor: mode === 'dark' ? `${color}50` : `${color}28`,
-    shadowColor: color,
-    shadowOpacity: mode === 'dark' ? 0.4 : 0.15,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  };
-}
-
-export function qaArrowBtnStyle(mode: 'dark' | 'light') {
-  return {
-    backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-  };
-}
-
-export function qaArrowIconColor(mode: 'dark' | 'light') {
-  return mode === 'dark' ? '#94a3b8' : '#64748b';
-}
-
 
 
 export function brandZenStyle(mode: 'dark' | 'light', palette: ScreenPalette) {
