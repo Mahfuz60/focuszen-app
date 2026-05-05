@@ -347,7 +347,16 @@ export function BreatheScreen() {
             </View>
           </View>
 
-          <View style={styles.readyTechnique}>
+          <View style={[styles.readyTechnique, {
+            borderColor: mode === 'dark' ? `${palette.accent}40` : `${palette.accent}15`,
+            shadowColor: palette.accent,
+            shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+            shadowRadius: 18,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 8,
+            backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+            borderWidth: 1.5,
+          }]}>
             <View style={styles.readyTechniqueHeader}>
               <Feather name="wind" size={16} color={palette.accent} />
               <Text style={styles.readyTechniqueLabel}>{pattern.label}</Text>
@@ -357,7 +366,7 @@ export function BreatheScreen() {
             </Text>
             <Text style={styles.readyTechniqueDesc}>{pattern.description}</Text>
           </View>
-
+ 
           {/* Pattern selector */}
           {!isRunning && (
             <View style={styles.patternsSection}>
@@ -365,7 +374,7 @@ export function BreatheScreen() {
                 <View style={styles.sectionAccent} />
                 <Text style={styles.sectionLabel}>TECHNIQUE</Text>
               </View>
-
+ 
               <View style={styles.patternsGrid}>
                 {Object.entries(BREATHE_PATTERNS).map(([key, p]) => {
                   const displayPattern = key === 'custom' && selectedPattern === 'custom' ? customDraft : p;
@@ -384,7 +393,17 @@ export function BreatheScreen() {
                         setSelectedPattern(key as BreathePattern);
                         setIsCustomEditorOpen(key === 'custom');
                       }}
-                      style={[styles.patternCard, selectedPattern === key && styles.patternCardActive]}
+                      style={[styles.patternCard, selectedPattern === key && styles.patternCardActive, {
+                        borderColor: selectedPattern === key 
+                          ? (mode === 'dark' ? `${config.colors[0]}50` : `${config.colors[0]}30`)
+                          : (mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'),
+                        shadowColor: config.colors[0],
+                        shadowOpacity: selectedPattern === key ? (mode === 'dark' ? 0.3 : 0.1) : 0,
+                        shadowRadius: 15,
+                        elevation: selectedPattern === key ? 6 : 0,
+                        borderWidth: selectedPattern === key ? 1.5 : 1,
+                        backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#ffffff',
+                      }]}
                     >
                       {/* Left Side Accent Glow */}
                       <LinearGradient
@@ -393,7 +412,7 @@ export function BreatheScreen() {
                         end={{ x: 1, y: 0 }}
                         style={styles.patternSideGlow}
                       />
-
+ 
                       <LinearGradient
                         colors={config.colors}
                         start={{ x: 0, y: 0 }}
@@ -447,9 +466,17 @@ export function BreatheScreen() {
                   );
                 })}
               </View>
-
+ 
               {/* Tip Card */}
-              <View style={styles.tipCard}>
+              <View style={[styles.tipCard, {
+                borderColor: mode === 'dark' ? `${palette.accent}30` : `${palette.accent}12`,
+                shadowColor: palette.accent,
+                shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+                shadowRadius: 15,
+                elevation: 4,
+                borderWidth: 1,
+                backgroundColor: mode === 'dark' ? 'rgba(124,58,237,0.05)' : '#ffffff',
+              }]}>
                 <Ionicons name="information-circle-outline" size={24} color={palette.accent} />
                 <Text style={styles.tipText}>
                   {pattern.description}

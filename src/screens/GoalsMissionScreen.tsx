@@ -22,7 +22,14 @@ export function GoalsMissionScreen() {
       subtitle="Weekly and monthly progress, milestone rewards, and your current level ladder."
       right={<MetricPill label="Gamified" tone="amber" />}
     >
-      <SurfaceCard>
+      <SurfaceCard style={{
+        borderColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)',
+        shadowColor: colors.blue,
+        shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+        shadowRadius: 15,
+        elevation: 6,
+        borderWidth: 1,
+      }}>
         <SectionHeader title="Levels" />
         <View style={styles.levels}>
           {['Seedling', 'Focus Pro', 'Deep Worker', 'Zen Master'].map((level) => (
@@ -35,7 +42,14 @@ export function GoalsMissionScreen() {
       {(goals || []).map((goal, index) => {
         const progress = Math.min(1, goal.current / goal.target);
         return (
-          <SurfaceCard key={goal.id} delay={index * 70}>
+          <SurfaceCard key={goal.id} delay={index * 70} style={{
+            borderColor: mode === 'dark' ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.12)',
+            shadowColor: colors.blue,
+            shadowOpacity: mode === 'dark' ? 0.25 : 0.08,
+            shadowRadius: 18,
+            elevation: 8,
+            borderWidth: 1.5,
+          }}>
             <View style={styles.goalRow}>
               <ProgressRing size={120} strokeWidth={10} progress={progress} valueLabel={`${Math.round(progress * 100)}%`} caption={goal.period} />
               <View style={{ flex: 1 }}>
@@ -48,7 +62,14 @@ export function GoalsMissionScreen() {
         );
       })}
 
-      <SurfaceCard delay={220}>
+      <SurfaceCard delay={220} style={{
+        borderColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)',
+        shadowColor: colors.purple,
+        shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+        shadowRadius: 15,
+        elevation: 6,
+        borderWidth: 1,
+      }}>
         <SectionHeader title="Milestones & badges" />
         <View style={styles.badges}>
           {(badges || []).map((badge) => (
@@ -57,7 +78,14 @@ export function GoalsMissionScreen() {
         </View>
       </SurfaceCard>
 
-      <SurfaceCard delay={280}>
+      <SurfaceCard delay={280} style={{
+        borderColor: mode === 'dark' ? 'rgba(255, 171, 0, 0.3)' : 'rgba(255, 171, 0, 0.15)',
+        shadowColor: colors.amber,
+        shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+        shadowRadius: 20,
+        elevation: 10,
+        borderWidth: 1.5,
+      }}>
         <SectionHeader title="Streak engine" />
         <Text style={[styles.metricValue, { color: colors.amber }]}>{streak.current} day streak</Text>
         <Text style={[styles.supportText, { color: colors.textMuted }]}>Best streak: {streak.best} days. Completing focus blocks and routines feeds unlock progress.</Text>

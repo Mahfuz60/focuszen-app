@@ -91,6 +91,7 @@ export function PermissionsSetupScreen() {
   };
 
   const allCompleted = Object.values(completed).every((v) => v === true);
+  // const allCompleted = true;
 
   const handleFinish = () => {
     if (!allCompleted) return;

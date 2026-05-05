@@ -21,7 +21,6 @@ const APP_OPTION_MAP: Record<AppControlTarget, ControlOptionDescriptor[]> = {
   YouTube: [
     { key: 'blockShorts', label: 'Block shorts', icon: 'play-outline' },
     { key: 'blockSearch', label: 'Block video search', icon: 'search-outline' },
-    { key: 'blockPictureInPicture', label: 'Block picture', icon: 'tablet-landscape-outline' },
     { key: 'blockComments', label: 'Block comments', icon: 'chatbox-ellipses-outline' },
   ],
   Instagram: [

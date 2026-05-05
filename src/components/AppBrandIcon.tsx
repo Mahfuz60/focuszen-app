@@ -18,6 +18,8 @@ import {
 } from 'simple-icons';
 import { AppControlTarget } from '../types/models';
 
+import { useAppTheme } from '../hooks/useAppTheme';
+
 type AppBrandIconProps = {
   appName: AppControlTarget | string;
   size?: number;
@@ -60,45 +62,97 @@ function normalizeAppName(appName: string): AppControlTarget | 'fallback' {
   }
 }
 
-function getBrandConfig(appName: AppControlTarget | string): BrandConfig {
-  const fixedBg = 'rgba(255, 255, 255, 0.08)';
+function getBrandConfig(appName: AppControlTarget | string, mode: 'light' | 'dark'): BrandConfig {
+  const isDark = mode === 'dark';
+  const fixedBg = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 1)';
+  
   switch (normalizeAppName(appName)) {
     case 'YouTube':
-      return { icon: siYoutube, iconColor: '#FF0000', background: fixedBg };
+      return { 
+        icon: siYoutube, 
+        iconColor: isDark ? '#FF0000' : '#FFFFFF', 
+        background: isDark ? fixedBg : '#FF0000' 
+      };
     case 'Instagram':
-      return { icon: siInstagram, iconColor: '#E4405F', background: fixedBg };
+      return { 
+        icon: siInstagram, 
+        iconColor: '#FFFFFF', 
+        gradient: isDark ? ['#E4405F', '#FD1D1D', '#F56040'] : ['#833AB4', '#E1306C', '#F77737']
+      };
     case 'Facebook':
-      return { icon: siFacebook, iconColor: '#1877F2', background: fixedBg };
+      return { 
+        icon: siFacebook, 
+        iconColor: isDark ? '#1877F2' : '#FFFFFF', 
+        background: isDark ? fixedBg : '#1877F2' 
+      };
     case 'Snapchat':
-      return { icon: siSnapchat, iconColor: '#FFFC00', background: fixedBg };
+      return { 
+        icon: siSnapchat, 
+        iconColor: '#333333', 
+        background: '#FFFC00' 
+      };
     case 'TikTok':
-      return { icon: siTiktok, iconColor: '#FFFFFF', background: fixedBg };
+      return { 
+        icon: siTiktok, 
+        iconColor: isDark ? '#FFFFFF' : '#000000', 
+        background: isDark ? fixedBg : '#FFFFFF' 
+      };
     case 'Telegram':
-      return { icon: siTelegram, iconColor: '#24A1DE', background: fixedBg };
+      return { 
+        icon: siTelegram, 
+        iconColor: isDark ? '#24A1DE' : '#FFFFFF', 
+        background: isDark ? fixedBg : '#24A1DE' 
+      };
     case 'Line':
-      return { icon: siLine, iconColor: '#06C755', background: fixedBg };
+      return { 
+        icon: siLine, 
+        iconColor: isDark ? '#06C755' : '#FFFFFF', 
+        background: isDark ? fixedBg : '#06C755' 
+      };
     case 'Messenger':
-      return { icon: siMessenger, iconColor: '#00B2FF', background: fixedBg };
+      return { 
+        icon: siMessenger, 
+        iconColor: isDark ? '#00B2FF' : '#FFFFFF', 
+        background: isDark ? fixedBg : '#00B2FF' 
+      };
     case 'WhatsApp':
-      return { icon: siWhatsapp, iconColor: '#25D366', background: fixedBg };
+      return { 
+        icon: siWhatsapp, 
+        iconColor: isDark ? '#25D366' : '#FFFFFF', 
+        background: isDark ? fixedBg : '#25D366' 
+      };
     case 'X':
-      return { icon: siX, iconColor: '#FFFFFF', background: fixedBg };
+      return { 
+        icon: siX, 
+        iconColor: '#FFFFFF', 
+        background: '#000000' 
+      };
     default:
-      return { icon: siAppstore, iconColor: '#5b8dff', background: fixedBg };
+      return { 
+        icon: siAppstore, 
+        iconColor: isDark ? '#5b8dff' : '#FFFFFF', 
+        background: isDark ? fixedBg : '#5b8dff' 
+      };
   }
 }
 
+export function getAppColor(appName: AppControlTarget | string): string {
+  // Use a default mode for color getting
+  return getBrandConfig(appName, 'light').background || '#5b8dff';
+}
+
 export function AppBrandIcon({ appName, size = 36 }: AppBrandIconProps) {
-  const config = getBrandConfig(appName);
+  const { mode } = useAppTheme();
+  const config = getBrandConfig(appName, mode);
   const shellStyle = [
     styles.shell,
     {
       width: size,
       height: size,
-      borderRadius: size * 0.34,
+      borderRadius: size * 0.28,
     },
   ];
-  const iconSize = size * 0.52;
+  const iconSize = size * 0.58;
 
   const iconSvg = (
     <Svg width={iconSize} height={iconSize} viewBox="0 0 24 24">

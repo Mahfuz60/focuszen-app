@@ -455,12 +455,23 @@ export function DailyPlannerScreen() {
             ) : (
               plannerView.visibleTasks.map((task) => {
                 const categoryStyle = categoryStyles[task.category];
+                const catGlow = (categoryGlows as any)[task.category] || categoryGlows.Work;
+                const glowColor = task.category === 'Study' ? '#00b0ff' : 
+                                 task.category === 'Work' ? '#00c853' :
+                                 task.category === 'Health' ? '#ffab00' : '#d500f9';
 
                 return (
                   <LinearGradient
                     key={task.id}
-                    colors={(categoryGlows as any)[task.category] || categoryGlows.Work}
-                    style={styles.taskCard}
+                    colors={catGlow}
+                    style={[styles.taskCard, {
+                      borderColor: mode === 'dark' ? `${glowColor}35` : `${glowColor}15`,
+                      shadowColor: glowColor,
+                      shadowOpacity: mode === 'dark' ? 0.25 : 0.08,
+                      shadowRadius: 15,
+                      elevation: 6,
+                      borderWidth: 1.5,
+                    }]}
                   >
                     <View style={styles.taskTop}>
                       <View style={styles.taskIdentity}>

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Circle, Defs, RadialGradient, Stop, LinearGradient } from 'react-native-svg';
+import Svg, { Circle, Defs, RadialGradient, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import {
@@ -237,13 +238,13 @@ export function PurifyScreen() {
             style={styles.rainbowSvg}
           >
             <Defs>
-              <LinearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <SvgLinearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <Stop offset="0%" stopColor="#38bdf8" />
                 <Stop offset="25%" stopColor="#00ff9d" />
                 <Stop offset="50%" stopColor="#fbbf24" />
                 <Stop offset="75%" stopColor="#f43f5e" />
                 <Stop offset="100%" stopColor="#d946ef" />
-              </LinearGradient>
+              </SvgLinearGradient>
               <RadialGradient id="ringBackGlow" cx="50%" cy="50%" r="50%">
                 <Stop offset="0%" stopColor="#d946ef" stopOpacity="0.2" />
                 <Stop offset="100%" stopColor="#0f111a" stopOpacity="0" />
@@ -290,26 +291,65 @@ export function PurifyScreen() {
 
         </View>
 
-        <Pressable onPress={() => {}} style={styles.nextMilestoneCard}>
-          <View style={styles.milestoneIconWrap}>
-            <Ionicons name="disc-outline" size={26} color="#d946ef" />
-          </View>
-          <View style={styles.milestoneCopy}>
-            <Text style={styles.milestoneLabelSmall}>Next milestone</Text>
-            <Text style={styles.milestoneValueLarge}>{nextMilestoneLabel}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+        <Pressable onPress={() => {}} style={{ marginTop: spacing.md }}>
+          <LinearGradient
+            colors={mode === 'dark' ? ['#d946ef25', '#d946ef10'] : ['#ffffff', '#fdf4ff']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.nextMilestoneCard, {
+              borderColor: mode === 'dark' ? '#d946ef60' : '#d946ef30',
+              shadowColor: '#d946ef',
+              shadowOpacity: mode === 'dark' ? 0.4 : 0.15,
+              shadowRadius: 20,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 10,
+              borderWidth: 1.5,
+              marginTop: 0, // removed margin from inner style
+            }]}
+          >
+            <View style={styles.milestoneIconWrap}>
+              <Ionicons name="disc-outline" size={26} color="#d946ef" />
+            </View>
+            <View style={styles.milestoneCopy}>
+              <Text style={styles.milestoneLabelSmall}>Next milestone</Text>
+              <Text style={styles.milestoneValueLarge}>{nextMilestoneLabel}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+          </LinearGradient>
         </Pressable>
 
-        <View style={styles.quoteGlassCard}>
-          <View style={styles.quoteLeftBar} />
-          <View style={styles.quoteContent}>
-            <Text style={styles.quoteTextMain}>"{quoteVm.body}"</Text>
-            <Text style={styles.quoteSourceText}>{quoteVm.sourceLabel}</Text>
-          </View>
+        <View style={{ marginTop: spacing.md }}>
+          <LinearGradient
+            colors={mode === 'dark' ? ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.01)'] : ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.8)']}
+            style={[styles.quoteGlassCard, {
+              borderColor: mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+              shadowColor: mode === 'dark' ? '#ffffff' : '#000000',
+              shadowOpacity: mode === 'dark' ? 0.1 : 0.05,
+              shadowRadius: 25,
+              shadowOffset: { width: 0, height: 12 },
+              elevation: 6,
+              borderWidth: 1,
+              marginTop: 0,
+            }]}
+          >
+            <View style={styles.quoteLeftBar} />
+            <View style={styles.quoteContent}>
+              <Text style={styles.quoteTextMain}>"{quoteVm.body}"</Text>
+              <Text style={styles.quoteSourceText}>{quoteVm.sourceLabel}</Text>
+            </View>
+          </LinearGradient>
         </View>
 
-        <Pressable onPress={() => navigation.navigate('Focus')} style={styles.openFocusButton}>
+        <Pressable onPress={() => navigation.navigate('Focus')} style={[styles.openFocusButton, {
+          borderColor: mode === 'dark' ? '#fbbf2440' : '#fbbf2420',
+          shadowColor: '#fbbf24',
+          shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+          shadowRadius: 15,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 8,
+          backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+          borderWidth: 1,
+        }]}>
           <Ionicons name="flash" size={20} color={palette.yellow} style={{ marginRight: 12 }} />
           <Text style={styles.openFocusText}>Open focus</Text>
           <Ionicons name="chevron-forward" size={18} color={palette.yellow} style={{ marginLeft: 'auto' }} />

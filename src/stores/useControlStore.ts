@@ -49,6 +49,15 @@ export const useControlStore = create<ControlState>()(
             FocusZenSettings.updateAppFeatures(control.appName, control.features);
           });
           FocusZenSettings.setStrictMode(state.strictModeEnabled);
+          if (FocusZenSettings.setSafeBrowsing) {
+            FocusZenSettings.setSafeBrowsing(
+              state.safeBrowsing.adultContentBlock ?? false,
+              state.safeBrowsing.gamblingBlock ?? false,
+            );
+          }
+          if (FocusZenSettings.setCustomBlockedDomains && state.safeBrowsing.customDomains) {
+            FocusZenSettings.setCustomBlockedDomains(state.safeBrowsing.customDomains);
+          }
         }
       },
       toggleAppBlocked: (appName) =>
@@ -109,12 +118,21 @@ export const useControlStore = create<ControlState>()(
       toggleSafeBrowsing: (key) =>
         set((state) => {
           if (state.strictModeEnabled) return {};
-          return {
-            safeBrowsing: {
-              ...state.safeBrowsing,
-              [key]: !state.safeBrowsing[key],
-            },
+          const updated = {
+            ...state.safeBrowsing,
+            [key]: !state.safeBrowsing[key],
           };
+          // Sync to native SharedPrefs so AccessibilityService reads live values
+          if (FocusZenSettings?.setSafeBrowsing) {
+            FocusZenSettings.setSafeBrowsing(
+              updated.adultContentBlock ?? false,
+              updated.gamblingBlock ?? false,
+            );
+          }
+          if (FocusZenSettings?.setCustomBlockedDomains && updated.customDomains) {
+            FocusZenSettings.setCustomBlockedDomains(updated.customDomains);
+          }
+          return { safeBrowsing: updated };
         }),
       setCustomDomains: (domains) =>
         set((state) => ({

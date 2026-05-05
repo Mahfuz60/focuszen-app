@@ -60,4 +60,22 @@ class SettingsModule(reactContext: ReactApplicationContext) :
         val intent = Intent(reactApplicationContext, FocusForegroundService::class.java)
         reactApplicationContext.stopService(intent)
     }
+
+    @ReactMethod
+    fun setSafeBrowsing(adultContentBlock: Boolean, gamblingBlock: Boolean) {
+        prefs.edit()
+            .putBoolean("adultContentBlock", adultContentBlock)
+            .putBoolean("gamblingBlock", gamblingBlock)
+            .apply()
+    }
+
+    @ReactMethod
+    fun setCustomBlockedDomains(domains: com.facebook.react.bridge.ReadableArray) {
+        val sb = StringBuilder()
+        for (i in 0 until domains.size()) {
+            if (i > 0) sb.append(",")
+            sb.append(domains.getString(i))
+        }
+        prefs.edit().putString("custom_blocked_domains", sb.toString()).apply()
+    }
 }

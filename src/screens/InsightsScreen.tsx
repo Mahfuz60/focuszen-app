@@ -317,14 +317,23 @@ export function InsightsScreen() {
       x: padding + i * stepX,
       y: height - padding - (Math.min(item.value, highestValue) / highestValue) * chartHeight,
     }));
-
+ 
     const linePath = points.reduce((path, p, i) => 
       i === 0 ? `M${p.x},${p.y}` : `${path} L${p.x},${p.y}`, '');
     
     const fillPath = `${linePath} L${points[points.length - 1].x},${height} L${points[0].x},${height} Z`;
-
+ 
     return (
-      <View style={styles.sectionCard}>
+      <View style={[styles.sectionCard, {
+        borderColor: mode === 'dark' ? `${palette.green}40` : `${palette.green}15`,
+        shadowColor: palette.green,
+        shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 8,
+        backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+        borderWidth: 1.5,
+      }]}>
         <View style={styles.sectionHeader}>
           <View>
              <Text style={styles.heroMinutes}>{focusMinutesLabel}</Text>
@@ -334,7 +343,7 @@ export function InsightsScreen() {
              <Text style={styles.heroDelta}>↑ {formatDelta(weeklyDelta)}</Text>
           </View>
         </View>
-
+ 
         <View style={styles.chartContainer}>
           <View style={styles.chartYAxis}>
             <Text style={styles.chartYLabel}>60m</Text>
@@ -343,7 +352,7 @@ export function InsightsScreen() {
             <Text style={styles.chartYLabel}>15m</Text>
             <Text style={styles.chartYLabel}>0m</Text>
           </View>
-
+ 
           <View style={styles.chartArea}>
             <View style={styles.chartGrid}>
               <View style={styles.chartGridLine} />
@@ -366,7 +375,7 @@ export function InsightsScreen() {
                 <Circle key={i} cx={p.x} cy={p.y} r={4.5} fill={palette.green} stroke={palette.surface} strokeWidth={2.5} />
               ))}
             </Svg>
-
+ 
             <View style={styles.chartXLabels}>
               {dataPoints.map((item) => (
                 <Text key={item.label} style={styles.chartXLabel}>{item.label}</Text>
@@ -374,7 +383,7 @@ export function InsightsScreen() {
             </View>
           </View>
         </View>
-
+ 
         <View style={styles.periodToggle}>
           {['7D', '4W', '12M'].map((p) => (
             <Pressable 
@@ -389,11 +398,20 @@ export function InsightsScreen() {
       </View>
     );
   }
-
+ 
   function renderSummaryPairs() {
     return (
       <View style={styles.summaryGrid}>
-        <View style={styles.summaryCard}>
+        <View style={[styles.summaryCard, {
+          borderColor: mode === 'dark' ? `${palette.green}30` : `${palette.green}12`,
+          shadowColor: palette.green,
+          shadowOpacity: mode === 'dark' ? 0.2 : 0.08,
+          shadowRadius: 15,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 6,
+          backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+          borderWidth: 1,
+        }]}>
           <View style={styles.summaryHeader}>
              <View style={styles.summaryIconWrap}>
                 <Ionicons name="leaf-outline" size={16} color={palette.green} />
@@ -403,8 +421,17 @@ export function InsightsScreen() {
           <Text style={styles.summaryValue}>{focusOverview.bestDay.value || 'None'}</Text>
           <Text style={styles.summarySub}>No focus sessions</Text>
         </View>
-
-        <View style={styles.summaryCard}>
+ 
+        <View style={[styles.summaryCard, {
+          borderColor: mode === 'dark' ? `${palette.purple}30` : `${palette.purple}12`,
+          shadowColor: palette.purple,
+          shadowOpacity: mode === 'dark' ? 0.2 : 0.08,
+          shadowRadius: 15,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 6,
+          backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+          borderWidth: 1,
+        }]}>
           <View style={styles.summaryHeader}>
              <View style={[styles.summaryIconWrap, { backgroundColor: 'rgba(217,70,239,0.05)' }]}>
                 <Ionicons name="sparkles" size={16} color={palette.purple} />
@@ -417,22 +444,40 @@ export function InsightsScreen() {
       </View>
     );
   }
-
+ 
   function renderControlSnapshot() {
     return (
-      <View style={styles.sectionCard}>
+      <View style={[styles.sectionCard, {
+        borderColor: mode === 'dark' ? `${palette.purple}40` : `${palette.purple}15`,
+        shadowColor: palette.purple,
+        shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 8,
+        backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+        borderWidth: 1.5,
+        marginTop: 20,
+      }]}>
         <View style={styles.purifyHeader}>
           <Text style={styles.sectionTitle}>Control snapshot</Text>
           <Text style={[styles.sectionTitle, { color: palette.green }]}>0%</Text>
         </View>
-
+ 
         <View style={styles.tripletGrid}>
           {[
             { label: 'Protected', value: controlOverview.metrics.protected.value, icon: 'shield-outline', color: palette.blue },
             { label: 'Blocked', value: controlOverview.metrics.blocked.value, icon: 'lock-closed-outline', color: palette.green },
             { label: 'Usage', value: controlUsageLabel, icon: 'time-outline', color: palette.purple },
           ].map((item, i) => (
-            <View key={i} style={styles.tripletCard}>
+            <View key={i} style={[styles.tripletCard, {
+              borderColor: mode === 'dark' ? `${item.color}30` : `${item.color}10`,
+              shadowColor: item.color,
+              shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+              shadowRadius: 10,
+              elevation: 4,
+              borderWidth: 1,
+              backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
+            }]}>
               <View style={[styles.tripletIcon, { backgroundColor: `${item.color}15` }]}>
                 <Ionicons name={item.icon as any} size={20} color={item.color} />
               </View>
@@ -453,21 +498,39 @@ export function InsightsScreen() {
 
   function renderPurifyOverhaul() {
     return (
-      <View style={styles.sectionCard}>
+      <View style={[styles.sectionCard, {
+        borderColor: mode === 'dark' ? `${palette.purple}40` : `${palette.purple}15`,
+        shadowColor: palette.purple,
+        shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 8,
+        backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+        borderWidth: 1.5,
+        marginTop: 20,
+      }]}>
         <View style={styles.purifyHeader}>
           <Text style={styles.sectionTitle}>Purify progress</Text>
           <View style={styles.purifyBadge}>
             <Text style={styles.purifyBadgeText}>{purifyInsights.activeStage.title}</Text>
           </View>
         </View>
-
+ 
         <View style={styles.tripletGrid}>
           {[
             { label: 'Current Streak', value: purifyInsights.summary.current.value, icon: 'flash-outline', color: palette.purple },
             { label: 'Best Streak', value: purifyInsights.summary.best.value, icon: 'star-outline', color: palette.green },
             { label: 'Lifetime Days', value: purifyInsights.summary.lifetime.value, icon: 'calendar-outline', color: palette.blue },
           ].map((item, i) => (
-            <View key={i} style={styles.tripletCard}>
+            <View key={i} style={[styles.tripletCard, {
+              borderColor: mode === 'dark' ? `${item.color}30` : `${item.color}10`,
+              shadowColor: item.color,
+              shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+              shadowRadius: 10,
+              elevation: 4,
+              borderWidth: 1,
+              backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
+            }]}>
               <View style={[styles.tripletIcon, { backgroundColor: `${item.color}15` }]}>
                 <Ionicons name={item.icon as any} size={20} color={item.color} />
               </View>

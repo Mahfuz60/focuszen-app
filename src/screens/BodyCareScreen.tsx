@@ -471,14 +471,30 @@ export function BodyCareScreen() {
           <View style={styles.summarySection}>
             <Text style={styles.sectionTitle}>Today's Summary</Text>
             <View style={styles.summaryGrid}>
-              <View style={styles.summaryCard}>
+              <View style={[styles.summaryCard, {
+                borderColor: mode === 'dark' ? `${palette.blue}30` : `${palette.blue}12`,
+                shadowColor: palette.blue,
+                shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+                shadowRadius: 15,
+                elevation: 6,
+                backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
+                borderWidth: 1,
+              }]}>
                  <View style={[styles.summaryIcon, { backgroundColor: palette.blueSoft }]}>
                     <Ionicons name="water-outline" size={20} color={palette.blue} />
                  </View>
                  <Text style={styles.summaryValue}>{formatMl(totalWaterToday)}</Text>
                  <Text style={styles.summaryLabel}>Water Intake</Text>
               </View>
-              <View style={styles.summaryCard}>
+              <View style={[styles.summaryCard, {
+                borderColor: mode === 'dark' ? `${palette.green}30` : `${palette.green}12`,
+                shadowColor: palette.green,
+                shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+                shadowRadius: 15,
+                elevation: 6,
+                backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
+                borderWidth: 1,
+              }]}>
                  <View style={[styles.summaryIcon, { backgroundColor: palette.greenSoft }]}>
                     <Ionicons name="eye-outline" size={20} color={palette.green} />
                  </View>

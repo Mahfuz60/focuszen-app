@@ -19,7 +19,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppBrandIcon } from "../components/AppBrandIcon";
+import { AppBrandIcon, getAppColor } from "../components/AppBrandIcon";
 import { AnimatedThemeBackdrop } from "../components/AnimatedThemeBackdrop";
 import { useControlStore } from "../stores/useControlStore";
 import { usePurifyStore } from "../stores/usePurifyStore";
@@ -217,7 +217,7 @@ export function ControlScreen() {
     palette.backgroundTop,
     palette.backgroundBottom,
   ];
-  const statusBarStyle = "light-content";
+  const statusBarStyle = resolvedMode === 'dark' ? 'light-content' : 'dark-content';
 
   function handleBack() {
     navigation.navigate("Home");
@@ -342,7 +342,16 @@ export function ControlScreen() {
           ) : null}
               <View style={styles.metricsRow}>
                 {metricCards.map((metric) => (
-                  <View key={metric.key} style={styles.metricCard}>
+                  <View key={metric.key} style={[styles.metricCard, {
+                    borderColor: mode === 'dark' ? `${metric.color}40` : `${metric.color}20`,
+                    shadowColor: metric.color,
+                    shadowOpacity: mode === 'dark' ? 0.35 : 0.12,
+                    shadowRadius: 15,
+                    shadowOffset: { width: 0, height: 6 },
+                    elevation: 6,
+                    backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+                    borderWidth: 1,
+                  }]}>
                     <View
                       style={[
                         styles.metricIcon,
@@ -399,7 +408,15 @@ export function ControlScreen() {
                 />
               </View>
 
-              <View style={styles.card}>
+              <View style={[styles.card, {
+                borderColor: mode === 'dark' ? `${palette.purple}30` : `${palette.purple}15`,
+                shadowColor: palette.purple,
+                shadowOpacity: mode === 'dark' ? 0.25 : 0.08,
+                shadowRadius: 20,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 6,
+                backgroundColor: mode === 'dark' ? 'rgba(12, 16, 26, 0.95)' : '#ffffff',
+              }]}>
                 <Text style={styles.sectionEyebrow}>Blocked apps</Text>
 
                 {visibleControls.map((control) => {
@@ -419,6 +436,7 @@ export function ControlScreen() {
                     control.appName,
                   );
                   const expanded = expandedApp === control.appName;
+                  const appColor = getAppColor(control.appName);
 
                   return (
                     <View
@@ -426,6 +444,15 @@ export function ControlScreen() {
                       style={[
                         styles.appShell,
                         expanded ? styles.appShellExpanded : null,
+                        {
+                          borderColor: mode === 'dark' ? `${appColor}50` : `${appColor}28`,
+                          shadowColor: appColor,
+                          shadowOpacity: mode === 'dark' ? 0.4 : 0.15,
+                          shadowRadius: 18,
+                          shadowOffset: { width: 0, height: 6 },
+                          elevation: 8,
+                          backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+                        }
                       ]}
                     >
                       <Pressable
@@ -526,7 +553,15 @@ export function ControlScreen() {
                 ) : null}
               </View>
 
-              <View style={styles.card}>
+              <View style={[styles.card, {
+                borderColor: mode === 'dark' ? `${palette.green}40` : `${palette.green}20`,
+                shadowColor: palette.green,
+                shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+                shadowRadius: 15,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 8,
+                backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+              }]}>
                 <Text style={styles.sectionEyebrow}>Protection modes</Text>
 
                 {safeBrowsingRows.map((row, index) => {

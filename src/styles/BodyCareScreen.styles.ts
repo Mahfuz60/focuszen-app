@@ -60,8 +60,8 @@ export function createBodyCareStyles(palette: ScreenPalette) {
     sectionCard: {
       marginTop: spacing.md, padding: spacing.lg, borderRadius: 28,
       backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
-      shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 12 },
-      elevation: 8,
+      shadowColor: palette.blue, shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 12 },
+      elevation: 10,
     },
     sectionCardAlert: { borderColor: palette.strokeAlert, backgroundColor: palette.blueSoft },
     cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md },
@@ -98,8 +98,10 @@ export function createBodyCareStyles(palette: ScreenPalette) {
 
     standCard: {
       marginTop: spacing.md, borderRadius: 28, backgroundColor: palette.surface,
-      borderWidth: 1, borderColor: palette.stroke, overflow: 'hidden',
+      borderWidth: 1.5, borderColor: palette.stroke, overflow: 'hidden',
       flexDirection: 'row', height: 160,
+      shadowColor: palette.blue, shadowOpacity: 0.2, shadowRadius: 15, shadowOffset: { width: 0, height: 8 },
+      elevation: 8,
     },
     standContent: { flex: 1.2, padding: spacing.lg, justifyContent: 'center' },
     standTitle: { fontSize: 18, fontWeight: '800', color: palette.blue, marginBottom: 8 },
@@ -113,7 +115,7 @@ export function createBodyCareStyles(palette: ScreenPalette) {
     summaryCard: {
       flex: 1, padding: spacing.lg, borderRadius: 24,
       backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
-      shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, shadowOffset: { width: 0, height: 10 },
+      shadowColor: palette.blue, shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 10 },
       elevation: 6,
     },
     summaryIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
@@ -122,8 +124,10 @@ export function createBodyCareStyles(palette: ScreenPalette) {
 
     motivationCard: {
       marginTop: spacing.md, padding: spacing.lg, borderRadius: 24,
-      backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.stroke,
+      backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
       flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+      shadowColor: palette.blue, shadowOpacity: 0.15, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
     },
     motivationIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
     motivationTitle: { fontSize: 16, fontWeight: '800', color: palette.text },
@@ -149,6 +153,8 @@ export function createBodyCareStyles(palette: ScreenPalette) {
     chartContainer: { 
       marginTop: spacing.md, padding: spacing.lg, borderRadius: 28,
       backgroundColor: palette.surface, borderWidth: 1.5, borderColor: palette.stroke,
+      shadowColor: palette.blue, shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 12 },
+      elevation: 10,
     },
     chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl },
     chartTitle: { fontSize: 16, fontWeight: '800', color: palette.text },

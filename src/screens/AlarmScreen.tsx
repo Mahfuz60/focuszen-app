@@ -202,7 +202,15 @@ export function AlarmScreen() {
 
           {/* Timer display */}
           <View style={styles.timerSection}>
-            <Animated.View style={[styles.timerRing, { transform: [{ scale: isAlarmFiring ? pulseAnim : 1 }] }]}>
+            <Animated.View style={[styles.timerRing, { 
+              transform: [{ scale: isAlarmFiring ? pulseAnim : 1 }],
+              borderColor: isAlarmFiring ? palette.alarm : (mode === 'dark' ? `${palette.primaryGlow}50` : `${palette.primaryGlow}20`),
+              shadowColor: isAlarmFiring ? palette.alarm : palette.primaryGlow,
+              shadowOpacity: (isRunning || isAlarmFiring) ? (mode === 'dark' ? 0.4 : 0.15) : 0,
+              shadowRadius: 25,
+              elevation: (isRunning || isAlarmFiring) ? 12 : 0,
+              borderWidth: 2,
+            }]}>
               <View style={[styles.timerInner, isAlarmFiring && { borderColor: palette.alarm }]}>
                 <Text style={styles.timerEmoji}>{preset.emoji}</Text>
                 <Text style={[styles.timerDisplay, isAlarmFiring && { color: palette.alarm }]}>
@@ -231,7 +239,17 @@ export function AlarmScreen() {
                   <Pressable
                     key={key}
                     onPress={() => setSelectedPreset(key)}
-                    style={[styles.presetCard, selectedPreset === key && styles.presetCardActive]}
+                    style={[styles.presetCard, selectedPreset === key && styles.presetCardActive, {
+                      borderColor: selectedPreset === key 
+                        ? (mode === 'dark' ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.3)')
+                        : (mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'),
+                      shadowColor: '#3b82f6',
+                      shadowOpacity: selectedPreset === key ? (mode === 'dark' ? 0.3 : 0.1) : 0,
+                      shadowRadius: 15,
+                      elevation: selectedPreset === key ? 6 : 0,
+                      borderWidth: selectedPreset === key ? 1.5 : 1,
+                      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#ffffff',
+                    }]}
                   >
                     <Text style={styles.presetEmoji}>{p.emoji}</Text>
                     <Text style={[styles.presetLabel, selectedPreset === key && styles.presetLabelActive]}>{p.label}</Text>

@@ -306,7 +306,17 @@ export function HomeScreen() {
             </View>
 
             <View style={styles.streakWrap}>
-              <View style={styles.streakRing}>
+              <View style={[styles.streakRing, {
+                borderColor: mode === 'dark' ? `${palette.green}40` : `${palette.green}20`,
+                shadowColor: palette.green,
+                shadowOpacity: mode === 'dark' ? 0.35 : 0.1,
+                shadowRadius: 20,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 10,
+                backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.96)' : '#ffffff',
+                borderWidth: 1.5,
+                borderRadius: 70,
+              }]}>
                 <Svg width={140} height={140} style={{ position: 'absolute', transform: [{ scaleX: -1 }] }}>
                   <Circle
                     cx={70}
@@ -340,11 +350,20 @@ export function HomeScreen() {
                     <Text style={[extraStyles.streakBadgeText, { color: palette.green }]}>Keep it going!</Text>
                   </View>
                 </View>
-              </View>
-            </View>
           </View>
+        </View>
+      </View>
 
-          <Pressable onPress={handlePrimaryAction} style={styles.focusCard}>
+      <Pressable onPress={handlePrimaryAction} style={[styles.focusCard, {
+            borderColor: mode === 'dark' ? `${palette.green}40` : `${palette.green}20`,
+            shadowColor: palette.green,
+            shadowOpacity: mode === 'dark' ? 0.35 : 0.1,
+            shadowRadius: 20,
+            shadowOffset: { width: 0, height: 8 },
+            elevation: 10,
+            borderWidth: 1.5,
+            backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.98)' : '#ffffff',
+          }]}>
             <View style={[extraStyles.focusCardContent, { paddingRight: spacing.sm }]}>
               <View style={styles.focusHeader}>
                 <View style={styles.focusEyebrowRow}>
@@ -496,7 +515,16 @@ export function HomeScreen() {
             </View>
           </View>
 
-          <View style={styles.usageDetailsCard}>
+          <View style={[styles.usageDetailsCard, {
+            borderColor: mode === 'dark' ? 'rgba(59, 130, 246, 0.65)' : 'rgba(59, 130, 246, 0.35)',
+            shadowColor: '#3b82f6',
+            shadowOpacity: mode === 'dark' ? 0.5 : 0.2,
+            shadowRadius: 35,
+            shadowOffset: { width: 0, height: 12 },
+            elevation: 15,
+            backgroundColor: mode === 'dark' ? 'rgba(10, 16, 26, 0.99)' : '#ffffff',
+            borderWidth: 2,
+          }]}>
             <View style={styles.usageList}>
               {usageDetails.map((item, index) => {
                 const itemPercent = usageChartTotal > 0 ? item.value / usageChartTotal : 0;
@@ -624,7 +652,7 @@ export function HomeScreen() {
 
 
 
-         
+          
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Up next</Text>
@@ -635,7 +663,16 @@ export function HomeScreen() {
 
           <Pressable
             onPress={() => navigation.navigate('DailyPlanner')}
-            style={styles.upNextCard}
+            style={[styles.upNextCard, {
+              borderColor: mode === 'dark' ? `${palette.green}35` : `${palette.green}15`,
+              shadowColor: palette.green,
+              shadowOpacity: mode === 'dark' ? 0.25 : 0.08,
+              shadowRadius: 15,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 6,
+              backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+              borderWidth: 1,
+            }]}
           >
             <View style={styles.upNextIconWrap}>
               <Ionicons name="trending-up-outline" size={18} color={palette.green} />

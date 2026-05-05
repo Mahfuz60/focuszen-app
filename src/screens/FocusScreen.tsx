@@ -337,21 +337,39 @@ export function FocusScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.goalCard}>
+          <View style={[styles.goalCard, {
+            borderColor: mode === 'dark' ? '#3b82f640' : '#3b82f620',
+            shadowColor: '#3b82f6',
+            shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+            shadowRadius: 15,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 8,
+            backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+            borderWidth: 1,
+          }]}>
             <View style={styles.goalHeader}>
               <Ionicons name="home-outline" size={18} color="#7aa2ff" />
               <Text style={styles.goalLabel}>Today's focus goal</Text>
             </View>
-
+ 
             <Text style={styles.goalValue}>{`${todayFocusMinutes} / ${targetMinutes} min`}</Text>
-
+ 
             <View style={styles.goalTrack}>
               <View style={[styles.goalFill, { width: `${goalProgress * 100}%` as `${number}%` }]} />
             </View>
           </View>
-
+ 
           {showTimeEditor ? (
-            <View style={styles.editCard}>
+            <View style={[styles.editCard, {
+              borderColor: mode === 'dark' ? `${palette.green}40` : `${palette.green}20`,
+              shadowColor: palette.green,
+              shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+              shadowRadius: 15,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 8,
+              backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+              borderWidth: 1,
+            }]}>
               <View style={styles.editHeader}>
                 <Text style={styles.editTitle}>Focus Duration</Text>
                 <Text style={styles.editMeta}>{`Min ${minimumEditableMinutes} min`}</Text>
@@ -415,12 +433,28 @@ export function FocusScreen() {
           ) : null}
 
           <View style={styles.bottomActions}>
-            <Pressable onPress={handleStopSession} style={styles.actionButton}>
+            <Pressable onPress={handleStopSession} style={[styles.actionButton, {
+              borderColor: mode === 'dark' ? '#ef444430' : '#ef444415',
+              shadowColor: '#ef4444',
+              shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+              shadowRadius: 15,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 8,
+              backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+            }]}>
               <Ionicons name="stop" size={18} color={palette.text} />
               <Text style={styles.actionLabel}>Stop session</Text>
             </Pressable>
-
-            <Pressable onPress={handleOpenTimeEditor} style={styles.actionButton}>
+ 
+            <Pressable onPress={handleOpenTimeEditor} style={[styles.actionButton, {
+              borderColor: mode === 'dark' ? `${palette.green}40` : `${palette.green}20`,
+              shadowColor: palette.green,
+              shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
+              shadowRadius: 15,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 8,
+              backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
+            }]}>
               <Ionicons name="create-outline" size={18} color={palette.text} />
               <View style={styles.actionCopy}>
                 <Text style={styles.actionLabel}>Edit time</Text>
