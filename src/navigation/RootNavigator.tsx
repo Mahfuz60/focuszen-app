@@ -3,7 +3,6 @@ import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MainTabs } from './MainTabs';
 import { DailyPlannerScreen } from '../screens/DailyPlannerScreen';
-import { QuickStartScreen } from '../screens/QuickStartScreen';
 import { NameSetupScreen } from '../screens/NameSetupScreen';
 import { PermissionsSetupScreen } from '../screens/PermissionsSetupScreen';
 import { BreatheScreen } from '../screens/BreatheScreen';
@@ -51,7 +50,6 @@ export function RootNavigator() {
         <Stack.Screen name="PermissionsSetup" component={PermissionsSetupScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="DailyPlanner" component={DailyPlannerScreen} />
-        <Stack.Screen name="QuickStart" component={QuickStartScreen} />
         <Stack.Screen name="Breathe" component={BreatheScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Alarm" component={AlarmScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="BodyCare" component={BodyCareScreen} options={{ animation: 'slide_from_bottom' }} />

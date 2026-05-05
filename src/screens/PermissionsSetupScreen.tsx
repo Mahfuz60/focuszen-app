@@ -19,19 +19,17 @@ import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useControlStore } from '../stores/useControlStore';
-import { spacing } from '../theme/tokens';
 import {
   permissionsStyles as styles,
   darkPalette,
   lightPalette,
-  ScreenPalette,
 } from '../styles/PermissionsSetupScreen.styles';
 
 const { PermissionChecker } = NativeModules;
 
 export function PermissionsSetupScreen() {
   const navigation = useNavigation<any>();
-  const { colors, mode, text } = useAppTheme();
+  const { mode} = useAppTheme();
   const completePermissionsSetup = useSettingsStore((state) => state.completePermissionsSetup);
   const grantPermissions = useControlStore((state) => state.grantPermissions);
 
