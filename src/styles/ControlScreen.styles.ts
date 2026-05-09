@@ -1,57 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
-
-export const darkPalette = {
-  backgroundTop: '#2b283eff',
-  backgroundBottom: '#171026',
-  screenGlow: 'rgba(0, 230, 118, 0.18)',
-  screenGlowSoft: 'rgba(213, 0, 249, 0.15)',
-  screenGlowAccent: 'rgba(0, 176, 255, 0.18)',
-  surface: '#1e2433',
-  surfaceSoft: 'rgba(255, 255, 255, 0.07)',
-  surfaceInset: 'rgba(0, 0, 0, 0.25)',
-  border: 'rgba(255, 255, 255, 0.08)',
-  divider: 'rgba(255, 255, 255, 0.05)',
-  text: '#ffffff',
-  textMuted: '#e2e8f0',
-  textSoft: '#94a3b8',
-  green: '#00ff9d',
-  greenSoft: 'rgba(0, 255, 157, 0.1)',
-  purple: '#d946ef',
-  purpleSoft: 'rgba(217, 70, 239, 0.1)',
-  blue: '#38bdf8',
-  blueSoft: 'rgba(56, 189, 248, 0.1)',
-  danger: '#ef4444',
-  inactive: '#64748b',
-  shadow: 'rgba(83, 79, 79, 0.6)',
-};
-
-export const lightPalette = {
-  backgroundTop: '#f4fbf7',
-  backgroundBottom: '#f0f4f8',
-  screenGlow: 'rgba(5, 148, 50, 0.05)',
-  screenGlowSoft: 'rgba(50, 146, 255, 0.04)',
-  screenGlowAccent: 'rgba(149, 92, 255, 0.03)',
-  surface: '#ffffff',
-  surfaceSoft: '#f0f4f6',
-  surfaceInset: '#f7fafb',
-  border: 'rgba(0, 0, 0, 0.08)',
-  divider: 'rgba(0, 0, 0, 0.05)',
-  text: '#101318ff',
-  textMuted: '#4b5563',
-  textSoft: '#6b7280',
-  green: '#059432ff',
-  greenSoft: 'rgba(34, 228, 94, 0.1)',
-  purple: '#955cff',
-  purpleSoft: 'rgba(149, 92, 255, 0.1)',
-  blue: '#3292ff',
-  blueSoft: 'rgba(50, 146, 255, 0.1)',
-  danger: '#ef4444',
-  inactive: '#d1d5db',
-  shadow: 'rgba(0, 0, 0, 0.08)',
-};
-
-export type ScreenPalette = typeof darkPalette;
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dark') {
   return StyleSheet.create({

@@ -21,10 +21,8 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { spacing } from '../theme/tokens';
 import {
   createPurifyStyles as createStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
 } from '../styles/PurifyScreen.styles';
+import { ScreenPalette } from '../theme/screenPalettes';
 import {
   buildPurifyStatus,
   getNextPurifyMilestone,
@@ -51,7 +49,9 @@ function formatMilestoneLabel(days: number, language: 'en' | 'bn') {
 }
 
 export function PurifyScreen() {
-  const { mode, text } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('purify'), [getPalette]);
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const tabBarHeight = useBottomTabBarHeight();
@@ -68,11 +68,6 @@ export function PurifyScreen() {
 
   const [nowIso, setNowIso] = useState(() => new Date().toISOString());
   const currentHour = useMemo(() => new Date(nowIso).getHours(), [nowIso]);
-  const palette = useMemo(
-    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
-    [mode]
-  );
-  const styles = useMemo(() => createStyles(palette), [palette]);
 
   useEffect(() => {
     if (!isFocused) {
@@ -204,18 +199,27 @@ export function PurifyScreen() {
             <Pressable onPress={handleBack} style={styles.topIconButton}>
               <Ionicons name="arrow-back" size={24} color={palette.text} />
             </Pressable>
-            <View style={styles.toggleShell}>
-              <Pressable
-                onPress={() => setPurifyLanguage('en')}
-                style={[styles.toggleOption, purifyLanguage === 'en' && styles.toggleOptionActive]}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={styles.toggleShell}>
+                <Pressable
+                  onPress={() => setPurifyLanguage('en')}
+                  style={[styles.toggleOption, purifyLanguage === 'en' && styles.toggleOptionActive]}
+                >
+                  <Text style={styles.toggleText}>EN</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setPurifyLanguage('bn')}
+                  style={[styles.toggleOption, purifyLanguage === 'bn' && styles.toggleOptionActive]}
+                >
+                  <Text style={styles.toggleText}>BN</Text>
+                </Pressable>
+              </View>
+
+              <Pressable 
+                onPress={() => navigation.navigate('Insights')}
+                style={styles.topIconButton}
               >
-                <Text style={styles.toggleText}>EN</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setPurifyLanguage('bn')}
-                style={[styles.toggleOption, purifyLanguage === 'bn' && styles.toggleOptionActive]}
-              >
-                <Text style={styles.toggleText}>BN</Text>
+                <Ionicons name="settings-outline" size={20} color={palette.text} />
               </Pressable>
             </View>
           </View>
@@ -247,7 +251,7 @@ export function PurifyScreen() {
               </SvgLinearGradient>
               <RadialGradient id="ringBackGlow" cx="50%" cy="50%" r="50%">
                 <Stop offset="0%" stopColor="#d946ef" stopOpacity="0.2" />
-                <Stop offset="100%" stopColor="#0f111a" stopOpacity="0" />
+                <Stop offset="100%" stopColor={palette.backgroundTop} stopOpacity="0" />
               </RadialGradient>
             </Defs>
             
@@ -266,7 +270,7 @@ export function PurifyScreen() {
               cx="160"
               cy="30"
               r="7"
-              fill="#0a0a0aff"
+              fill={mode === 'dark' ? '#0a0a0aff' : '#ffffff'}
             />
           </Svg>
 

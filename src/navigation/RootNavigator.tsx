@@ -10,6 +10,7 @@ import {
   BodyCareScreen,
   HydrationScreen,
   EyeWellnessScreen,
+  InsightsScreen,
 } from '../screens';
 import { MainTabs } from './MainTabs';
 import { RootStackParamList } from '../types/navigation';
@@ -59,6 +60,7 @@ export function RootNavigator() {
         <Stack.Screen name="BodyCare" component={BodyCareScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Hydration" component={HydrationScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="EyeWellness" component={EyeWellnessScreen} options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="Insights" component={InsightsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,51 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
-
-export const darkPalette = {
-  backgroundTop: '#070b18',
-  backgroundBottom: '#101827',
-  primaryGlow: 'rgba(96, 165, 250, 0.22)',
-  secondaryGlow: 'rgba(168, 85, 247, 0.16)',
-  accentGlow: 'rgba(34, 211, 238, 0.12)',
-  surface: 'rgba(15, 23, 42, 0.72)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.06)',
-  stroke: 'rgba(148, 163, 184, 0.22)',
-  text: '#ffffff',
-  textMuted: '#e2e8f0',
-  textSoft: '#94a3b8',
-  accent: '#60a5fa',
-  accentSoft: 'rgba(96, 165, 250, 0.14)',
-  alarm: '#ef4444',
-  alarmSoft: 'rgba(239, 68, 68, 0.15)',
-  red: '#ef4444',
-  green: '#22c55e',
-  shadow: 'rgba(0, 0, 0, 0.5)',
-  backgroundTopStr: '#070b18',
-};
-
-export const lightPalette = {
-  backgroundTop: '#f8fbff',
-  backgroundBottom: '#eef6ff',
-  primaryGlow: 'rgba(37, 99, 235, 0.14)',
-  secondaryGlow: 'rgba(124, 58, 237, 0.1)',
-  accentGlow: 'rgba(14, 165, 233, 0.1)',
-  surface: 'rgba(255, 255, 255, 0.9)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.7)',
-  stroke: 'rgba(37, 99, 235, 0.16)',
-  text: '#0f172a',
-  textMuted: '#475569',
-  textSoft: '#64748b',
-  accent: '#2563eb',
-  accentSoft: 'rgba(37, 99, 235, 0.1)',
-  alarm: '#dc2626',
-  alarmSoft: 'rgba(220, 38, 38, 0.1)',
-  red: '#dc2626',
-  green: '#059669',
-  shadow: 'rgba(0, 0, 0, 0.06)',
-  backgroundTopStr: '#f8fbff',
-};
-
-export type ScreenPalette = typeof darkPalette;
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function createAlarmStyles(palette: ScreenPalette) {
   return StyleSheet.create({

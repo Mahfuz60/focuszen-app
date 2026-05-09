@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import {
+  Image,
   Pressable,
   ScrollView,
   StatusBar,
@@ -13,6 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
+import { useAlarmStore } from '../stores/useAlarmStore';
+import { useBreatheStore } from '../stores/useBreatheStore';
+import { useBodyCareStore, computeTodayWater } from '../stores/useBodyCareStore';
 import { useControlStore } from '../stores/useControlStore';
 import { useFocusStore } from '../stores/useFocusStore';
 import { usePurifyStore } from '../stores/usePurifyStore';
@@ -22,16 +26,22 @@ import { useUsageStore } from '../stores/useUsageStore';
 import { spacing } from '../theme/tokens';
 import {
   createInsightsStyles as createStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
 } from '../styles/InsightsScreen.styles';
+import { ScreenPalette } from '../theme/screenPalettes';
 import { AppControlTarget } from '../types/models';
 import { buildControlInsightsOverview } from '../utils/controlInsightsOverview';
-import { getLatestInsightsAnchorDate } from '../utils/insightsAnalytics';
+import { 
+  getLatestInsightsAnchorDate, 
+  getEarliestInsightsAnchorDate,
+  getPeriodBounds, 
+  shiftInsightsAnchorDate,
+  buildBucketSeeds, 
+  isDateWithinBounds, 
+  formatPeriodLabel 
+} from '../utils/insightsAnalytics';
 import { buildPurifyFocusOverview } from '../utils/purifyFocusOverview';
 import { buildPurifyInsights } from '../utils/purifyInsights';
-import { buildPurifyStatus } from '../utils/purifyProgress';
+import { buildPurifyStatus, getPurifyRingProgress } from '../utils/purifyProgress';
 
 
 
@@ -68,7 +78,7 @@ function formatDelta(change: number) {
 
 function formatHourWindow(hour: number | null) {
   if (hour === null) {
-    return 'No sessions yet';
+    return 'No Data';
   }
 
   const formatHour = (value: number) => {
@@ -82,22 +92,18 @@ function formatHourWindow(hour: number | null) {
 }
 
 export function InsightsScreen() {
-  const { mode, text } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('insights'), [getPalette]);
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-  const tabBarHeight = useBottomTabBarHeight();
   const [activeTab, setActiveTab] = useState<InsightTab>('overview');
-  const [insightRange, setInsightRange] = useState<'week' | 'month' | 'year'>('week');
+  const [insightRange, setInsightRange] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('week');
   const [usageFilter, setUsageFilter] = useState<UsageFilter>('all');
+  const [selectedWellnessMetric, setSelectedWellnessMetric] = useState<'naps' | 'water' | 'breathe'>('water');
+  const [showFullActivity, setShowFullActivity] = useState(false);
   const [nowIso, setNowIso] = useState(() => new Date().toISOString());
-  const palette = useMemo(
-    () =>
-      mode === 'dark'
-        ? ({ ...darkPalette } as ScreenPalette)
-        : ({ ...lightPalette } as ScreenPalette),
-    [mode, darkPalette, lightPalette]
-  );
-  const styles = useMemo(() => createStyles(palette), [palette]);
+
   const controls = useControlStore((state) => state.controls);
   const strictModeEnabled = useControlStore((state) => state.strictModeEnabled);
   const focusSessions = useFocusStore((state) => state.sessions);
@@ -106,6 +112,10 @@ export function InsightsScreen() {
   const purifyLanguage = useSettingsStore((state) => state.settings.purifyLanguage ?? 'en');
   const studySessions = useStudyStore((state) => state.sessions);
   const usageEntries = useUsageStore((state) => state.entries);
+  const napSessions = useAlarmStore((state) => state.sessions);
+  const breatheSessions = useBreatheStore((state) => state.sessions);
+  const waterEntries = useBodyCareStore((state) => state.waterEntries);
+  const waterGoal = useBodyCareStore((state) => state.waterGoalMl);
   const statusBarStyle = mode === 'dark' ? 'light-content' : 'dark-content';
 
   useEffect(() => {
@@ -132,15 +142,74 @@ export function InsightsScreen() {
     return () => clearInterval(interval);
   }, [isFocused, purify.active, purifyLanguage, refreshPurify]);
 
-  const anchorDate = useMemo(
+  const [anchorDate, setAnchorDate] = useState(() =>
+    getLatestInsightsAnchorDate({
+      focusSessions,
+      studySessions,
+      usageEntries,
+    })
+  );
+
+  const earliestDate = useMemo(
     () =>
-      getLatestInsightsAnchorDate({
+      getEarliestInsightsAnchorDate({
         focusSessions,
         studySessions,
         usageEntries,
       }),
     [focusSessions, studySessions, usageEntries]
   );
+
+  const recentActivities = useMemo(() => {
+    const range = insightRange;
+    const bounds = getPeriodBounds(anchorDate, range, earliestDate);
+
+    const activities: any[] = [
+      ...focusSessions.map(s => ({ ...s, type: 'focus', timestamp: s.endedAt || s.startedAt })),
+      ...napSessions.filter(s => s.completedAt).map(s => ({ ...s, type: 'nap', timestamp: s.completedAt })),
+      ...breatheSessions.map(s => ({ ...s, type: 'breathe', timestamp: s.completedAt })),
+      ...waterEntries.map(e => ({ ...e, type: 'water', timestamp: e.loggedAt })),
+    ];
+
+    return activities
+      .filter(a => a.timestamp && isDateWithinBounds(new Date(a.timestamp), bounds))
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [focusSessions, napSessions, breatheSessions, waterEntries, anchorDate, insightRange, earliestDate]);
+
+  const wellnessDashboard = useMemo(() => {
+    const range = insightRange;
+    const bounds = getPeriodBounds(anchorDate, range, earliestDate);
+    const buckets = buildBucketSeeds(range, bounds).map(bucket => {
+      const bucketBounds = { start: bucket.start, end: bucket.end };
+      
+      const napsInBucket = napSessions.filter(s => s.completedAt && isDateWithinBounds(new Date(s.completedAt), bucketBounds));
+      const breatheInBucket = breatheSessions.filter(s => isDateWithinBounds(new Date(s.completedAt), bucketBounds));
+      const waterInBucket = waterEntries.filter(e => isDateWithinBounds(new Date(e.loggedAt), bucketBounds));
+
+      return {
+        key: bucket.key,
+        label: bucket.label,
+        shortLabel: bucket.shortLabel,
+        naps: napsInBucket.reduce((acc, s) => acc + s.durationMinutes, 0),
+        breathe: Math.floor(breatheInBucket.reduce((acc, s) => acc + s.durationSeconds, 0) / 60),
+        water: waterInBucket.reduce((acc, e) => acc + e.amountMl, 0),
+      };
+    });
+
+    const totalNaps = buckets.reduce((acc, b) => acc + b.naps, 0);
+    const totalBreathe = buckets.reduce((acc, b) => acc + b.breathe, 0);
+    const totalWater = buckets.reduce((acc, b) => acc + b.water, 0);
+
+    return {
+      buckets,
+      totals: {
+        naps: totalNaps,
+        breathe: totalBreathe,
+        water: totalWater,
+      },
+      rangeLabel: formatPeriodLabel(range, bounds),
+    };
+  }, [insightRange, anchorDate, napSessions, breatheSessions, waterEntries]);
 
   const focusOverview = useMemo(
     () =>
@@ -248,48 +317,6 @@ export function InsightsScreen() {
     return formatHourWindow(bestHour);
   }, [focusSessions, studySessions, weekEnd, weekStart]);
 
-  const appUsageRows = useMemo(() => {
-    const totals = new Map<AppControlTarget, number>();
-
-    usageEntries.forEach((entry) => {
-      const entryDate = new Date(entry.date);
-      if (entryDate < weekStart || entryDate > weekEnd) {
-        return;
-      }
-
-      totals.set(entry.appName, (totals.get(entry.appName) ?? 0) + entry.minutesUsed);
-    });
-
-    return [...totals.entries()]
-      .map(([appName, minutesUsed]) => {
-        const control = controls.find((item) => item.appName === appName);
-        const protectedState = Boolean(
-          control?.blocked ||
-            control?.timeLimitMinutes ||
-            Object.values(control?.features ?? {}).some(Boolean)
-        );
-
-        return {
-          appName,
-          minutesUsed,
-          blocked: Boolean(control?.blocked),
-          protectedState,
-        };
-      })
-      .filter((item) => {
-        if (usageFilter === 'blocked') {
-          return item.blocked;
-        }
-
-        if (usageFilter === 'used') {
-          return item.minutesUsed > 0;
-        }
-
-        return true;
-      })
-      .sort((left, right) => right.minutesUsed - left.minutesUsed);
-  }, [controls, usageEntries, usageFilter, weekEnd, weekStart]);
-
   const focusMinutesLabel = `${parseMinutes(focusOverview.metrics.focus.value)}m`;
   const controlUsageLabel = controlOverview.metrics.usage.value;
 
@@ -301,263 +328,425 @@ export function InsightsScreen() {
 
     navigation.navigate('Home');
   }
-
   function renderFocusOverviewCard() {
     const dataPoints = focusOverview.chartItems || [];
-    const highestValue = Math.max(...dataPoints.map((item) => item.value), 60);
+    const rawMax = Math.max(...dataPoints.map((item) => item.value), 0);
+    const maxVal = rawMax < 60 ? 60 : Math.ceil(rawMax / 15) * 15;
     
-    // SVG Line Chart Logic
-    const width = 300; // Adjusted for Y-axis
+    const formatValue = (val: number) => {
+      if (val >= 60) return `${Math.floor(val / 60)}h`;
+      return `${Math.round(val)}m`;
+    };
+
+    const yAxisLabels = [
+      formatValue(maxVal),
+      formatValue(maxVal * 0.75),
+      formatValue(maxVal * 0.5),
+      formatValue(maxVal * 0.25),
+      '0m',
+    ];
+
+    const width = 300;
     const height = 120;
     const padding = 10;
     const chartHeight = height - padding * 2;
-    const stepX = (width - padding * 2) / (dataPoints.length - 1);
+    const stepX = dataPoints.length > 1 ? (width - padding * 2) / (dataPoints.length - 1) : 0;
     
     const points = dataPoints.map((item, i) => ({
-      x: padding + i * stepX,
-      y: height - padding - (Math.min(item.value, highestValue) / highestValue) * chartHeight,
+      x: dataPoints.length > 1 ? padding + i * stepX : width / 2,
+      y: height - padding - (Math.min(item.value, maxVal) / maxVal) * chartHeight,
     }));
  
     const linePath = points.reduce((path, p, i) => 
       i === 0 ? `M${p.x},${p.y}` : `${path} L${p.x},${p.y}`, '');
     
-    const fillPath = `${linePath} L${points[points.length - 1].x},${height} L${points[0].x},${height} Z`;
- 
+    const fillPath = points.length > 0 
+      ? `${linePath} L${points[points.length - 1].x},${height} L${points[0].x},${height} Z`
+      : '';
+
     return (
-      <View style={[styles.sectionCard, {
-        borderColor: mode === 'dark' ? `${palette.green}40` : `${palette.green}15`,
-        shadowColor: palette.green,
-        shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 8,
-        backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
-        borderWidth: 1.5,
-      }]}>
-        <View style={styles.sectionHeader}>
-          <View>
-             <Text style={styles.heroMinutes}>{focusMinutesLabel}</Text>
-             <Text style={styles.heroMeta}>Total focus</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end', paddingTop: 8 }}>
-             <Text style={styles.heroDelta}>↑ {formatDelta(weeklyDelta)}</Text>
-          </View>
-        </View>
- 
-        <View style={styles.chartContainer}>
-          <View style={styles.chartYAxis}>
-            <Text style={styles.chartYLabel}>60m</Text>
-            <Text style={styles.chartYLabel}>45m</Text>
-            <Text style={styles.chartYLabel}>30m</Text>
-            <Text style={styles.chartYLabel}>15m</Text>
-            <Text style={styles.chartYLabel}>0m</Text>
-          </View>
- 
-          <View style={styles.chartArea}>
-            <View style={styles.chartGrid}>
-              <View style={styles.chartGridLine} />
-              <View style={styles.chartGridLine} />
-              <View style={styles.chartGridLine} />
-              <View style={styles.chartGridLine} />
-              <View style={styles.chartGridLine} />
+      <LinearGradient
+        colors={mode === 'dark' ? [`${palette.green}40`, `${palette.blue}40`] : [`${palette.green}15`, `${palette.blue}15`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.sectionCardGradient, { marginTop: spacing.lg }]}
+      >
+        <View style={[styles.sectionCardInner, { backgroundColor: palette.surface }]}>
+          <View style={styles.sectionHeader}>
+            <View>
+               <Text style={styles.heroMinutes}>{focusMinutesLabel}</Text>
+               <Text style={styles.heroMeta}>Total focus</Text>
             </View>
-            
-            <Svg width="100%" height={height}>
-              <Defs>
-                <SvgLinearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={palette.green} stopOpacity={0.25} />
-                  <Stop offset="1" stopColor={palette.green} stopOpacity={0} />
-                </SvgLinearGradient>
-              </Defs>
-              <Path d={fillPath} fill="url(#chartFill)" />
-              <Path d={linePath} stroke={palette.green} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              {points.map((p, i) => (
-                <Circle key={i} cx={p.x} cy={p.y} r={4.5} fill={palette.green} stroke={palette.surface} strokeWidth={2.5} />
-              ))}
-            </Svg>
- 
-            <View style={styles.chartXLabels}>
-              {dataPoints.map((item) => (
-                <Text key={item.label} style={styles.chartXLabel}>{item.label}</Text>
-              ))}
+            <View style={{ alignItems: 'flex-end', paddingTop: 8 }}>
+               <Text style={styles.heroDelta}>↑ {formatDelta(weeklyDelta)}</Text>
             </View>
           </View>
+   
+          <View style={styles.chartContainer}>
+            <View style={styles.chartYAxis}>
+              {yAxisLabels.map((l, i) => (
+                <Text key={i} style={styles.chartYLabel}>{l}</Text>
+              ))}
+            </View>
+   
+            <View style={styles.chartArea}>
+              <View style={styles.chartGrid}>
+                {[...Array(5)].map((_, i) => (
+                  <View key={i} style={styles.chartGridLine} />
+                ))}
+              </View>
+              
+              <Svg width="100%" height={height}>
+                <Defs>
+                  <SvgLinearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                    <Stop offset="0" stopColor={palette.green} stopOpacity={0.25} />
+                    <Stop offset="1" stopColor={palette.green} stopOpacity={0} />
+                  </SvgLinearGradient>
+                </Defs>
+                <Path d={fillPath} fill="url(#chartFill)" />
+                {/* Line Glow Effect */}
+                <Path d={linePath} stroke={palette.green} strokeWidth={6} fill="none" opacity={0.15} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d={linePath} stroke={palette.green} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                {points.map((p, i) => (
+                  <React.Fragment key={i}>
+                     <Circle cx={p.x} cy={p.y} r={6} fill={palette.green} opacity={0.2} />
+                     <Circle cx={p.x} cy={p.y} r={4.5} fill={palette.green} stroke={mode === 'dark' ? '#111' : '#fff'} strokeWidth={2} />
+                  </React.Fragment>
+                ))}
+              </Svg>
+   
+              <View style={styles.chartXLabels}>
+                {dataPoints.map((item, i) => {
+                  const isDay = insightRange === 'day';
+                  const show = isDay ? i % 6 === 0 || i === dataPoints.length - 1 : true;
+                  
+                  return (
+                    <Text 
+                      key={`${item.label}-${i}`} 
+                      style={[
+                        styles.chartXLabel, 
+                        !show && { opacity: 0 } 
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
         </View>
- 
-        <View style={styles.periodToggle}>
-          {['7D', '4W', '12M'].map((p) => (
-            <Pressable 
-              key={p} 
-              style={[styles.periodBtn, insightRange === (p === '7D' ? 'week' : p === '4W' ? 'month' : 'year') ? styles.periodBtnActive : null]}
-              onPress={() => setInsightRange(p === '7D' ? 'week' : p === '4W' ? 'month' : 'year')}
-            >
-              <Text style={[styles.periodText, insightRange === (p === '7D' ? 'week' : p === '4W' ? 'month' : 'year') ? styles.periodTextActive : null]}>{p}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
+      </LinearGradient>
     );
   }
- 
+
   function renderSummaryPairs() {
     return (
       <View style={styles.summaryGrid}>
-        <View style={[styles.summaryCard, {
-          borderColor: mode === 'dark' ? `${palette.green}30` : `${palette.green}12`,
-          shadowColor: palette.green,
-          shadowOpacity: mode === 'dark' ? 0.2 : 0.08,
-          shadowRadius: 15,
-          shadowOffset: { width: 0, height: 6 },
-          elevation: 6,
-          backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
-          borderWidth: 1,
-        }]}>
-          <View style={styles.summaryHeader}>
-             <View style={styles.summaryIconWrap}>
-                <Ionicons name="leaf-outline" size={16} color={palette.green} />
-             </View>
-             <Text style={styles.summaryLabel}>Best Day</Text>
+        <LinearGradient
+          colors={mode === 'dark' ? [`${palette.green}40`, `${palette.blue}40`] : [`${palette.green}15`, `${palette.blue}15`]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.summaryCardGradient}
+        >
+          <View style={[styles.summaryCardInner, { backgroundColor: palette.surface }]}>
+            <View style={styles.summaryHeader}>
+               <View style={styles.summaryIconWrap}>
+                  <Ionicons name="leaf-outline" size={16} color={palette.green} />
+               </View>
+               <Text style={styles.summaryLabel}>Best Day</Text>
+            </View>
+            <Text style={styles.summaryValue}>{focusOverview.bestDay.value || 'None'}</Text>
+            <Text style={styles.summarySub}>{focusOverview.bestDay.label || 'Keep pushing'}</Text>
           </View>
-          <Text style={styles.summaryValue}>{focusOverview.bestDay.value || 'None'}</Text>
-          <Text style={styles.summarySub}>No focus sessions</Text>
-        </View>
- 
-        <View style={[styles.summaryCard, {
-          borderColor: mode === 'dark' ? `${palette.purple}30` : `${palette.purple}12`,
-          shadowColor: palette.purple,
-          shadowOpacity: mode === 'dark' ? 0.2 : 0.08,
-          shadowRadius: 15,
-          shadowOffset: { width: 0, height: 6 },
-          elevation: 6,
-          backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
-          borderWidth: 1,
-        }]}>
-          <View style={styles.summaryHeader}>
-             <View style={[styles.summaryIconWrap, { backgroundColor: 'rgba(217,70,239,0.05)' }]}>
-                <Ionicons name="sparkles" size={16} color={palette.purple} />
-             </View>
-             <Text style={styles.summaryLabel}>Top Time</Text>
+        </LinearGradient>
+
+        <LinearGradient
+          colors={mode === 'dark' ? [`${palette.purple}40`, `${palette.blue}40`] : [`${palette.purple}15`, `${palette.blue}15`]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.summaryCardGradient}
+        >
+          <View style={[styles.summaryCardInner, { backgroundColor: palette.surface }]}>
+            <View style={styles.summaryHeader}>
+               <View style={[styles.summaryIconWrap, { backgroundColor: 'rgba(217,70,239,0.05)' }]}>
+                  <Ionicons name="sparkles" size={16} color={palette.purple} />
+               </View>
+               <Text style={styles.summaryLabel}>Top Time</Text>
+            </View>
+            <Text style={styles.summaryValue}>{topTimeRange || 'No Data'}</Text>
+            <Text style={styles.summarySub}>Peak focus window</Text>
           </View>
-          <Text style={styles.summaryValue}>{topTimeRange || 'None'}</Text>
-          <Text style={styles.summarySub}>No data yet</Text>
-        </View>
+        </LinearGradient>
       </View>
     );
   }
- 
+
   function renderControlSnapshot() {
     return (
-      <View style={[styles.sectionCard, {
-        borderColor: mode === 'dark' ? `${palette.purple}40` : `${palette.purple}15`,
-        shadowColor: palette.purple,
-        shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 8,
-        backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
-        borderWidth: 1.5,
-        marginTop: 20,
-      }]}>
-        <View style={styles.purifyHeader}>
-          <Text style={styles.sectionTitle}>Control snapshot</Text>
-          <Text style={[styles.sectionTitle, { color: palette.green }]}>0%</Text>
-        </View>
- 
-        <View style={styles.tripletGrid}>
-          {[
-            { label: 'Protected', value: controlOverview.metrics.protected.value, icon: 'shield-outline', color: palette.blue },
-            { label: 'Blocked', value: controlOverview.metrics.blocked.value, icon: 'lock-closed-outline', color: palette.green },
-            { label: 'Usage', value: controlUsageLabel, icon: 'time-outline', color: palette.purple },
-          ].map((item, i) => (
-            <View key={i} style={[styles.tripletCard, {
-              borderColor: mode === 'dark' ? `${item.color}30` : `${item.color}10`,
-              shadowColor: item.color,
-              shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
-              shadowRadius: 10,
-              elevation: 4,
-              borderWidth: 1,
-              backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
-            }]}>
-              <View style={[styles.tripletIcon, { backgroundColor: `${item.color}15` }]}>
-                <Ionicons name={item.icon as any} size={20} color={item.color} />
-              </View>
-              <Text style={styles.tripletValue}>{item.value}</Text>
-              <Text style={styles.tripletLabel}>{item.label}</Text>
-            </View>
-          ))}
-        </View>
+      <LinearGradient
+        colors={mode === 'dark' ? [`${palette.purple}40`, `${palette.blue}40`] : [`${palette.purple}15`, `${palette.blue}15`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.sectionCardGradient, { marginTop: spacing.md }]}
+      >
+        <View style={[styles.sectionCardInner, { backgroundColor: palette.surface }]}>
+          <View style={styles.purifyHeader}>
+            <Text style={styles.sectionTitle}>Control snapshot</Text>
+            <Text style={[styles.sectionTitle, { color: palette.green }]}>{controlOverview.metrics.protected.percent}%</Text>
+          </View>
 
-        <View style={{ marginTop: 24, backgroundColor: 'transparent', padding: 0 }}>
-           <Text style={styles.summaryLabel}>Top App</Text>
-           <Text style={[styles.summaryValue, { marginTop: 4 }]}>{controlOverview.facts.topApp.value || 'None'}</Text>
-           <Text style={styles.summarySub}>No app usage recorded</Text>
+          <View style={styles.tripletGrid}>
+            {[
+              { label: 'Protected', value: controlOverview.metrics.protected.value, icon: 'shield-outline', color: palette.blue },
+              { label: 'Blocked', value: controlOverview.metrics.blocked.value, icon: 'lock-closed-outline', color: palette.green },
+              { label: 'Usage', value: controlUsageLabel, icon: 'time-outline', color: palette.purple },
+            ].map((item, i) => (
+              <View key={i} style={[styles.tripletCard, {
+                borderColor: mode === 'dark' ? `${item.color}30` : `${item.color}10`,
+                shadowColor: item.color,
+                shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+                shadowRadius: 10,
+                elevation: 4,
+                borderWidth: 1,
+                backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
+              }]}>
+                <View style={[styles.tripletIcon, { backgroundColor: `${item.color}15` }]}>
+                  <Ionicons name={item.icon as any} size={20} color={item.color} />
+                </View>
+                <Text style={styles.tripletValue}>{item.value}</Text>
+                <Text style={styles.tripletLabel}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={{ marginTop: 24, backgroundColor: 'transparent', padding: 0 }}>
+             <Text style={styles.summaryLabel}>Top App</Text>
+             <Text style={[styles.summaryValue, { marginTop: 4 }]}>{controlOverview.facts.topApp.value || 'None'}</Text>
+             <Text style={styles.summarySub}>No app usage recorded</Text>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
     );
   }
 
   function renderPurifyOverhaul() {
     return (
-      <View style={[styles.sectionCard, {
-        borderColor: mode === 'dark' ? `${palette.purple}40` : `${palette.purple}15`,
-        shadowColor: palette.purple,
-        shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 8,
-        backgroundColor: mode === 'dark' ? 'rgba(10,16,26,0.97)' : '#ffffff',
-        borderWidth: 1.5,
-        marginTop: 20,
-      }]}>
-        <View style={styles.purifyHeader}>
-          <Text style={styles.sectionTitle}>Purify progress</Text>
-          <View style={styles.purifyBadge}>
-            <Text style={styles.purifyBadgeText}>{purifyInsights.activeStage.title}</Text>
+      <LinearGradient
+        colors={mode === 'dark' ? [`${palette.purple}40`, `${palette.blue}40`] : [`${palette.purple}15`, `${palette.blue}15`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.sectionCardGradient, { marginTop: spacing.md }]}
+      >
+        <View style={[styles.sectionCardInner, { backgroundColor: palette.surface }]}>
+          <View style={styles.purifyHeader}>
+            <Text style={styles.sectionTitle}>Purify progress</Text>
+            <View style={styles.purifyBadge}>
+              <Text style={styles.purifyBadgeText}>{purifyInsights.activeStage.title}</Text>
+            </View>
+          </View>
+
+          <View style={styles.tripletGrid}>
+            {[
+              { label: 'Current Streak', value: purifyInsights.summary.current.value, icon: 'flash-outline', color: palette.purple },
+              { label: 'Best Streak', value: purifyInsights.summary.best.value, icon: 'star-outline', color: palette.green },
+              { label: 'Lifetime Days', value: purifyInsights.summary.lifetime.value, icon: 'calendar-outline', color: palette.blue },
+            ].map((item, i) => (
+              <View key={i} style={[styles.tripletCard, {
+                borderColor: mode === 'dark' ? `${item.color}30` : `${item.color}10`,
+                shadowColor: item.color,
+                shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
+                shadowRadius: 10,
+                elevation: 4,
+                borderWidth: 1,
+                backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
+              }]}>
+                <View style={[styles.tripletIcon, { backgroundColor: `${item.color}15` }]}>
+                  <Ionicons name={item.icon as any} size={20} color={item.color} />
+                </View>
+                <Text style={styles.tripletValue}>{item.value}</Text>
+                <Text style={styles.tripletLabel}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+          <View style={styles.timelineWrap}>
+             <Text style={styles.summaryLabel}>Live Streak</Text>
+             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                <Text style={styles.summaryValue}>{purifyStatus.currentStreakLabel || '0 day streak'}</Text>
+                <View style={{ backgroundColor: `${palette.purple}15`, padding: 8, borderRadius: 12 }}>
+                   <Ionicons name="rocket" size={20} color={palette.purple} />
+                </View>
+             </View>
+
+             <View style={{ marginTop: 24 }}>
+                <View style={[styles.timelineRow, { height: 12, backgroundColor: palette.stroke + (mode === 'dark' ? '15' : '30'), overflow: 'hidden' }]}>
+                   <View style={{ 
+                     position: 'absolute', 
+                     left: 0, 
+                     top: 0, 
+                     bottom: 0, 
+                     width: `${Math.max(2, getPurifyRingProgress(purifyStatus.currentStreakDays) * 100)}%`, 
+                     backgroundColor: palette.purple,
+                     borderRadius: 6,
+                     shadowColor: palette.purple,
+                     shadowOpacity: 0.6,
+                     shadowRadius: 12,
+                     elevation: 5
+                   }} />
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+                  <Text style={styles.timelineText}>{purifyStatus.stageProgressText}</Text>
+                  <Text style={styles.timelineText}>{purifyStatus.nextMilestoneLabel}</Text>
+                </View>
+             </View>
           </View>
         </View>
- 
-        <View style={styles.tripletGrid}>
-          {[
-            { label: 'Current Streak', value: purifyInsights.summary.current.value, icon: 'flash-outline', color: palette.purple },
-            { label: 'Best Streak', value: purifyInsights.summary.best.value, icon: 'star-outline', color: palette.green },
-            { label: 'Lifetime Days', value: purifyInsights.summary.lifetime.value, icon: 'calendar-outline', color: palette.blue },
-          ].map((item, i) => (
-            <View key={i} style={[styles.tripletCard, {
-              borderColor: mode === 'dark' ? `${item.color}30` : `${item.color}10`,
-              shadowColor: item.color,
-              shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
-              shadowRadius: 10,
-              elevation: 4,
-              borderWidth: 1,
-              backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff',
-            }]}>
-              <View style={[styles.tripletIcon, { backgroundColor: `${item.color}15` }]}>
-                <Ionicons name={item.icon as any} size={20} color={item.color} />
-              </View>
-              <Text style={styles.tripletValue}>{item.value}</Text>
-              <Text style={styles.tripletLabel}>{item.label}</Text>
+      </LinearGradient>
+    );
+  }
+
+  function renderWellnessCharts() {
+    const metrics = [
+      { id: 'water', label: 'Water', asset: require('../../assets/wellness.png'), color: palette.blue },
+      { id: 'breathe', label: 'Breathe', asset: require('../../assets/breathe.png'), color: palette.purple },
+      { id: 'naps', label: 'Naps', asset: require('../../assets/powerNap.png'), color: palette.green },
+    ];
+
+    const data = wellnessDashboard.buckets;
+    const maxVal = Math.max(...data.map(b => (b as any)[selectedWellnessMetric]), 1);
+
+    return (
+      <LinearGradient
+        colors={mode === 'dark' ? [`${palette.blue}40`, `${palette.purple}40`] : [`${palette.blue}15`, `${palette.purple}15`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.sectionCardGradient, { marginTop: spacing.md }]}
+      >
+        <View style={[styles.sectionCardInner, { backgroundColor: palette.surface }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Wellness Insights</Text>
+            <View style={styles.weekChip}>
+              {insightRange !== 'all' && (
+                <Pressable 
+                  onPress={() => setAnchorDate(shiftInsightsAnchorDate(anchorDate, insightRange, -1))} 
+                  style={styles.navBtn}
+                >
+                  <Ionicons name="chevron-back" size={16} color={palette.text} />
+                </Pressable>
+              )}
+              <Text style={styles.weekChipText}>{wellnessDashboard.rangeLabel}</Text>
+              {insightRange !== 'all' && (
+                <Pressable 
+                  onPress={() => setAnchorDate(shiftInsightsAnchorDate(anchorDate, insightRange, 1))} 
+                  style={styles.navBtn}
+                >
+                  <Ionicons name="chevron-forward" size={16} color={palette.text} />
+                </Pressable>
+              )}
             </View>
-          ))}
-        </View>
+          </View>
 
-        <View style={styles.timelineWrap}>
-           <Text style={styles.summaryLabel}>Live Streak</Text>
-           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-              <Text style={styles.summaryValue}>{purifyStatus.currentStreakLabel || '0 day streak'}</Text>
-              <Ionicons name="rocket-outline" size={24} color={palette.purple} />
-           </View>
+          <View style={styles.metricSelector}>
+            {metrics.map(m => {
+              const active = selectedWellnessMetric === m.id;
+              return (
+                <Pressable
+                  key={m.id}
+                  onPress={() => setSelectedWellnessMetric(m.id as any)}
+                  style={[styles.metricBtn, active && styles.metricBtnActive]}
+                >
+                  <Image source={m.asset} style={{ width: 18, height: 18, marginRight: 4, opacity: active ? 1 : 0.6 }} resizeMode="contain" />
+                  <Text style={[styles.metricText, active && styles.metricTextActive]}>{m.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
 
-           <View style={[styles.timelineRow, { marginTop: 20 }]}>
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <View key={i} style={[styles.timelineDot, i === 0 ? styles.timelineDotActive : null]} />
-              ))}
-           </View>
-           <View style={styles.timelineMeta}>
-              <Text style={styles.timelineText}>Elapsed {purifyStatus.elapsedLabel}</Text>
-              <Text style={styles.timelineText}>Next: {purifyInsights.nextStage?.title || 'None'}</Text>
-           </View>
+          <View style={styles.wellnessChartContainer}>
+            <View style={styles.wellnessBars}>
+              {data.map((bucket, i) => {
+                const val = (bucket as any)[selectedWellnessMetric];
+                const heightPercent = (val / maxVal) * 100;
+                const activeMetricColor = metrics.find(m => m.id === selectedWellnessMetric)?.color || palette.green;
+
+                return (
+                  <View key={bucket.key} style={styles.wellnessCol}>
+                    <View style={styles.barTrack}>
+                       <View style={[styles.barFill, { height: `${Math.max(4, heightPercent)}%`, backgroundColor: activeMetricColor }]} />
+                    </View>
+                    <Text style={styles.barLabel}>{bucket.shortLabel}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
+    );
+  }
+
+  function renderActivityFeed() {
+    const displayActivities = recentActivities.slice(0, showFullActivity ? 10 : 5);
+    
+    return (
+      <LinearGradient
+        colors={mode === 'dark' ? [`${palette.green}40`, `${palette.purple}40`] : [`${palette.green}15`, `${palette.purple}15`]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.sectionCardGradient, { marginTop: spacing.md }]}
+      >
+        <View style={[styles.sectionCardInner, { backgroundColor: palette.surface }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Activity Feed</Text>
+          </View>
+          <View style={styles.activityList}>
+            {displayActivities.map((activity, i) => {
+              const config = ({
+                focus: { asset: require('../../assets/focus.png'), color: palette.green, title: 'Focus Session' },
+                nap: { asset: require('../../assets/powerNap.png'), color: '#f59e0b', title: 'Power Nap' },
+                breathe: { asset: require('../../assets/breathe.png'), color: '#8b5cf6', title: 'Breathe' },
+                water: { asset: require('../../assets/wellness.png'), color: '#0ea5e9', title: 'Hydration' },
+              } as Record<string, any>)[activity.type];
+
+              const time = new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              
+              return (
+                <View key={`${activity.type}-${i}`} style={[styles.activityItem, i === displayActivities.length - 1 && { borderBottomWidth: 0 }]}>
+                  <View style={[styles.activityIconBox, { backgroundColor: `${config.color}08` }]}>
+                     <Image source={config.asset} style={{ width: 22, height: 22 }} resizeMode="contain" />
+                  </View>
+                  <View style={styles.activityInfo}>
+                    <Text style={styles.activityTitle}>{config.title}</Text>
+                    <Text style={styles.activityMeta}>
+                      {activity.type === 'focus' && `${activity.durationMinutes}m session`}
+                      {activity.type === 'nap' && `${activity.durationMinutes}m nap`}
+                      {activity.type === 'breathe' && `${Math.floor(activity.durationSeconds / 60)}m breathe`}
+                      {activity.type === 'water' && `${activity.amountMl}ml logged`}
+                    </Text>
+                  </View>
+                  <Text style={styles.activityTime}>{time}</Text>
+                </View>
+              );
+            })}
+          </View>
+          
+          {recentActivities.length > 5 && (
+            <Pressable 
+              onPress={() => setShowFullActivity(!showFullActivity)} 
+              style={styles.seeAllBtn}
+            >
+              <Text style={styles.seeAllText}>
+                {showFullActivity ? 'Show Less' : `See All (${recentActivities.length})`}
+              </Text>
+              <Ionicons 
+                name={showFullActivity ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color={palette.blue} 
+              />
+            </Pressable>
+          )}
+        </View>
+      </LinearGradient>
     );
   }
 
@@ -590,8 +779,24 @@ export function InsightsScreen() {
     // Overview Tab
     return (
       <>
+        <View style={styles.periodToggle}>
+          {(['day', 'week', 'month', 'year', 'all'] as const).map((r) => (
+            <Pressable
+              key={r}
+              onPress={() => setInsightRange(r)}
+              style={[styles.periodBtn, insightRange === r && styles.periodBtnActive]}
+            >
+              <Text style={[styles.periodText, insightRange === r && styles.periodTextActive]}>
+                {r === 'day' ? 'Today' : r === 'all' ? 'All' : r.charAt(0).toUpperCase() + r.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
         {renderFocusOverviewCard()}
         {renderSummaryPairs()}
+        {renderWellnessCharts()}
+        {renderActivityFeed()}
         {renderControlSnapshot()}
         {renderPurifyOverhaul()}
       </>
@@ -610,7 +815,7 @@ export function InsightsScreen() {
         accentGlow={palette.screenGlowAccent}
       >
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}
+          contentContainerStyle={[styles.content, { paddingBottom: spacing.xl }]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topBar}>
@@ -620,9 +825,7 @@ export function InsightsScreen() {
 
             <Text style={styles.topTitle}>Insights</Text>
 
-            <Pressable style={styles.topIconButton}>
-              <Ionicons name="ellipsis-horizontal" size={18} color={palette.text} />
-            </Pressable>
+            <View style={{ width: 42 }} />
           </View>
 
           <View style={styles.tabRow}>
@@ -640,11 +843,12 @@ export function InsightsScreen() {
                 <Pressable
                   key={tab}
                   onPress={() => setActiveTab(tab as InsightTab)}
-                  style={[styles.tabChip, active ? styles.tabChipActive : null]}
+                  style={[styles.tabChip, active ? styles.tabChipActive : null, { alignItems: 'center' }]}
                 >
                   <Text style={[styles.tabChipText, active ? styles.tabChipTextActive : null]}>
                     {label}
                   </Text>
+                  {active && <View style={styles.activeTabGlow} />}
                 </Pressable>
               );
             })}
@@ -656,4 +860,3 @@ export function InsightsScreen() {
     </SafeAreaView>
   );
 }
-

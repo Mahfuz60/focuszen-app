@@ -7,6 +7,7 @@ import {
   ScrollView,
   StatusBar,
   Text,
+  useColorScheme,
   View,
   Image,
 } from 'react-native';
@@ -20,16 +21,11 @@ import { usePlannerStore } from '../stores/usePlannerStore';
 import { useProfileStore } from '../stores/useProfileStore';
 import { useStudyStore } from '../stores/useStudyStore';
 import { useUsageStore } from '../stores/useUsageStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import { GradientBorderCard } from '../components/GradientBorderCard';
 import { spacing } from '../theme/tokens';
 import {
   createHomeStyles as createStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
-  qaCardStyle,
-  qaArrowBtnStyle,
-  qaArrowIconColor,
   brandZenStyle,
   brandTextStyle,
   greetingNameStyle,
@@ -37,7 +33,6 @@ import {
   upNextArrowStyle,
   extraStyles,
 } from '../styles/HomeScreen.styles';
-import { formatMinutes } from '../utils/date';
 import { buildHomeDashboard } from '../utils/homeDashboard';
 
 function formatCountdown(totalSeconds: number) {
@@ -66,9 +61,13 @@ function firstName(value: string) {
 export function HomeScreen() {
   const [usageTimeframe, setUsageTimeframe] = React.useState<'today' | 'week' | 'month' | 'year'>('today');
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
-  const { mode, text } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('home'), [getPalette]);
+  const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
   const navigation = useNavigation<any>();
   const tabBarHeight = useBottomTabBarHeight();
+  const systemScheme = useColorScheme();
+  const settings = useSettingsStore((state) => state.settings);
   const profile = useProfileStore((state) => state.profile);
   const focusSessions = useFocusStore((state) => state.sessions);
   const activeSession = useFocusStore((state) => state.activeSession);
@@ -81,11 +80,6 @@ export function HomeScreen() {
   const streak = useGoalsStore((state) => state.streak);
   const tasks = usePlannerStore((state) => state.tasks);
   const selectedDate = usePlannerStore((state) => state.selectedDate);
-  const palette = useMemo(
-    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
-    [mode]
-  );
-  const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
 
   const dashboard = useMemo(
     () =>
@@ -113,15 +107,10 @@ export function HomeScreen() {
   );
 
   const displayName = firstName(profile.displayName);
-  const openTasksCount = Math.max(
-    dashboard.summary.totalTasks - dashboard.summary.completedTasks,
-    0
-  );
+
   const featuredFocusTask = dashboard.featuredFocusTask;
   const nextTask = dashboard.nextTask;
-  const focusCardTitle = activeSession
-    ? dashboard.activeSessionTask?.title ?? featuredFocusTask?.title ?? 'Deep work session'
-    : featuredFocusTask?.title ?? 'Deep work session';
+
   const focusCardTime = activeSession
     ? formatCountdown(activeSession.remainingSeconds)
     : formatFocusSlot(featuredFocusTask?.focusPresetMinutes ?? selectedPreset);
@@ -253,12 +242,10 @@ export function HomeScreen() {
   }
 
   const localQuickActions = [
-    { key: 'focus', label: 'Deep Work', sub: 'Stay in the zone', image: require('../../assets/focus.png'), target: 'Focus', color: '#10b981' },
     { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', image: require('../../assets/breathe.png'), target: 'Breathe', color: '#4f46e5' },
     { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', image: require('../../assets/powerNap.png'), target: 'Alarm', color: '#f59e0b' },
     { key: 'hydration', label: 'Hydration', sub: 'Water & Drinks', image: require('../../assets/wellness.png'), target: 'Hydration', color: '#0ea5e9' },
     { key: 'eyewellness', label: 'Eye Care', sub: 'Rest & Exercises', image: require('../../assets/restEye.png'), target: 'EyeWellness', color: '#10b981' },
-    { key: 'plan', label: 'Planner', sub: 'Daily tasks', image: require('../../assets/planner.png'), target: 'DailyPlanner', color: '#a855f7' },
   ] as const;
 
   return (
@@ -277,17 +264,19 @@ export function HomeScreen() {
           contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]}
         >
           <View style={styles.headerRow}>
-            <Text style={[styles.brandText, brandTextStyle(mode, palette)]}>
-              Focus<Text style={brandZenStyle(mode, palette)}>Zen</Text>
-            </Text>
+            <View>
+              <Text style={[styles.brandText, brandTextStyle(mode, palette)]}>
+                Focus<Text style={brandZenStyle(mode, palette)}>Zen</Text>
+              </Text>
+             
+            </View>
             <View>
               <Pressable
                 onPress={() => navigation.navigate('Insights')}
                 style={styles.headerIconButton}
               >
-                <Ionicons name="notifications-outline" size={20} color={palette.text} />
+                <Ionicons name="settings-outline" size={20} color={palette.text} />
               </Pressable>
-              <View style={styles.notificationDot} />
             </View>
           </View>
 
@@ -353,12 +342,49 @@ export function HomeScreen() {
                     <Text style={[extraStyles.streakBadgeText, { color: palette.green }]}>Keep it going!</Text>
                   </View>
                 </View>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
 
+          <Pressable
+            onPress={handlePrimaryAction}
+            style={[styles.focusCard, {
+              backgroundColor: mode === 'dark' ? 'rgba(15, 23, 42, 0.8)' : '#fff',
+              marginTop: spacing.lg,
+            }]}
+          >
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={styles.focusEyebrowRow}>
+                  <Ionicons name="flash" size={14} color={palette.green} />
+                  <Text style={styles.focusEyebrow}>TODAY'S FOCUS</Text>
+                </View>
+              </View>
 
+              <Text style={styles.focusTitle}>Deep work session</Text>
 
+              <View style={styles.focusFooter}>
+                <View style={styles.focusTimerRow}>
+                  <Ionicons name="timer-outline" size={18} color={palette.green} />
+                  <Text style={styles.focusTimer}>{focusCardTime}</Text>
+                </View>
+                <Text style={[styles.focusMeta, { marginLeft: spacing.md }]}>
+                  {focusCardMeta}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.playGlowOuter, { backgroundColor: palette.greenSoft }]}>
+              <View style={styles.playGlowInner}>
+                <Ionicons
+                  name={activeSession ? 'pause' : 'play'}
+                  size={24}
+                  color="#fff"
+                  style={activeSession ? styles.playIconActive : styles.playIcon}
+                />
+              </View>
+            </View>
+          </Pressable>
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -405,6 +431,9 @@ export function HomeScreen() {
 
           <View style={[styles.sectionHeader, { marginTop: spacing.md }]}>
             <Text style={styles.sectionTitle}>Analytics</Text>
+            <Pressable onPress={() => navigation.navigate('Insights')}>
+              <Text style={styles.seeAllText}>See Full</Text>
+            </Pressable>
           </View>
 
           <View style={{ zIndex: 100 }}>
@@ -482,16 +511,19 @@ export function HomeScreen() {
             )}
           </View>
 
-          <View style={[styles.usageDetailsCard, {
-            borderColor: mode === 'dark' ? 'rgba(59, 130, 246, 0.65)' : 'rgba(59, 130, 246, 0.35)',
-            shadowColor: '#3b82f6',
-            shadowOpacity: mode === 'dark' ? 0.5 : 0.2,
-            shadowRadius: 35,
-            shadowOffset: { width: 0, height: 12 },
-            elevation: 15,
-            backgroundColor: mode === 'dark' ? 'rgba(10, 16, 26, 0.99)' : '#ffffff',
-            borderWidth: 2,
-          }]}>
+          <Pressable 
+            onPress={() => navigation.navigate('Insights')}
+            style={[styles.usageDetailsCard, {
+              borderColor: mode === 'dark' ? 'rgba(59, 130, 246, 0.65)' : 'rgba(59, 130, 246, 0.35)',
+              shadowColor: '#3b82f6',
+              shadowOpacity: mode === 'dark' ? 0.5 : 0.2,
+              shadowRadius: 35,
+              shadowOffset: { width: 0, height: 12 },
+              elevation: 15,
+              backgroundColor: mode === 'dark' ? 'rgba(10, 16, 26, 0.99)' : '#ffffff',
+              borderWidth: 2,
+            }]}
+          >
             <View style={styles.usageList}>
               {usageDetails.map((item, index) => {
                 const itemPercent = usageChartTotal > 0 ? item.value / usageChartTotal : 0;
@@ -531,7 +563,12 @@ export function HomeScreen() {
                       </View>
                       <View>
                         <Text style={styles.usageListName}>{item.label}</Text>
-                        <Text style={styles.usageListTime}>{item.value}m</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Text style={styles.usageListTime}>{item.value}m</Text>
+                          <Text style={{ fontSize: 12, fontWeight: '700', color: item.color }}>
+                            {Math.round(itemPercent * 100)}%
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
@@ -541,81 +578,100 @@ export function HomeScreen() {
 
             <View style={styles.usageListDivider} />
 
-              <View style={styles.usageChartContainer}>
-                <Svg width={200} height={200} viewBox="0 0 200 200">
-                  {usageChartSegments.map((segment, idx) => {
-                    const strokeW = 24;
-                    const gap = 6;
-                    
-                    const segmentLen = (segment.visualPercent * usageChartCircumference);
-                    const dashLen = Math.max(0.1, segmentLen - strokeW - gap);
-                    const dashOffset = segment.dashOffset - (strokeW / 2) - (gap / 2);
+            <View style={styles.usageChartContainer}>
+              <Svg width={200} height={200} viewBox="0 0 200 200">
+                {usageChartSegments.map((segment) => {
+                  const strokeW = 24;
+                  const gap = 6;
+                  const segmentLen = (segment.visualPercent * usageChartCircumference);
+                  const dashLen = Math.max(0.1, segmentLen - strokeW - gap);
+                  const dashOffset = segment.dashOffset - (strokeW / 2) - (gap / 2);
+                  const startAngle = ((-segment.dashOffset) / usageChartCircumference) * 360 - 90;
+                  const sweepAngle = segment.visualPercent * 360;
+                  const midAngle = startAngle + (sweepAngle / 2);
+                  const rad = midAngle * (Math.PI / 180);
+                  const lineInner = chartRadius + 10;
+                  const lineOuter = chartRadius + 18;
+                  const x1 = 100 + lineInner * Math.cos(rad);
+                  const y1 = 100 + lineInner * Math.sin(rad);
+                  const x2 = 100 + lineOuter * Math.cos(rad);
+                  const y2 = 100 + lineOuter * Math.sin(rad);
+                  const labelDist = lineOuter + 22;
+                  const labelX = 100 + labelDist * Math.cos(rad);
+                  const labelY = 100 + labelDist * Math.sin(rad);
 
-                    const startAngle = ((-segment.dashOffset) / usageChartCircumference) * 360 - 90;
-                    const sweepAngle = segment.visualPercent * 360;
-                    const midAngle = startAngle + (sweepAngle / 2);
-                    const rad = midAngle * (Math.PI / 180);
+                  return (
+                    <React.Fragment key={`seg-${segment.key}`}>
+                      <Circle
+                        cx={100} cy={100} r={chartRadius}
+                        stroke={segment.color} strokeWidth={strokeW}
+                        strokeDasharray={`${dashLen} ${usageChartCircumference}`}
+                        strokeDashoffset={dashOffset}
+                        fill="none" strokeLinecap="round"
+                        opacity={segment.actualPercent > 0 ? 1 : (mode === 'dark' ? 0.25 : 0.2)}
+                        transform="rotate(-90 100 100)"
+                      />
+                      <Path
+                        d={`M ${x1} ${y1} L ${x2} ${y2}`}
+                        stroke={segment.color} strokeWidth={1}
+                        opacity={segment.actualPercent > 0 ? 0.7 : 0.3}
+                        fill="none"
+                      />
+                    </React.Fragment>
+                  );
+                })}
+              </Svg>
 
-                    const lineInner = chartRadius + 10;
-                    const lineOuter = chartRadius + 18;
-                    const isRight = Math.cos(rad) > 0;
-                    
-                    const x1 = 100 + lineInner * Math.cos(rad);
-                    const y1 = 100 + lineInner * Math.sin(rad);
-                    const x2 = 100 + lineOuter * Math.cos(rad);
-                    const y2 = 100 + lineOuter * Math.sin(rad);
+              {/* Segment Labels */}
+              {usageChartSegments.map((segment) => {
+                const midAngle = ((-segment.dashOffset) / usageChartCircumference) * 360 - 90 + (segment.visualPercent * 360 / 2);
+                const rad = midAngle * (Math.PI / 180);
+                const labelDist = chartRadius + 40;
+                const labelX = 100 + labelDist * Math.cos(rad);
+                const labelY = 100 + labelDist * Math.sin(rad);
 
-                    // Label offset
-                    const labelDist = lineOuter + 22;
-                    const labelX = 100 + labelDist * Math.cos(rad);
-                    const labelY = 100 + labelDist * Math.sin(rad);
+                return (
+                  <View
+                    key={`label-${segment.key}`}
+                    pointerEvents="none"
+                    style={{
+                      position: 'absolute',
+                      left: '50%',
+                      top: '50%',
+                      width: 40,
+                      height: 20,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginLeft: labelX - 100, // Relative to SVG center (100,100)
+                      marginTop: labelY - 100,  // Relative to SVG center (100,100)
+                      zIndex: 10,
+                    }}
+                  >
+                    <Text style={{ 
+                      fontSize: 11, 
+                      fontWeight: '800', 
+                      color: segment.color,
+                      backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)',
+                      paddingHorizontal: 4,
+                      paddingVertical: 2,
+                      borderRadius: 6,
+                      overflow: 'hidden',
+                    }}>
+                      {Math.round(segment.actualPercent * 100)}%
+                    </Text>
+                  </View>
+                );
+              })}
 
-                    return (
-                      <React.Fragment key={`seg-${segment.key}`}>
-                        <Circle
-                          cx={100} cy={100} r={chartRadius}
-                          stroke={segment.color} strokeWidth={strokeW}
-                          strokeDasharray={`${dashLen} ${usageChartCircumference}`}
-                          strokeDashoffset={dashOffset}
-                          fill="none" strokeLinecap="round"
-                          opacity={segment.actualPercent > 0 ? 1 : (mode === 'dark' ? 0.25 : 0.2)}
-                          transform="rotate(-90 100 100)"
-                        />
-                        <Path
-                          d={`M ${x1} ${y1} L ${x2} ${y2}`}
-                          stroke={segment.color} strokeWidth={1}
-                          opacity={segment.actualPercent > 0 ? 0.7 : 0.3}
-                          fill="none"
-                        />
-                        <Text
-                          style={[
-                            styles.usagePercentLabel,
-                            { 
-                              color: segment.color, 
-                              opacity: segment.actualPercent > 0 ? 1 : 0.6,
-                              left: labelX - 30,
-                              top: labelY - 10,
-                              width: 60,
-                              textAlign: 'center',
-                            }
-                          ]}
-                        >
-                          {(segment.actualPercent * 100).toFixed(1)}%
-                        </Text>
-                      </React.Fragment>
-                    );
-                  })}
-                </Svg>
-
-                <View style={styles.usageCenterContainer}>
-                  <Text style={styles.usageCenterValue}>
-                    {usageChartTotal < 60 ? usageChartTotal : Math.floor(usageChartTotal / 60)}
-                    <Text style={styles.usageCenterValueSuffix}>{usageChartTotal < 60 ? 'm' : 'h'}</Text>
-                  </Text>
-                  <Text style={styles.usageCenterLabel}>Total</Text>
-                </View>
+              <View style={styles.usageCenterContainer}>
+                <Text style={styles.usageCenterValue}>
+                  {usageChartTotal < 60 ? usageChartTotal : Math.floor(usageChartTotal / 60)}
+                  <Text style={styles.usageCenterValueSuffix}>{usageChartTotal < 60 ? 'm' : 'h'}</Text>
+                </Text>
+                <Text style={styles.usageCenterLabel}>Total</Text>
               </View>
             </View>
+          </Pressable>
 
 
 

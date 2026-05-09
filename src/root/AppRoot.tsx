@@ -21,7 +21,9 @@ import { useAppTheme } from '../hooks/useAppTheme';
 import { useAlarmStore } from '../stores/useAlarmStore';
 import { useControlStore } from '../stores/useControlStore';
 import { useFocusStore } from '../stores/useFocusStore';
-import { NativeModules } from 'react-native';
+import { NativeModules, View } from 'react-native';
+import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
+import { palettes } from '../theme/tokens';
 
 const { FocusZenSettings } = NativeModules;
 
@@ -108,10 +110,20 @@ export function AppRoot() {
     return null;
   }
 
+  const palette = palettes[mode];
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-      <RootNavigator />
+      <AnimatedThemeBackdrop
+        colors={[palette.background, palette.background]}
+        mode={mode}
+        primaryGlow={mode === 'dark' ? 'rgba(0, 255, 157, 0.12)' : 'rgba(31, 165, 91, 0.08)'}
+        secondaryGlow={mode === 'dark' ? 'rgba(217, 70, 239, 0.1)' : 'rgba(170, 0, 255, 0.06)'}
+        accentGlow={mode === 'dark' ? 'rgba(56, 189, 248, 0.12)' : 'rgba(41, 98, 255, 0.08)'}
+      >
+        <RootNavigator />
+      </AnimatedThemeBackdrop>
     </GestureHandlerRootView>
   );
 }

@@ -15,22 +15,20 @@ import {
   Switch,
   Text,
   TextInput,
-  useColorScheme,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppBrandIcon, getAppColor } from "../components/AppBrandIcon";
 import { AnimatedThemeBackdrop } from "../components/AnimatedThemeBackdrop";
 import { useControlStore } from "../stores/useControlStore";
+import { useSettingsStore } from "../stores/useSettingsStore";
 import { usePurifyStore } from "../stores/usePurifyStore";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { spacing } from "../theme/tokens";
 import {
   createControlStyles as createStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
 } from "../styles/ControlScreen.styles";
+import { ScreenPalette } from '../theme/screenPalettes';
 import { AppControlTarget } from "../types/models";
 import {
   countEnabledOptions,
@@ -115,13 +113,17 @@ function ToggleTrack({
 export function ControlScreen() {
   const navigation = useNavigation<any>();
   const tabBarHeight = useBottomTabBarHeight();
-  const { mode } = useAppTheme();
-  const colorScheme = useColorScheme();
-  const resolvedMode =
-    mode === "dark" || colorScheme === "dark" ? "dark" : "light";
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('control'), [getPalette]);
+  const styles = useMemo(
+    () => createStyles(palette, mode),
+    [palette, mode],
+  );
   const controls = useControlStore((state) => state.controls);
   const safeBrowsing = useControlStore((state) => state.safeBrowsing);
   const strictModeEnabled = useControlStore((state) => state.strictModeEnabled);
+  const setThemeMode = useSettingsStore((state) => state.setThemeMode);
+  const currentThemeMode = useSettingsStore((state) => state.settings.themeMode);
   const toggleFeature = useControlStore((state) => state.toggleFeature);
   const toggleSafeBrowsing = useControlStore(
     (state) => state.toggleSafeBrowsing,
@@ -140,14 +142,6 @@ export function ControlScreen() {
     "YouTube",
   );
   const deferredQuery = useDeferredValue(query);
-  const palette = useMemo<ScreenPalette>(
-    () => (resolvedMode === "dark" ? darkPalette : lightPalette),
-    [resolvedMode],
-  );
-  const styles = useMemo(
-    () => createStyles(palette, resolvedMode),
-    [palette, resolvedMode],
-  );
 
   const sortedControls = useMemo(
     () => sortControlsByUsage(controls),
@@ -217,7 +211,7 @@ export function ControlScreen() {
     palette.backgroundTop,
     palette.backgroundBottom,
   ];
-  const statusBarStyle = resolvedMode === 'dark' ? 'light-content' : 'dark-content';
+  const statusBarStyle = mode === 'dark' ? 'light-content' : 'dark-content';
 
   function handleBack() {
     navigation.navigate("Home");
@@ -243,7 +237,7 @@ export function ControlScreen() {
 
       <AnimatedThemeBackdrop
         colors={backgroundColors}
-        mode={resolvedMode}
+        mode={mode}
         primaryGlow={palette.screenGlow}
         secondaryGlow={palette.screenGlowSoft}
         accentGlow={palette.screenGlowAccent}
@@ -275,13 +269,16 @@ export function ControlScreen() {
 
               <Text style={styles.topTitle}>App Control</Text>
 
-              <View style={styles.topIconButton}>
+              <Pressable 
+                onPress={() => navigation.navigate('Insights')}
+                style={styles.topIconButton}
+              >
                 <Ionicons
-                  name="shield-checkmark-outline"
+                  name="settings-outline"
                   size={24}
                   color={palette.text}
                 />
-              </View>
+              </Pressable>
             </View>
 
             <Text style={styles.helperText}>
@@ -522,7 +519,7 @@ export function ControlScreen() {
                                 onDisabledPress={handlePermissionRequired}
                                 palette={palette}
                                 styles={styles}
-                                mode={resolvedMode}
+                                mode={mode}
                               />
                             </View>
                           ))}
@@ -606,11 +603,63 @@ export function ControlScreen() {
                         onDisabledPress={handlePermissionRequired}
                         palette={palette}
                         styles={styles}
-                        mode={resolvedMode}
+                        mode={mode}
                       />
                     </View>
                   );
                 })}
+              </View>
+
+              <View style={[styles.card, {
+                borderColor: mode === 'dark' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
+                shadowColor: '#3b82f6',
+                shadowOpacity: mode === 'dark' ? 0.25 : 0.08,
+                shadowRadius: 20,
+                elevation: 6,
+                backgroundColor: mode === 'dark' ? 'rgba(12, 16, 26, 0.95)' : '#ffffff',
+                marginTop: spacing.md,
+                paddingBottom: 24,
+              }]}>
+                <Text style={styles.sectionEyebrow}>Appearance</Text>
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+                  {(['system', 'light', 'dark'] as const).map((t) => {
+                    // Ensure it always selects 'system' by default if no preference is found
+                    const active = (currentThemeMode || 'system') === t;
+                    return (
+                      <Pressable
+                        key={t}
+                        onPress={() => setThemeMode(t)}
+                        style={{
+                          flex: 1,
+                          paddingVertical: 12,
+                          borderRadius: 16,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: active 
+                            ? (mode === 'dark' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)')
+                            : (mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
+                          borderWidth: 1,
+                          borderColor: active ? '#3b82f6' : 'transparent',
+                        }}
+                      >
+                        <Ionicons 
+                          name={t === 'system' ? 'settings-outline' : t === 'light' ? 'sunny-outline' : 'moon-outline'} 
+                          size={18} 
+                          color={active ? '#3b82f6' : (mode === 'dark' ? '#94a3b8' : '#64748b')} 
+                        />
+                        <Text style={{ 
+                          fontSize: 10, 
+                          fontWeight: 'bold', 
+                          marginTop: 4, 
+                          color: active ? '#3b82f6' : (mode === 'dark' ? '#94a3b8' : '#64748b'),
+                          textTransform: 'uppercase'
+                        }}>
+                          {t}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
         </ScrollView>
       </AnimatedThemeBackdrop>

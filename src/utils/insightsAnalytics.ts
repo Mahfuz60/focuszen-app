@@ -1,6 +1,6 @@
 import { AppControlTarget, FocusSession, StudySession, UsageEntry } from '../types/models';
 
-export type InsightsRange = 'day' | 'week' | 'month' | 'year';
+export type InsightsRange = 'day' | 'week' | 'month' | 'year' | 'all';
 export type InsightsMetric = 'focus' | 'social';
 
 export type InsightsBucket = {
@@ -96,6 +96,24 @@ export function getLatestInsightsAnchorDate({
   return new Date(Math.max(...timestamps));
 }
 
+export function getEarliestInsightsAnchorDate({
+  focusSessions,
+  studySessions,
+  usageEntries,
+}: Pick<BuildInsightsDashboardInput, 'focusSessions' | 'studySessions' | 'usageEntries'>) {
+  const timestamps = [
+    ...(focusSessions || []).map((session) => getFocusSessionDate(session).getTime()),
+    ...(studySessions || []).map((session) => new Date(session.startedAt).getTime()),
+    ...(usageEntries || []).map((entry) => new Date(entry.date).getTime()),
+  ].filter((value) => Number.isFinite(value));
+
+  if (timestamps.length === 0) {
+    return new Date();
+  }
+
+  return new Date(Math.min(...timestamps));
+}
+
 export function shiftInsightsAnchorDate(anchorDate: Date, range: InsightsRange, delta: number) {
   const shifted = new Date(anchorDate);
 
@@ -126,7 +144,8 @@ export function buildInsightsDashboard({
   studySessions,
   usageEntries,
 }: BuildInsightsDashboardInput): InsightsDashboard {
-  const currentBounds = getPeriodBounds(anchorDate, range);
+  const earliestDate = range === 'all' ? getEarliestInsightsAnchorDate({ focusSessions, studySessions, usageEntries }) : undefined;
+  const currentBounds = getPeriodBounds(anchorDate, range, earliestDate);
   const previousAnchorDate = shiftInsightsAnchorDate(anchorDate, range, -1);
   const previousBounds = getPeriodBounds(previousAnchorDate, range);
   const currentUsage = (usageEntries || []).filter((entry) => isDateWithinBounds(new Date(entry.date), currentBounds));
@@ -263,7 +282,10 @@ function calculateChangePercent(currentTotal: number, previousTotal: number) {
   return Math.round(((currentTotal - previousTotal) / previousTotal) * 100);
 }
 
-function buildBucketSeeds(range: InsightsRange, bounds: Bounds): BucketSeed[] {
+export function buildBucketSeeds(range: InsightsRange, bounds: Bounds): BucketSeed[] {
+  if (range === 'all') {
+    return buildAllTimeBuckets(bounds);
+  }
   if (range === 'day') {
     return Array.from({ length: 24 }, (_, hour) => {
       const start = new Date(bounds.start);
@@ -345,7 +367,7 @@ function buildBucketSeeds(range: InsightsRange, bounds: Bounds): BucketSeed[] {
   });
 }
 
-function formatPeriodLabel(range: InsightsRange, bounds: Bounds) {
+export function formatPeriodLabel(range: InsightsRange, bounds: Bounds) {
   if (range === 'day') {
     return formatDate(bounds.start, { month: 'short', day: 'numeric', year: 'numeric' });
   }
@@ -367,6 +389,31 @@ function formatDate(date: Date, options: Intl.DateTimeFormatOptions) {
   return new Intl.DateTimeFormat('en-US', options).format(date);
 }
 
+function buildAllTimeBuckets(bounds: Bounds): BucketSeed[] {
+  const seeds: BucketSeed[] = [];
+  let current = new Date(bounds.start);
+  current.setDate(1);
+  current.setHours(0, 0, 0, 0);
+
+  while (current <= bounds.end) {
+    const start = new Date(current);
+    const end = new Date(current.getFullYear(), current.getMonth() + 1, 0, 23, 59, 59, 999);
+    const label = start.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+
+    seeds.push({
+      key: `all-${start.getTime()}`,
+      label,
+      shortLabel: label,
+      start,
+      end,
+    });
+
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  return seeds;
+}
+
 function formatHourLabel(hour: number) {
   const period = hour >= 12 ? 'PM' : 'AM';
   const normalizedHour = hour % 12 === 0 ? 12 : hour % 12;
@@ -379,7 +426,14 @@ function formatHourShortLabel(hour: number) {
   return `${normalizedHour}${period}`;
 }
 
-function getPeriodBounds(anchorDate: Date, range: InsightsRange): Bounds {
+export function getPeriodBounds(anchorDate: Date, range: InsightsRange, earliestDate?: Date): Bounds {
+  if (range === 'all') {
+    const start = earliestDate || new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
   const start =
     range === 'day'
       ? startOfDay(anchorDate)
@@ -418,6 +472,6 @@ function startOfYear(date: Date) {
   return start;
 }
 
-function isDateWithinBounds(date: Date, bounds: Bounds) {
+export function isDateWithinBounds(date: Date, bounds: Bounds) {
   return date >= bounds.start && date <= bounds.end;
 }

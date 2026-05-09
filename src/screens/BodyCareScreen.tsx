@@ -26,10 +26,8 @@ import {
 import { spacing } from '../theme/tokens';
 import {
   createBodyCareStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
 } from '../styles/BodyCareScreen.styles';
+import { ScreenPalette } from '../theme/screenPalettes';
 
 const { width } = Dimensions.get('window');
 
@@ -56,19 +54,15 @@ function WaterMascot({ color }: { color: string }) {
 }
 
 export function BodyCareScreen() {
-  const { mode } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('bodyCare'), [getPalette]);
+  const styles = useMemo(() => createBodyCareStyles(palette), [palette]);
   const navigation = useNavigation<any>();
 
   const waterGoalMl = useBodyCareStore((s) => s.waterGoalMl);
   const waterEntries = useBodyCareStore((s) => s.waterEntries);
   const logWater = useBodyCareStore((s) => s.logWater);
   const logEyeRest = useBodyCareStore((s) => s.logEyeRest);
-
-  const palette = useMemo(
-    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
-    [mode]
-  );
-  const styles = useMemo(() => createBodyCareStyles(palette), [palette]);
 
   const [currentDay, setCurrentDay] = useState(new Date().toDateString());
   const todayEntries = useMemo(() => {

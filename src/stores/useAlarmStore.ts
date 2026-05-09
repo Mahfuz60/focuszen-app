@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-export type NapPreset = '10min' | '20min' | '26min' | '90min' | 'custom';
+export type NapPreset = '10min' | '20min' | '30min' | '60min' | 'custom';
 
 export type AlarmSession = {
   id: string;
@@ -36,17 +36,17 @@ export const NAP_PRESETS: Record<NapPreset, { label: string; minutes: number; em
     emoji: '🧠',
     benefit: 'Peak cognitive reset. NASA approved.',
   },
-  '26min': {
-    label: '26 min',
-    minutes: 26,
+  '30min': {
+    label: '30 min',
+    minutes: 30,
     emoji: '🚀',
-    benefit: 'NASA pilot nap. +34% alertness.',
+    benefit: 'Advanced alertness boost. No inertia.',
   },
-  '90min': {
-    label: '90 min',
-    minutes: 90,
+  '60min': {
+    label: '60 min',
+    minutes: 60,
     emoji: '💫',
-    benefit: 'Full sleep cycle. Deep recovery.',
+    benefit: 'Deep restorative cycle. Full recovery.',
   },
   custom: {
     label: 'Custom',

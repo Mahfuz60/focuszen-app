@@ -3,7 +3,6 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StatusBar,
@@ -23,10 +22,8 @@ import { usePlannerStore } from '../stores/usePlannerStore';
 import { spacing, typography } from '../theme/tokens';
 import {
   createFocusStyles as createStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
 } from '../styles/FocusScreen.styles';
+import { ScreenPalette } from '../theme/screenPalettes';
 import { isSameDay } from '../utils/date';
 
 
@@ -39,8 +36,12 @@ function formatCountdown(totalSeconds: number) {
   return `${minutes}:${seconds}`;
 }
 
+import { FocusCompleteModal } from '../components/FocusCompleteModal';
+
 export function FocusScreen() {
-  const { mode, text } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('focus'), [getPalette]);
+  const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
   const defaultFocusMinutes = 30;
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
@@ -65,19 +66,8 @@ export function FocusScreen() {
   const selectedDate = usePlannerStore((state) => state.selectedDate);
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [showTimeEditor, setShowTimeEditor] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [draftMinutes, setDraftMinutes] = useState(String(selectedPreset));
-  const palette = useMemo<ScreenPalette>(
-    () =>
-      mode === 'dark'
-        ? {
-            ...darkPalette,
-          }
-        : {
-            ...lightPalette,
-          },
-    [mode]
-  );
-  const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
 
   useEffect(() => {
     if (!isFocused || !activeSession || activeSession.paused) {
@@ -123,10 +113,10 @@ export function FocusScreen() {
     : `${String(idleFocusMinutes ?? defaultFocusMinutes).padStart(2, '0')}:00`;
   const ringState = activeSession
     ? activeSession.paused
-      ? 'Paused'
-      : linkedTask
-        ? `Focusing (Starts: ${linkedTask.startTime})`
-        : 'Session in progress'
+    ? 'Paused'
+    : linkedTask
+    ? `Focusing (Starts: ${linkedTask.startTime})`
+    : 'Session in progress'
     : 'Ready to start';
   const ringProgress = activeSession
     ? Math.min(
@@ -170,8 +160,9 @@ export function FocusScreen() {
       markTaskInProgressFromFocus(completed.linkedTaskId);
     }
 
-    Alert.alert('Focus complete', 'Session saved and your linked task was updated.');
+    setShowCompleteModal(true);
   }
+
 
   function handleMainAction() {
     if (!activeSession) {
@@ -250,8 +241,12 @@ export function FocusScreen() {
                 Block distractions. <Text style={styles.subtitleAccent}>Dive deep.</Text>
               </Text>
             </View>
+            <Pressable onPress={() => navigation.navigate('Insights')} style={styles.backButton}>
+              <Ionicons name="settings-outline" size={20} color={palette.text} />
+            </Pressable>
+          </View>
 
-            <View style={{ zIndex: 100 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', zIndex: 100 }}>
               <Pressable
                 onPress={() => setShowModeMenu((current) => !current)}
                 style={styles.modeChip}
@@ -290,7 +285,6 @@ export function FocusScreen() {
                 </View>
               )}
             </View>
-          </View>
 
           <View style={styles.ringSection}>
             <Svg
@@ -475,6 +469,10 @@ export function FocusScreen() {
             </Pressable>
           </View>
         </ScrollView>
+        <FocusCompleteModal
+          visible={showCompleteModal}
+          onClose={() => setShowCompleteModal(false)}
+        />
       </AnimatedThemeBackdrop>
     </SafeAreaView>
   );

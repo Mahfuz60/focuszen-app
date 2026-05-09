@@ -1,49 +1,13 @@
 import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
 
-export const darkPalette = {
-  backgroundTop: '#0a0f0d',
-  backgroundBottom: '#111b17',
-  screenGlow: 'rgba(83, 208, 131, 0.08)',
-  screenGlowSoft: 'rgba(111, 157, 255, 0.05)',
-  surface: '#15201b',
-  surfaceSoft: '#1a2721',
-  stroke: '#22352c',
-  text: '#ffffff',
-  textMuted: '#9ab3a5',
-  green: '#2ecc71',
-  buttonEnabled: '#2ecc71',
-  statusBar: 'light-content' as const,
-  shadow: 'rgba(0, 0, 0, 0.4)',
-  buttonText: '#000000',
-  iconColor: '#2ecc71',
-  iconBg: 'rgba(46, 204, 113, 0.15)',
-};
+import { ScreenPalette } from '../theme/screenPalettes';
 
-export const lightPalette = {
-  backgroundTop: '#ffffff',
-  backgroundBottom: '#f0f5f2',
-  screenGlow: 'rgba(46, 204, 113, 0.08)',
-  screenGlowSoft: 'rgba(46, 111, 242, 0.04)',
-  surface: '#ffffff',
-  surfaceSoft: '#f7fbf8',
-  stroke: '#e2ece5',
-  text: '#111b17',
-  textMuted: '#5c7365',
-  green: '#1fa55b',
-  buttonEnabled: '#1fa55b',
-  statusBar: 'dark-content' as const,
-  shadow: 'rgba(17, 27, 23, 0.06)',
-  buttonText: '#ffffff',
-  iconColor: '#1fa55b',
-  iconBg: 'rgba(31, 165, 91, 0.1)',
-};
-
-export type ScreenPalette = typeof darkPalette;
-
-export const permissionsStyles = StyleSheet.create({
+export function createPermissionsStyles(palette: ScreenPalette) {
+  return StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: palette.backgroundTop,
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
@@ -55,6 +19,7 @@ export const permissionsStyles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
+    color: palette.green,
   },
   title: {
     marginTop: spacing.md,
@@ -63,12 +28,14 @@ export const permissionsStyles = StyleSheet.create({
     fontWeight: '900',
     maxWidth: 320,
     letterSpacing: -0.5,
+    color: palette.text,
   },
   subtitle: {
     marginTop: spacing.sm,
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '400',
+    color: palette.textMuted,
   },
   list: {
     marginTop: spacing.xl,
@@ -80,6 +47,9 @@ export const permissionsStyles = StyleSheet.create({
     borderRadius: 20,
     padding: spacing.md,
     borderWidth: 1.5,
+    backgroundColor: palette.surface,
+    borderColor: palette.stroke,
+    shadowColor: palette.shadow,
     shadowOpacity: 1,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
@@ -101,12 +71,14 @@ export const permissionsStyles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     letterSpacing: -0.2,
+    color: palette.text,
   },
   cardDesc: {
     marginTop: 4,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '400',
+    color: palette.textMuted,
   },
   button: {
     marginTop: spacing.xl + spacing.md,
@@ -115,6 +87,7 @@ export const permissionsStyles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: palette.shadow,
     shadowOpacity: 1,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
@@ -126,3 +99,4 @@ export const permissionsStyles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
+}

@@ -1,41 +1,6 @@
-import { StyleSheet, Dimensions } from 'react-native';
-import { spacing, radius } from '../theme/tokens';
-
-const { width } = Dimensions.get('window');
-
-export const darkPalette = {
-  background: '#04070f',
-  surface: '#0d121d',
-  surfaceLight: '#1a2233',
-  primary: '#10b981',
-  primaryGlow: 'rgba(16, 185, 129, 0.25)',
-  text: '#ffffff',
-  textMuted: '#94a3b8',
-  textDim: '#64748b',
-  stroke: 'rgba(255, 255, 255, 0.08)',
-  accentGreen: '#10b981',
-  accentYellow: '#fbbf24',
-  accentPurple: '#a78bfa',
-  accentBlue: '#38bdf8',
-};
-
-export const lightPalette = {
-  background: '#f8fafc',
-  surface: '#ffffff',
-  surfaceLight: '#f1f5f9',
-  primary: '#059669',
-  primaryGlow: 'rgba(5, 150, 105, 0.08)',
-  text: '#0f172a',
-  textMuted: '#334155',
-  textDim: '#64748b',
-  stroke: 'rgba(0, 0, 0, 0.06)',
-  accentGreen: '#10b981',
-  accentYellow: '#f59e0b',
-  accentPurple: '#8b5cf6',
-  accentBlue: '#0ea5e9',
-};
-
-export type ScreenPalette = typeof darkPalette;
+import { StyleSheet } from 'react-native';
+import { spacing } from '../theme/tokens';
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function createEyeWellnessStyles(palette: ScreenPalette) {
   return StyleSheet.create({

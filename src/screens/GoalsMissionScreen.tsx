@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { SurfaceCard } from '../components/SurfaceCard';
@@ -8,10 +8,15 @@ import { MetricPill } from '../components/MetricPill';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useGoalsStore } from '../stores/useGoalsStore';
 import { spacing, typography } from '../theme/tokens';
-import { goalsMissionStyles as styles } from '../styles/GoalsMissionScreen.styles';
+import {
+  createGoalsMissionStyles as createStyles,
+} from '../styles/GoalsMissionScreen.styles';
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function GoalsMissionScreen() {
-  const { colors } = useAppTheme();
+  const { mode, colors, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('goalsMission'), [getPalette]);
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const goals = useGoalsStore((state) => state.goals);
   const badges = useGoalsStore((state) => state.badges);
   const streak = useGoalsStore((state) => state.streak);
@@ -23,7 +28,7 @@ export function GoalsMissionScreen() {
       right={<MetricPill label="Gamified" tone="amber" />}
     >
       <SurfaceCard style={{
-        borderColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)',
+        borderColor: palette.stroke,
         shadowColor: colors.blue,
         shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
         shadowRadius: 15,
@@ -43,7 +48,7 @@ export function GoalsMissionScreen() {
         const progress = Math.min(1, goal.current / goal.target);
         return (
           <SurfaceCard key={goal.id} delay={index * 70} style={{
-            borderColor: mode === 'dark' ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.12)',
+            borderColor: palette.accentSoft,
             shadowColor: colors.blue,
             shadowOpacity: mode === 'dark' ? 0.25 : 0.08,
             shadowRadius: 18,
@@ -63,7 +68,7 @@ export function GoalsMissionScreen() {
       })}
 
       <SurfaceCard delay={220} style={{
-        borderColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)',
+        borderColor: palette.stroke,
         shadowColor: colors.purple,
         shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
         shadowRadius: 15,
@@ -79,7 +84,7 @@ export function GoalsMissionScreen() {
       </SurfaceCard>
 
       <SurfaceCard delay={280} style={{
-        borderColor: mode === 'dark' ? 'rgba(255, 171, 0, 0.3)' : 'rgba(255, 171, 0, 0.15)',
+        borderColor: palette.goldSoft,
         shadowColor: colors.amber,
         shadowOpacity: mode === 'dark' ? 0.3 : 0.1,
         shadowRadius: 20,

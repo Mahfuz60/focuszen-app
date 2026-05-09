@@ -1,53 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
+import { ScreenPalette } from '../theme/screenPalettes';
 
-export const darkPalette = {
-  backgroundTop: '#040712',
-  backgroundBottom: '#080d1a',
-  primaryGlow: 'rgba(56, 189, 248, 0.25)',
-  secondaryGlow: 'rgba(16, 185, 129, 0.18)',
-  accentGlow: 'rgba(56, 189, 248, 0.12)',
-  surface: 'rgba(18, 25, 41, 0.92)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.08)',
-  stroke: 'rgba(148, 163, 184, 0.16)',
-  strokeAlert: 'rgba(56, 189, 248, 0.4)',
-  text: '#ffffff',
-  textMuted: '#f1f5f9',
-  textSoft: '#94a3b8',
-  blue: '#0ea5e9',
-  blueSoft: 'rgba(56, 189, 248, 0.16)',
-  green: '#10b981',
-  greenSoft: 'rgba(16, 185, 129, 0.16)',
-  accent: '#38bdf8',
-  accentSoft: 'rgba(56, 189, 248, 0.12)',
-  shadow: 'rgba(0, 0, 0, 0.5)',
-};
-
-export const lightPalette = {
-  backgroundTop: '#f0f9ff',
-  backgroundBottom: '#ffffff',
-  primaryGlow: 'rgba(2, 132, 199, 0.08)',
-  secondaryGlow: 'rgba(5, 150, 105, 0.06)',
-  accentGlow: 'rgba(2, 132, 199, 0.04)',
-  surface: '#ffffff',
-  surfaceSoft: '#f1f5f9',
-  stroke: 'rgba(0, 0, 0, 0.06)',
-  strokeAlert: 'rgba(2, 132, 199, 0.3)',
-  text: '#0f172a',
-  textMuted: '#334155',
-  textSoft: '#64748b',
-  blue: '#0369a1',
-  blueSoft: 'rgba(14, 165, 233, 0.1)',
-  green: '#10b981',
-  greenSoft: 'rgba(16, 185, 129, 0.1)',
-  accent: '#0ea5e9',
-  accentSoft: 'rgba(14, 165, 233, 0.08)',
-  shadow: 'rgba(0, 0, 0, 0.05)',
-};
-
-export type ScreenPalette = typeof darkPalette;
-
-export function createBodyCareStyles(palette: ScreenPalette) {
+export function createBodyCareStyles(palette: ScreenPalette, mode: 'dark' | 'light') {
   return StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: palette.backgroundTop },
     content: { paddingHorizontal: spacing.md, paddingTop: 8, paddingBottom: 60 },
@@ -86,10 +41,10 @@ export function createBodyCareStyles(palette: ScreenPalette) {
     waterCircle: { 
       width: 280, height: 280, borderRadius: 140, 
       alignItems: 'center', justifyContent: 'center',
-      backgroundColor: 'rgba(15, 23, 42, 0.62)',
-      borderWidth: 2, borderColor: 'rgba(56, 189, 248, 0.18)',
+      backgroundColor: mode === 'dark' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(14, 165, 233, 0.05)',
+      borderWidth: 2, borderColor: 'rgba(56, 189, 248, 0.3)',
       overflow: 'hidden',
-      shadowColor: palette.blue, shadowOpacity: 0.2, shadowRadius: 18, elevation: 8,
+      shadowColor: palette.blue, shadowOpacity: 0.15, shadowRadius: 20, elevation: 8,
     },
     circleContent: { position: 'absolute', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', zIndex: 10 },
     currentIntake: { fontSize: 64, fontWeight: '900', color: palette.text, textAlign: 'center' },
@@ -147,9 +102,10 @@ export function createBodyCareStyles(palette: ScreenPalette) {
     drinkTypeBadgeText: { fontSize: 9, fontWeight: '900', color: palette.textSoft, textTransform: 'uppercase' },
 
     // Cards Row (Tips)
-    cardsRow: { flexDirection: 'row', gap: 12, marginTop: 20 },
+    cardsRow: { flexDirection: 'row', gap: 12, marginTop: 20, width: '100%' },
     tipCard: {
       flex: 1, backgroundColor: palette.surface, padding: 16, borderRadius: 24,
+      minHeight: 120,
     },
     tipIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
     tipTitle: { fontSize: 12, fontWeight: '800', color: palette.textSoft },
@@ -209,7 +165,7 @@ export function createBodyCareStyles(palette: ScreenPalette) {
   });
 }
 
-export function createHydrationAddModalStyles(palette: ScreenPalette, width: number, height: number) {
+export function createHydrationAddModalStyles(palette: ScreenPalette, mode: 'dark' | 'light', width: number, height: number) {
   return StyleSheet.create({
     overlay: { flex: 1, backgroundColor: 'rgba(2, 6, 23, 0.9)', justifyContent: 'center', padding: 12 },
     sheet: {

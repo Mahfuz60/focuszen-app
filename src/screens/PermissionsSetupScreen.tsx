@@ -20,16 +20,16 @@ import { useAppTheme } from '../hooks/useAppTheme';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useControlStore } from '../stores/useControlStore';
 import {
-  permissionsStyles as styles,
-  darkPalette,
-  lightPalette,
+  createPermissionsStyles as createStyles,
 } from '../styles/PermissionsSetupScreen.styles';
 
 const { PermissionChecker } = NativeModules;
 
 export function PermissionsSetupScreen() {
   const navigation = useNavigation<any>();
-  const { mode} = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('permissionsSetup'), [getPalette]);
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const completePermissionsSetup = useSettingsStore((state) => state.completePermissionsSetup);
   const grantPermissions = useControlStore((state) => state.grantPermissions);
 
@@ -69,10 +69,6 @@ export function PermissionsSetupScreen() {
 
     return () => subscription.remove();
   }, []);
-  const palette = useMemo(
-    () => (mode === 'dark' ? darkPalette : lightPalette),
-    [mode]
-  );
 
   const openSettings = async (action: string, key: string, dataUri?: string) => {
     if (Platform.OS === 'android') {
@@ -88,8 +84,8 @@ export function PermissionsSetupScreen() {
     }
   };
 
-  // const allCompleted = Object.values(completed).every((v) => v === true);
-  const allCompleted = true;
+  const allCompleted = Object.values(completed).every((v) => v === true);
+  // const allCompleted = true;
 
   const handleFinish = () => {
     if (!allCompleted) return;
@@ -131,7 +127,7 @@ export function PermissionsSetupScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.backgroundTop }]}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle={palette.statusBar} backgroundColor={palette.backgroundTop} />
 
       <AnimatedThemeBackdrop
@@ -142,9 +138,9 @@ export function PermissionsSetupScreen() {
         accentGlow={mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.3)'}
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={[styles.brand, { color: palette.green }]}>FocusZen</Text>
-          <Text style={[styles.title, { color: palette.text }]}>Core Permissions</Text>
-          <Text style={[styles.subtitle, { color: palette.textMuted }]}>
+          <Text style={styles.brand}>FocusZen</Text>
+          <Text style={styles.title}>Core Permissions</Text>
+          <Text style={styles.subtitle}>
             To effectively block distractions and track your focus, we need the following system permissions.
           </Text>
 
@@ -156,11 +152,7 @@ export function PermissionsSetupScreen() {
                   key={p.id}
                   style={[
                     styles.card,
-                    {
-                      backgroundColor: palette.surface,
-                      borderColor: isCompleted ? palette.green : palette.stroke,
-                      shadowColor: palette.shadow,
-                    },
+                    isCompleted && { borderColor: palette.green },
                   ]}
                   onPress={() => openSettings(p.action, p.id, (p as any).dataUri)}
                 >
@@ -172,8 +164,8 @@ export function PermissionsSetupScreen() {
                     />
                   </View>
                   <View style={styles.cardBody}>
-                    <Text style={[styles.cardTitle, { color: palette.text }]}>{p.title}</Text>
-                    <Text style={[styles.cardDesc, { color: palette.textMuted }]}>{p.description}</Text>
+                    <Text style={styles.cardTitle}>{p.title}</Text>
+                    <Text style={styles.cardDesc}>{p.description}</Text>
                   </View>
                   {isCompleted ? (
                     <Ionicons name="checkmark-circle" size={26} color={palette.green} />
@@ -192,10 +184,9 @@ export function PermissionsSetupScreen() {
               styles.button,
               {
                 backgroundColor: allCompleted ? palette.buttonEnabled : palette.surfaceSoft,
-                shadowColor: palette.shadow,
                 borderColor: allCompleted ? palette.buttonEnabled : palette.stroke,
-                opacity: allCompleted ? 1 : 0.6,
               },
+              !allCompleted && { opacity: 0.6 },
             ]}
           >
             <Text style={[styles.buttonText, { color: allCompleted ? palette.buttonText : palette.textMuted }]}>

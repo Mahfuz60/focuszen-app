@@ -19,10 +19,8 @@ import { useBreatheStore, BREATHE_PATTERNS, BreathePattern, BreathePhase } from 
 import { spacing } from '../theme/tokens';
 import {
   createBreatheStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
 } from "../styles/BreatheScreen.styles"
+import { ScreenPalette } from '../theme/screenPalettes';
 
 const customPhases: { key: BreathePhase; label: string }[] = [
   { key: 'inhale', label: 'Inhale' },
@@ -32,18 +30,14 @@ const customPhases: { key: BreathePhase; label: string }[] = [
 ];
 
 export function BreatheScreen() {
-  const { mode } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('breathe'), [getPalette]);
+  const styles = useMemo(() => createBreatheStyles(palette), [palette]);
   const navigation = useNavigation<any>();
   const addSession = useBreatheStore((s) => s.addSession);
   const totalCompleted = useBreatheStore((s) => s.totalSessionsCompleted);
   const customPattern = useBreatheStore((s) => s.customPattern);
   const setCustomPattern = useBreatheStore((s) => s.setCustomPattern);
-
-  const palette = useMemo(
-    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
-    [mode]
-  );
-  const styles = useMemo(() => createBreatheStyles(palette), [palette]);
 
   const [selectedPattern, setSelectedPattern] = useState<BreathePattern>('box');
   const [isRunning, setIsRunning] = useState(false);
@@ -218,9 +212,9 @@ export function BreatheScreen() {
               <Ionicons name="arrow-back" size={22} color={palette.text} />
             </Pressable>
             <Text style={styles.topTitle}>Breathe</Text>
-            <View style={styles.topIconButton}>
-              <Ionicons name="stats-chart-outline" size={20} color={palette.textSoft} />
-            </View>
+            <Pressable onPress={() => navigation.navigate('Insights')} style={styles.topIconButton}>
+              <Ionicons name="settings-outline" size={20} color={palette.text} />
+            </Pressable>
           </View>
 
           {/* Stats row */}

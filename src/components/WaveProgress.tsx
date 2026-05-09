@@ -4,7 +4,7 @@ import Svg, { Path, Defs, LinearGradient, Stop, Circle, G, Mask } from 'react-na
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-export function WaveProgress({ progress, size, color }: { progress: number, size: number, color: string }) {
+export function WaveProgress({ progress, size, color, mode }: { progress: number, size: number, color: string, mode: 'dark' | 'light' }) {
   const waveAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -29,22 +29,24 @@ export function WaveProgress({ progress, size, color }: { progress: number, size
     ]
   });
 
+  const bottomColor = mode === 'dark' ? '#0c4a6e' : '#bae6fd';
+
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       {/* Background Outer Ring */}
       <View style={[StyleSheet.absoluteFill, { 
         borderRadius: radius, 
         borderWidth: 1, 
-        borderColor: 'rgba(255,255,255,0.08)',
-        backgroundColor: 'rgba(255,255,255,0.02)'
+        borderColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(14, 165, 233, 0.12)',
+        backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(14, 165, 233, 0.03)'
       }]} />
 
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Defs>
           <LinearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#fff" stopOpacity="0.3" />
-            <Stop offset="0.1" stopColor={color} stopOpacity="0.8" />
-            <Stop offset="1" stopColor="#0c4a6e" stopOpacity="1" />
+            <Stop offset="0" stopColor={mode === 'dark' ? '#fff' : '#e0f2fe'} stopOpacity="0.4" />
+            <Stop offset="0.2" stopColor={color} stopOpacity="0.8" />
+            <Stop offset="1" stopColor={bottomColor} stopOpacity="1" />
           </LinearGradient>
           <Mask id="circleMask">
             <Circle cx={radius} cy={radius} r={radius} fill="white" />

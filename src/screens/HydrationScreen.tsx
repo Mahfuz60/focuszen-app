@@ -26,8 +26,6 @@ import {
 } from '../stores/useBodyCareStore';
 import {
   createBodyCareStyles,
-  darkPalette,
-  lightPalette,
   ScreenPalette,
 } from '../styles/BodyCareScreen.styles';
 
@@ -35,7 +33,9 @@ import { WaveProgress } from '../components/WaveProgress';
 import { HydrationAddModal } from '../components/HydrationAddModal';
 
 export function HydrationScreen() {
-  const { mode } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('bodyCare'), [getPalette]);
+  const styles = useMemo(() => createBodyCareStyles(palette), [palette]);
   const navigation = useNavigation<any>();
 
   const { waterEntries, waterGoalMl, logWater, updateGoal, lastVolumes, lastType } = useBodyCareStore();
@@ -76,11 +76,6 @@ export function HydrationScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  const palette = useMemo(
-    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
-    [mode]
-  );
-  const styles = useMemo(() => createBodyCareStyles(palette), [palette]);
 
   const todayEntries = useMemo(() => {
     const todayStart = new Date();
@@ -108,9 +103,6 @@ export function HydrationScreen() {
     }).start();
   }, [animatedProgress, progress]);
 
-  const backdropColors = useMemo(() => 
-    [palette.backgroundTop, mode === 'dark' ? '#020617' : '#f8fafc'] as const, 
-  [palette.backgroundTop, mode]);
 
   const handleLogWater = (ml: number, type: DrinkType = 'Water') => {
     logWater(ml, type);
@@ -135,12 +127,12 @@ export function HydrationScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={palette.statusBar} backgroundColor={palette.backgroundTop} />
       <AnimatedThemeBackdrop
-        colors={backdropColors}
+        colors={[palette.backgroundTop, palette.backgroundBottom]}
         mode={mode}
-        primaryGlow={palette.primaryGlow}
-        secondaryGlow={palette.secondaryGlow}
+        primaryGlow={palette.screenGlow}
+        secondaryGlow={palette.screenGlowSoft}
       >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Top bar */}
@@ -149,7 +141,9 @@ export function HydrationScreen() {
               <Ionicons name="arrow-back" size={24} color={palette.text} />
             </Pressable>
             <Text style={styles.topTitle}>Hydration</Text>
-            <View style={{ width: 42 }} />
+            <Pressable onPress={() => navigation.navigate('Insights')} style={styles.topIconButton}>
+              <Ionicons name="settings-outline" size={20} color={palette.text} />
+            </Pressable>
           </View>
 
           {/* Header */}
@@ -181,6 +175,7 @@ export function HydrationScreen() {
                   progress={visualProgress} 
                   size={280} 
                   color={palette.blue} 
+                  mode={mode}
                />
                <View style={styles.circleContent}>
                   <Text style={styles.currentIntake}>

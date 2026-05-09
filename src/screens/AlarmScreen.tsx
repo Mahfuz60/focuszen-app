@@ -18,14 +18,15 @@ import { useAlarmStore, NAP_PRESETS, NapPreset } from '../stores/useAlarmStore';
 import { spacing } from '../theme/tokens';
 import {
   createAlarmStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
 } from '../styles/AlarmScreen.styles';
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function AlarmScreen() {
-  const { mode } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('alarm'), [getPalette]);
+  const styles = useMemo(() => createAlarmStyles(palette), [palette]);
   const navigation = useNavigation<any>();
+
   const addSession = useAlarmStore((s) => s.addSession);
   const completeSession = useAlarmStore((s) => s.completeSession);
   const cancelActiveSession = useAlarmStore((s) => s.cancelActiveSession);
@@ -34,12 +35,6 @@ export function AlarmScreen() {
   const setAlarmFiring = useAlarmStore((s) => s.setAlarmFiring);
   const sessions = useAlarmStore((s) => s.sessions);
   const totalNaps = useAlarmStore((s) => s.totalNapsTaken);
-
-  const palette = useMemo(
-    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
-    [mode]
-  );
-  const styles = useMemo(() => createAlarmStyles(palette), [palette]);
 
   const [selectedPreset, setSelectedPreset] = useState<NapPreset>('20min');
   const [customMinutes, setCustomMinutes] = useState('20');
@@ -184,9 +179,9 @@ export function AlarmScreen() {
       <AnimatedThemeBackdrop
         colors={[palette.backgroundTop, palette.backgroundBottom]}
         mode={mode}
-        primaryGlow={palette.primaryGlow}
-        secondaryGlow={palette.secondaryGlow}
-        accentGlow={palette.accentGlow}
+        primaryGlow={palette.screenGlow}
+        secondaryGlow={palette.screenGlowSoft}
+        accentGlow={palette.screenGlowAccent}
       >
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: spacing.xxl }]} showsVerticalScrollIndicator={false}>
           {/* Top bar */}
@@ -195,21 +190,19 @@ export function AlarmScreen() {
               <Ionicons name="arrow-back" size={22} color={palette.text} />
             </Pressable>
             <Text style={styles.topTitle}>Power Nap</Text>
-            <View style={styles.topIconButton}>
-              <Text style={styles.napCount}>{totalNaps} naps</Text>
-            </View>
+            <Pressable onPress={() => navigation.navigate('Insights')} style={styles.topIconButton}>
+              <Ionicons name="settings-outline" size={20} color={palette.text} />
+            </Pressable>
           </View>
 
           {/* Timer display */}
           <View style={styles.timerSection}>
             <Animated.View style={[styles.timerRing, { 
               transform: [{ scale: isAlarmFiring ? pulseAnim : 1 }],
-              borderColor: isAlarmFiring ? palette.alarm : (mode === 'dark' ? `${palette.primaryGlow}50` : `${palette.primaryGlow}20`),
-              shadowColor: isAlarmFiring ? palette.alarm : palette.primaryGlow,
+              borderColor: isAlarmFiring ? palette.alarm : (mode === 'dark' ? `${palette.screenGlow}50` : `${palette.screenGlow}20`),
+              shadowColor: isAlarmFiring ? palette.alarm : palette.screenGlow,
               shadowOpacity: (isRunning || isAlarmFiring) ? (mode === 'dark' ? 0.4 : 0.15) : 0,
-              shadowRadius: 25,
               elevation: (isRunning || isAlarmFiring) ? 12 : 0,
-              borderWidth: 2,
             }]}>
               <View style={[styles.timerInner, isAlarmFiring && { borderColor: palette.alarm }]}>
                 <Text style={styles.timerEmoji}>{preset.emoji}</Text>
@@ -241,9 +234,9 @@ export function AlarmScreen() {
                     onPress={() => setSelectedPreset(key)}
                     style={[styles.presetCard, selectedPreset === key && styles.presetCardActive, {
                       borderColor: selectedPreset === key 
-                        ? (mode === 'dark' ? 'rgba(59, 130, 246, 0.5)' : 'rgba(59, 130, 246, 0.3)')
+                        ? (mode === 'dark' ? `${palette.accent}50` : `${palette.accent}30`)
                         : (mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'),
-                      shadowColor: '#3b82f6',
+                      shadowColor: palette.accent,
                       shadowOpacity: selectedPreset === key ? (mode === 'dark' ? 0.3 : 0.1) : 0,
                       shadowRadius: 15,
                       elevation: selectedPreset === key ? 6 : 0,

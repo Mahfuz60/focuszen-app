@@ -26,7 +26,7 @@ type OverviewSeries = {
 
 type BuildPurifyFocusOverviewInput = {
   language: AppLanguage;
-  range: 'week' | 'month' | 'year';
+  range: 'day' | 'week' | 'month' | 'year' | 'all';
   anchorDate: Date;
   focusSessions: FocusSession[];
   studySessions: StudySession[];

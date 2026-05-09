@@ -1,63 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
-
-export const darkPalette = {
-  backgroundTop: '#0f111a',
-  backgroundBottom: '#181124',
-  screenGlow: 'rgba(0, 255, 170, 0.25)',
-  screenGlowSoft: 'rgba(255, 51, 153, 0.2)',
-  screenGlowAccent: 'rgba(51, 153, 255, 0.25)',
-  surface: 'rgba(255, 255, 255, 0.12)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.08)',
-  stroke: 'rgba(255, 255, 255, 0.2)',
-  text: '#ffffff',
-  textMuted: '#e2e8f0',
-  textSoft: '#94a3b8',
-  purpleTrack: 'rgba(255, 255, 255, 0.15)',
-  purple: '#d946ef',
-  purpleGlow: 'rgba(217, 70, 239, 0.25)',
-  green: '#00ff9d',
-  iconAccent: '#ff4b4b',
-  yellow: '#fbbf24',
-  shadow: 'rgba(0, 0, 0, 0.5)',
-  activeToggleBg: '#56cce9ff',
-  flashAccent: '#00ff9d',
-  powerAccent: '#d500f9',
-  iconColor:'#07ea4fff',
-  powerBackground:'#f9f2f2ff'
-};
-
-export const lightPalette = {
-  backgroundTop: '#e8f5e9',
-  backgroundBottom: '#f3e5f5',
-  screenGlow: 'rgba(0, 200, 83, 0.15)',
-  screenGlowSoft: 'rgba(170, 0, 255, 0.12)',
-  screenGlowAccent: 'rgba(41, 98, 255, 0.15)',
-  surface: 'rgba(255, 255, 255, 0.8)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.6)',
-  stroke: 'rgba(255, 255, 255, 0.9)',
-  text: '#0f172a',
-  textMuted: '#475569',
-  textSoft: '#94a3b8',
-  purpleTrack: 'rgba(0, 0, 0, 0.04)',
-  purple: '#8b5cf6',
-  purpleGlow: 'rgba(139, 92, 246, 0.2)',
-  green: '#10b981',
-  iconAccent: '#dc2626',
-  yellow: '#d97706',
-  shadow: 'rgba(0, 0, 0, 0.06)',
-  activeToggleBg: '#56cce9ff',
-  flashAccent: '#0d9488',
-  powerAccent: '#121213ff',
-  powerBackground:'#d442abff',
-  iconColor:'#05f128ff',
-};
-
-export type ScreenPalette = typeof darkPalette & {
-  screenGlow: string;
-  screenGlowSoft: string;
-  screenGlowAccent: string;
-};
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function createPurifyStyles(palette: ScreenPalette) {
   return StyleSheet.create({

@@ -15,27 +15,18 @@ import { useProfileStore } from '../stores/useProfileStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { spacing } from '../theme/tokens';
 import {
-  nameSetupStyles as styles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
+  createNameSetupStyles as createStyles,
 } from '../styles/NameSetupScreen.styles';
 
 export function NameSetupScreen() {
   const navigation = useNavigation<any>();
-  const { colors, mode, text } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('nameSetup'), [getPalette]);
+  const styles = useMemo(() => createStyles(palette), [palette]);
   const currentName = useProfileStore((state) => state.profile.displayName);
   const setDisplayName = useProfileStore((state) => state.setDisplayName);
   const completeOnboarding = useSettingsStore((state) => state.completeOnboarding);
   const [name, setName] = useState(currentName === 'FocusZen User' ? '' : currentName);
-
-  const palette = useMemo(
-    () =>
-      mode === 'dark'
-        ? darkPalette(colors, text)
-        : lightPalette(colors, text),
-    [colors, mode, text]
-  );
 
   const trimmedName = name.trim();
   const disabled = trimmedName.length < 2;
@@ -55,7 +46,7 @@ export function NameSetupScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.backgroundTop }]}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle={palette.statusBar} backgroundColor={palette.backgroundTop} />
 
       <AnimatedThemeBackdrop
@@ -66,53 +57,28 @@ export function NameSetupScreen() {
         accentGlow={mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.44)'}
       >
         <View style={styles.content}>
-          <Text style={[styles.brand, { color: palette.green }]}>FocusZen</Text>
-          <Text style={[styles.title, { color: palette.text }]}>What should we call you?</Text>
-          <Text style={[styles.subtitle, { color: palette.textMuted }]}>
+          <Text style={styles.brand}>FocusZen</Text>
+          <Text style={styles.title}>What should we call you?</Text>
+          <Text style={styles.subtitle}>
             Your name appears across your focus plan each day.
           </Text>
 
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: palette.surface,
-                borderColor: palette.stroke,
-                shadowColor: palette.shadow,
-              },
-            ]}
-          >
-            <Text style={[styles.inputLabel, { color: palette.textMuted }]}>Your name</Text>
+          <View style={styles.card}>
+            <Text style={styles.inputLabel}>Your name</Text>
             <TextInput
               value={name}
               onChangeText={setName}
               placeholder="Enter your name"
               placeholderTextColor={palette.textMuted}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: palette.surfaceSoft,
-                  borderColor: palette.stroke,
-                  color: palette.inputText,
-                },
-              ]}
+              style={styles.input}
               autoFocus
               maxLength={32}
               returnKeyType="done"
-
             />
 
-            <View
-              style={[
-                styles.previewWrap,
-                {
-                  backgroundColor: palette.surfaceSoft,
-                  borderColor: palette.stroke,
-                },
-              ]}
-            >
-              <Text style={[styles.previewLabel, { color: palette.textMuted }]}>Your greeting</Text>
-              <Text style={[styles.previewText, { color: palette.text }]}>
+            <View style={styles.previewWrap}>
+              <Text style={styles.previewLabel}>Your greeting</Text>
+              <Text style={styles.previewText}>
                 {`Welcome back, ${preview}`}
               </Text>
             </View>
@@ -125,7 +91,6 @@ export function NameSetupScreen() {
               styles.button,
               {
                 backgroundColor: disabled ? palette.buttonDisabled : palette.buttonEnabled,
-                shadowColor: palette.shadow,
                 borderColor: disabled ? 'transparent' : 'rgba(255,255,255,0.08)',
               },
               disabled ? null : styles.buttonActive,

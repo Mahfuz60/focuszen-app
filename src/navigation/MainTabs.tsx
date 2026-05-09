@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Text, View } from 'react-native';
 import { HomeScreen } from '../screens/HomeScreen';
 import { FocusScreen } from '../screens/FocusScreen';
-import { InsightsScreen } from '../screens/InsightsScreen';
+import { DailyPlannerScreen } from '../screens/DailyPlannerScreen';
 import { ControlScreen } from '../screens/ControlScreen';
 import { PurifyScreen } from '../screens/PurifyScreen';
 import { MainTabParamList } from '../types/navigation';
@@ -27,7 +27,7 @@ const tabIcons: Record<
 > = {
   Home: { active: 'home', inactive: 'home-outline' },
   Focus: { active: 'timer', inactive: 'timer-outline' },
-  Insights: { active: 'bar-chart', inactive: 'bar-chart-outline' },
+  Planner: { active: 'calendar', inactive: 'calendar-outline' },
   Control: { active: 'options', inactive: 'options-outline' },
   Purify: { active: 'leaf', inactive: 'leaf-outline' },
 };
@@ -57,7 +57,7 @@ const tabAccentPalettes = {
     activeBorder: 'rgba(139, 92, 246, 0.18)',
     activeGlow: 'rgba(139, 92, 246, 0.14)',
   },
-  Insights: {
+  Planner: {
     activeIcon: '#3b82f6',
     activeBg: 'rgba(59, 130, 246, 0.12)',
     activeBorder: 'rgba(59, 130, 246, 0.18)',
@@ -94,7 +94,7 @@ export function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => {
         const routeName = route.name as keyof MainTabParamList;
-        const accent = tabAccentPalettes[routeName];
+        const accent = (tabAccentPalettes as any)[routeName];
 
         return {
           headerShown: false,
@@ -184,11 +184,11 @@ export function MainTabs() {
         }}
       />
       <Tab.Screen 
-        name="Insights" 
-        component={InsightsScreen} 
+        name="Planner" 
+        component={DailyPlannerScreen} 
         options={{
           tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>INSIGHTS</Text>
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>PLANNER</Text>
           ),
         }}
       />

@@ -8,12 +8,13 @@ export type RootStackParamList = {
   BodyCare: undefined;
   Hydration: undefined;
   EyeWellness: undefined;
+  Insights: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
   Focus: undefined;
-  Insights: undefined;
+  Planner: undefined;
   Control: undefined;
   Purify: undefined;
 };

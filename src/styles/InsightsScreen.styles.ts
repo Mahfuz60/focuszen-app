@@ -1,77 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
-
-export const darkPalette = {
-  backgroundTop: '#0d0b1a',
-  backgroundBottom: '#171026',
-  screenGlow: 'rgba(0, 230, 118, 0.18)',
-  screenGlowSoft: 'rgba(213, 0, 249, 0.15)',
-  screenGlowAccent: 'rgba(0, 176, 255, 0.18)',
-  surface: 'rgba(255, 255, 255, 0.08)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.12)',
-  stroke: 'rgba(255, 255, 255, 0.1)',
-  text: '#ffffff',
-  textMuted: '#e2e8f0',
-  textSoft: '#94a3b8',
-  white: '#ffffff',
-  green: '#00ff9d',
-  purple: '#d946ef',
-  blue: '#38bdf8',
-  chipActive: 'rgba(0, 255, 157, 0.15)',
-  chipBorder: 'rgba(0, 255, 157, 0.3)',
-  barTrack: 'rgba(255, 255, 255, 0.05)',
-  shadow: 'rgba(0, 0, 0, 0.6)',
-  greenSoft: 'rgba(0, 255, 157, 0.1)',
-  purpleSoft: 'rgba(217, 70, 239, 0.1)',
-  blueSoft: 'rgba(56, 189, 248, 0.1)',
-};
-
-export const chartPalettes = {
-  focus: {
-    dark: ['#00ff9d', '#0ea5e9'],
-    light: ['#10b981', '#3b82f6'],
-    track: {
-      dark: 'rgba(0,255,157,0.1)',
-      light: 'rgba(16,185,129,0.06)',
-    },
-    glow: {
-      dark: 'rgba(0,255,157,0.5)',
-      light: 'rgba(16,185,129,0.3)',
-    },
-  },
-  purify: {
-    dark: ['#d946ef', '#8b5cf6'],
-    light: ['#aa00ff', '#6366f1'],
-  },
-};
-
-export const lightPalette = {
-  backgroundTop: '#eef2ff',
-  backgroundBottom: '#f5f3ff',
-  screenGlow: 'rgba(0, 200, 83, 0.15)',
-  screenGlowSoft: 'rgba(170, 0, 255, 0.12)',
-  screenGlowAccent: 'rgba(41, 98, 255, 0.15)',
-  surface: '#ffffff',
-  surfaceSoft: 'rgba(255, 255, 255, 0.7)',
-  stroke: 'rgba(15, 23, 42, 0.06)',
-  text: '#0f172a',
-  textMuted: '#475569',
-  textSoft: '#94a3b8',
-  white: '#ffffff',
-  green: '#00c853',
-  purple: '#aa00ff',
-  blue: '#2962ff',
-  chipActive: '#ffffff',
-  chipBorder: 'rgba(0, 200, 83, 0.3)',
-  barTrack: 'rgba(0, 0, 0, 0.04)',
-  shadow: 'rgba(15, 23, 42, 0.08)',
-};
-
-export type ScreenPalette = typeof darkPalette & {
-  screenGlow: string;
-  screenGlowSoft: string;
-  screenGlowAccent: string;
-};
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function createInsightsStyles(palette: ScreenPalette) {
   return StyleSheet.create({
@@ -87,6 +16,7 @@ export function createInsightsStyles(palette: ScreenPalette) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      marginBottom: spacing.md,
     },
     topIconButton: {
       width: 42,
@@ -99,16 +29,75 @@ export function createInsightsStyles(palette: ScreenPalette) {
       borderColor: palette.stroke,
     },
     topTitle: {
-      fontSize: 18,
-      fontWeight: '700',
+      fontSize: 22,
+      fontWeight: '900',
       color: palette.text,
+      letterSpacing: -0.5,
     },
-    tabRow: { marginTop: spacing.md, flexDirection: 'row', gap: 6, padding: 4, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 24 },
-    tabChip: { flex: 1, paddingVertical: 10, borderRadius: 20, alignItems: 'center' },
-    tabChipActive: { backgroundColor: palette.chipActive, borderWidth: 1, borderColor: palette.chipBorder },
-    tabChipText: { fontSize: 13, fontWeight: '800', color: palette.textSoft, letterSpacing: 0.2 },
-    tabChipTextActive: { color: palette.text, fontWeight: '900' },
+    tabRow: {
+      flexDirection: 'row',
+      backgroundColor: palette.surfaceSoft,
+      padding: 6,
+      borderRadius: 20,
+      marginBottom: spacing.lg,
+    },
+    tabChip: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 14,
+    },
+    tabChipActive: {
+      backgroundColor: palette.surface,
+      shadowColor: palette.shadow,
+      shadowOpacity: 0.1,
+      shadowRadius: 10,
+      elevation: 4,
+    },
+    tabChipText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: palette.textSoft,
+      textAlign: 'center',
+    },
+    tabChipTextActive: {
+      color: palette.text,
+      fontWeight: '900',
+    },
+    activeTabGlow: {
+      position: 'absolute',
+      bottom: -4,
+      width: 20,
+      height: 2,
+      backgroundColor: palette.green,
+      borderRadius: 1,
+    },
 
+    sectionCardGradient: {
+      borderRadius: 28,
+      padding: 1.5,
+      shadowColor: palette.green,
+      shadowOpacity: 0.25,
+      shadowRadius: 20,
+      elevation: 8,
+    },
+    sectionCardInner: {
+      borderRadius: 26.5,
+      padding: spacing.xl,
+    },
+    summaryCardGradient: {
+      flex: 1,
+      borderRadius: 24,
+      padding: 1.5,
+      shadowColor: palette.green,
+      shadowOpacity: 0.2,
+      shadowRadius: 15,
+      elevation: 6,
+    },
+    summaryCardInner: {
+      borderRadius: 22.5,
+      padding: spacing.lg,
+      flex: 1,
+    },
     sectionCard: { 
       marginTop: spacing.lg, 
       borderRadius: 28, 
@@ -125,15 +114,17 @@ export function createInsightsStyles(palette: ScreenPalette) {
     sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.md },
     sectionTitle: { fontSize: 18, fontWeight: '800', color: palette.text },
     
-    weekChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: palette.surfaceSoft, borderWidth: 1, borderColor: palette.stroke },
-    weekChipText: { fontSize: 12, fontWeight: '800', color: palette.textSoft },
-    periodToggle: { flexDirection: 'row', backgroundColor: palette.surfaceSoft, padding: 4, borderRadius: 16, alignSelf: 'center', marginTop: 24 },
-    periodBtn: { paddingHorizontal: 22, paddingVertical: 10, borderRadius: 12 },
-    periodBtnActive: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.stroke, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 4 },
-    periodText: { fontSize: 13, fontWeight: '800', color: palette.textSoft },
-    periodTextActive: { color: palette.text },
+    weekChip: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    navBtn: { padding: 4 },
+    weekChipText: { fontSize: 13, fontWeight: '800', color: palette.text },
 
-    heroMinutes: { fontSize: 64, fontWeight: '900', color: palette.text, letterSpacing: -2 },
+    periodToggle: { flexDirection: 'row', gap: 8, marginBottom: spacing.md },
+    periodBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: palette.surfaceSoft, alignItems: 'center' },
+    periodBtnActive: { backgroundColor: palette.greenSoft, borderWidth: 1, borderColor: palette.green + '40' },
+    periodText: { fontSize: 12, fontWeight: '700', color: palette.textSoft },
+    periodTextActive: { color: palette.green },
+
+    heroMinutes: { fontSize: 36, fontWeight: '900', color: palette.text, letterSpacing: -1 },
     heroMeta: { fontSize: 18, fontWeight: '700', color: palette.text, marginTop: -2 },
     heroDelta: { fontSize: 13, fontWeight: '700', color: palette.green, marginTop: 4 },
 
@@ -146,7 +137,7 @@ export function createInsightsStyles(palette: ScreenPalette) {
     chartXLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingHorizontal: 4 },
     chartXLabel: { fontSize: 10, fontWeight: '900', color: palette.textSoft, textTransform: 'uppercase', letterSpacing: 0.5 },
 
-    summaryGrid: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+    summaryGrid: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md, width: '100%' },
     summaryCard: { 
       flex: 1, 
       padding: spacing.lg, 
@@ -194,5 +185,38 @@ export function createInsightsStyles(palette: ScreenPalette) {
     timelineDotActive: { backgroundColor: palette.purple, shadowColor: palette.purple, shadowOpacity: 0.5, shadowRadius: 8, elevation: 4 },
     timelineMeta: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
     timelineText: { fontSize: 11, fontWeight: '700', color: palette.textSoft },
+
+    activityList: { marginTop: spacing.md },
+    activityItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: palette.stroke },
+    activityIconBox: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    activityInfo: { flex: 1, marginLeft: 12 },
+    activityTitle: { fontSize: 15, fontWeight: '700', color: palette.text },
+    activityMeta: { fontSize: 12, fontWeight: '600', color: palette.textSoft, marginTop: 2 },
+    activityTime: { fontSize: 12, fontWeight: '700', color: palette.textSoft },
+
+    metricSelector: { flexDirection: 'row', gap: 10, marginTop: spacing.md, marginBottom: spacing.xl },
+    wellnessChartContainer: { marginTop: spacing.md },
+    wellnessBars: { flexDirection: 'row', alignItems: 'flex-end', height: 180, gap: 12 },
+    wellnessCol: { flex: 1, alignItems: 'center' },
+    barTrack: { width: 14, height: 140, backgroundColor: palette.stroke + '30', borderRadius: 7, overflow: 'hidden', justifyContent: 'flex-end' },
+    barFill: { width: '100%', borderRadius: 7 },
+    barLabel: { fontSize: 10, fontWeight: '900', color: palette.textSoft, marginTop: 12, textTransform: 'uppercase' },
+
+    metricBtn: { flex: 1, height: 48, borderRadius: 16, backgroundColor: palette.surfaceSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    metricBtnActive: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.blue + '30' },
+    metricText: { fontSize: 13, fontWeight: '700', color: palette.textSoft },
+    metricTextActive: { color: palette.text },
+
+    seeAllBtn: { 
+      marginTop: 16, 
+      paddingVertical: 12, 
+      alignItems: 'center', 
+      borderTopWidth: 1, 
+      borderColor: palette.stroke,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 4
+    },
+    seeAllText: { fontSize: 13, fontWeight: '800', color: palette.blue },
   });
 }

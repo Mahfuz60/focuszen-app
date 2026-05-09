@@ -1,7 +1,10 @@
 import { StyleSheet } from 'react-native';
 import { spacing, typography } from '../theme/tokens';
 
-export const goalsMissionStyles = StyleSheet.create({
+import { ScreenPalette } from '../theme/screenPalettes';
+
+export function createGoalsMissionStyles(palette: ScreenPalette) {
+  return StyleSheet.create({
   levels: {
     marginTop: spacing.md,
     flexDirection: 'row',
@@ -38,3 +41,4 @@ export const goalsMissionStyles = StyleSheet.create({
     fontWeight: '800',
   },
 });
+}

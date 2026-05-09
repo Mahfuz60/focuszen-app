@@ -1,0 +1,88 @@
+import { StyleSheet } from 'react-native';
+import { spacing, typography } from '../theme/tokens';
+import { ScreenPalette } from '../theme/screenPalettes';
+
+export const createFocusCompleteModalStyles = (palette: ScreenPalette, mode: 'light' | 'dark') =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.xl,
+    },
+    container: {
+      width: '100%',
+      backgroundColor: palette.backgroundTop,
+      borderRadius: 24,
+      padding: spacing.xl,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      shadowColor: palette.green,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 20,
+      elevation: 10,
+    },
+    iconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: mode === 'dark' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.1)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: palette.text,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+      fontFamily: typography.fontFamily.semiBold,
+    },
+    message: {
+      fontSize: 16,
+      color: palette.textSoft,
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: spacing.xl,
+      fontFamily: typography.fontFamily.regular,
+    },
+    motivationCard: {
+      width: '100%',
+      padding: spacing.lg,
+      borderRadius: 16,
+      backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+      marginBottom: spacing.xl,
+      borderLeftWidth: 4,
+      borderLeftColor: palette.green,
+    },
+    motivationText: {
+      fontSize: 15,
+      color: palette.text,
+      fontStyle: 'italic',
+      lineHeight: 20,
+      fontFamily: typography.fontFamily.medium,
+    },
+    button: {
+      width: '100%',
+      height: 56,
+      borderRadius: 16,
+      backgroundColor: palette.green,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: palette.green,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    buttonText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#ffffff',
+      fontFamily: typography.fontFamily.bold,
+    },
+  });

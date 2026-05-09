@@ -1,53 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
-
-export const darkPalette = {
-  backgroundTop: '#0d0b1a',
-  backgroundBottom: '#171026',
-  screenGlow: 'rgba(0, 230, 118, 0.18)',
-  screenGlowSoft: 'rgba(213, 0, 249, 0.15)',
-  screenGlowAccent: 'rgba(0, 176, 255, 0.18)',
-  surface: 'rgba(255, 255, 255, 0.03)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.05)',
-  stroke: 'rgba(255, 255, 255, 0.05)',
-  text: '#ffffff',
-  textMuted: '#e2e8f0',
-  textSoft: '#94a3b8',
-  accent: '#38bdf8',
-  accentSoft: 'rgba(56, 189, 248, 0.1)',
-  accentGradient: 'rgba(56, 189, 248, 0.25)',
-  ringSurface: 'rgba(15, 23, 42, 0.42)',
-  ringBorder: 'rgba(148, 163, 184, 0.28)',
-  ringPulse: 'rgba(56, 189, 248, 0.12)',
-  ringDot: '#ffffff',
-  red: '#ef4444',
-  shadow: 'rgba(0, 0, 0, 0.6)',
-};
-
-export const lightPalette = {
-  backgroundTop: '#e8f5e9',
-  backgroundBottom: '#f3e5f5',
-  screenGlow: 'rgba(0, 200, 83, 0.15)',
-  screenGlowSoft: 'rgba(170, 0, 255, 0.12)',
-  screenGlowAccent: 'rgba(41, 98, 255, 0.15)',
-  surface: 'rgba(255, 255, 255, 0.8)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.6)',
-  stroke: 'rgba(255, 255, 255, 0.9)',
-  text: '#0f172a',
-  textMuted: '#475569',
-  textSoft: '#64748b',
-  accent: '#0ea5e9',
-  accentSoft: 'rgba(14, 165, 233, 0.12)',
-  accentGradient: 'rgba(14, 165, 233, 0.25)',
-  ringSurface: 'rgba(255, 255, 255, 0.62)',
-  ringBorder: 'rgba(14, 165, 233, 0.28)',
-  ringPulse: 'rgba(14, 165, 233, 0.1)',
-  ringDot: '#0f172a',
-  red: '#dc2626',
-  shadow: 'rgba(0, 0, 0, 0.06)',
-};
-
-export type ScreenPalette = typeof darkPalette;
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function createBreatheStyles(palette: ScreenPalette) {
   return StyleSheet.create({

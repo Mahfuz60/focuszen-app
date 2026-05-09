@@ -12,9 +12,10 @@ type SettingsState = {
   setPurifyLanguage: (purifyLanguage: AppLanguage) => void;
   completeOnboarding: () => void;
   completePermissionsSetup: () => void;
-  toggleStrictMode: () => void;
   toggleNotifications: () => void;
   replayOnboarding: () => void;
+  _hasHydrated: boolean;
+  setHasHydrated: (val: boolean) => void;
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -46,10 +47,15 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           privacy: { ...state.privacy, onboardingCompleted: false, permissionsSetupCompleted: false },
         })),
+      _hasHydrated: false,
+      setHasHydrated: (val) => set({ _hasHydrated: val }),
     }),
     {
       name: STORAGE_KEYS.settings,
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

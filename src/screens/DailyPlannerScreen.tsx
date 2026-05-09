@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { Svg, Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import {
@@ -19,14 +21,14 @@ import { useAppTheme } from '../hooks/useAppTheme';
 import { useGoalsStore } from '../stores/useGoalsStore';
 import { useFocusStore } from '../stores/useFocusStore';
 import { usePlannerStore } from '../stores/usePlannerStore';
+import { spacing } from '../theme/tokens';
+
 
 import {
   createPlannerStyles as createStyles,
-  darkPalette,
   getCategoryStyles,
-  lightPalette,
-  ScreenPalette,
 } from '../styles/DailyPlannerScreen.styles';
+import { ScreenPalette } from '../theme/screenPalettes';
 import type { PlannerCategory, PlannerTask } from '../types/models';
 import {
   buildPlannerDraftFromTask,
@@ -43,8 +45,12 @@ import {
 
 
 
+import { FocusCompleteModal } from '../components/FocusCompleteModal';
+
 export function DailyPlannerScreen() {
-  const { mode, text } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('dailyPlanner'), [getPalette]);
+  const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation<any>();
   const selectedDate = usePlannerStore((state) => state.selectedDate);
   const tasks = usePlannerStore((state) => state.tasks);
@@ -63,25 +69,8 @@ export function DailyPlannerScreen() {
   const incrementGoalMetric = useGoalsStore((state) => state.incrementGoalMetric);
   const registerCompletion = useGoalsStore((state) => state.registerCompletion);
   const refreshBadges = useGoalsStore((state) => state.refreshBadges);
-  const palette = useMemo(
-    () =>
-      mode === 'dark'
-        ? ({
-            ...darkPalette,
-            text: text.primary,
-            textMuted: text.secondary,
-            textSoft: text.tertiary,
-          } as ScreenPalette)
-        : ({
-            ...lightPalette,
-            text: text.primary,
-            textMuted: text.secondary,
-            textSoft: text.tertiary,
-          } as ScreenPalette),
-    [mode, text]
-  );
   const categoryStyles = useMemo(() => getCategoryStyles(palette), [palette]);
-  const styles = useMemo(() => createStyles(palette), [palette]);
+  const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
 
   const plannerView = useMemo(() => buildPlannerViewModel(tasks, selectedDate), [selectedDate, tasks]);
   const suggestions = useMemo(
@@ -92,11 +81,13 @@ export function DailyPlannerScreen() {
   const [draft, setDraft] = useState<PlannerTaskDraft>(() => createPlannerDraft(selectedDate));
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
 
   const editingTask = useMemo(
     () => tasks.find((task) => task.id === editingTaskId) ?? null,
     [editingTaskId, tasks]
   );
+
 
   const activeTask = useMemo(
     () => tasks.find((task) => task.id === activeSession?.linkedTaskId) ?? null,
@@ -227,7 +218,7 @@ export function DailyPlannerScreen() {
       markTaskInProgressFromFocus(completed.linkedTaskId);
     }
 
-    Alert.alert('Focus complete', 'Session saved and your linked task was updated.');
+    setShowCompleteModal(true);
   }
 
   return (
@@ -254,43 +245,81 @@ export function DailyPlannerScreen() {
               <Text style={styles.topTitle}>Schedule</Text>
 
               <Pressable
-                onPress={() => setComposerOpen((current) => !current)}
+                onPress={() => navigation.navigate('Insights')}
                 style={styles.topIconButton}
               >
-                <Ionicons name="ellipsis-horizontal" size={18} color={palette.text} />
+                <Ionicons name="settings-outline" size={18} color={palette.text} />
               </Pressable>
             </View>
 
-            <LinearGradient
-              colors={mode === 'dark' ? ['rgba(0, 255, 157, 0.15)', 'rgba(0, 255, 157, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(0, 200, 83, 0.15)']}
-              style={styles.summaryShell}
-            >
+            <View style={styles.summaryShell}>
               <View style={styles.summaryHeader}>
-                <Text style={styles.summaryTitle}>Today's Agenda</Text>
-                <Text style={styles.summaryPercent}>{`${completionPercent}% complete`}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.summaryTitle}>Today's Agenda</Text>
+                  <Text style={styles.summaryText}>{summaryText}</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={styles.summaryPercent}>{`${completionPercent}% complete`}</Text>
+                  <View style={styles.progressTrack}>
+                    <View style={[styles.progressFill, { width: progressWidth }]} />
+                  </View>
+                </View>
               </View>
-
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: progressWidth }]} />
-              </View>
-
-              <Text style={styles.summaryText}>{summaryText}</Text>
 
               {activeSession ? (
                 <View style={styles.liveFocusCard}>
+                  <View style={styles.liveFocusRing}>
+                     <Svg width={64} height={64} viewBox="0 0 64 64">
+                       <Circle cx="32" cy="32" r="28" stroke={mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} strokeWidth="4" fill="none" />
+                       <Circle 
+                        cx="32" cy="32" r="28" 
+                        stroke="#10b981" 
+                        strokeWidth="4" 
+                        fill="none" 
+                        strokeDasharray={2 * Math.PI * 28}
+                        strokeDashoffset={2 * Math.PI * 28 * (1 - activeSession.remainingSeconds / (activeSession.presetMinutes * 60 || 1))}
+                        strokeLinecap="round"
+                        transform="rotate(-90 32 32)"
+                       />
+                     </Svg>
+                     <View style={{ position: 'absolute' }}>
+                        <Ionicons 
+                          name={activeTask ? (getCategoryStyles(palette)[activeTask.category]?.icon || 'flash') : 'flash'} 
+                          size={24} 
+                          color="#10b981" 
+                        />
+                     </View>
+                  </View>
+
                   <View style={styles.liveFocusCopy}>
-                    <Text style={styles.liveFocusLabel}>
-                      {activeTask ? `Focusing: ${activeTask.title} (Starts: ${activeTask.startTime})` : 'Focus live'}
-                    </Text>
-                    <Text style={styles.liveFocusTime}>
+                    <View style={styles.liveFocusChip}>
+                      <Text style={styles.liveFocusChipText}>FOCUSING NOW</Text>
+                    </View>
+                    <Text style={styles.liveFocusTitle}>{activeTask?.title || 'Focus Session'}</Text>
+                    <View style={styles.liveFocusMeta}>
+                      <Ionicons name="time-outline" size={14} color={palette.textMuted} />
+                      <Text style={styles.liveFocusMetaText}>
+                        {activeTask ? `${activeTask.startTime} • ${activeTask.durationMinutes} min` : 'Custom focus'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.liveFocusTimerWrap}>
+                    <Text style={styles.liveFocusRemaining}>
                       {formatCountdown(activeSession.remainingSeconds)}
                     </Text>
+                    <Text style={styles.liveFocusRemainingLabel}>remaining</Text>
                   </View>
 
                   <Pressable
                     onPress={activeSession.paused ? resumeSession : pauseSession}
                     style={styles.liveFocusButton}
                   >
+                    <Ionicons 
+                      name={activeSession.paused ? 'play-outline' : 'pause-outline'} 
+                      size={20} 
+                      color="#10b981" 
+                    />
                     <Text style={styles.liveFocusButtonText}>
                       {activeSession.paused ? 'Resume' : 'Pause'}
                     </Text>
@@ -299,7 +328,10 @@ export function DailyPlannerScreen() {
               ) : null}
 
               <View style={styles.suggestionsShell}>
-                <Text style={styles.suggestionsLabel}>Suggested for you</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md }}>
+                  <Text style={styles.suggestionsLabel}>Suggested for you</Text>
+                  <Text style={{ fontSize: 13, color: palette.green, fontWeight: '700' }}>See all</Text>
+                </View>
 
                 {suggestions.map((suggestion, index) => {
                   const categoryStyle = categoryStyles[suggestion.category];
@@ -330,9 +362,9 @@ export function DailyPlannerScreen() {
                         ]}
                       >
                         <Ionicons
-                          name={suggestion.added ? 'checkmark' : 'add'}
-                          size={18}
-                          color={palette.backgroundTop}
+                          name={suggestion.added ? 'checkmark-circle' : 'add'}
+                          size={suggestion.added ? 20 : 24}
+                          color={suggestion.added ? palette.green : palette.backgroundTop}
                         />
                       </Pressable>
                     </View>
@@ -341,23 +373,28 @@ export function DailyPlannerScreen() {
 
                 <Pressable
                   onPress={() => setComposerOpen((current) => !current)}
-                  style={styles.addCustomButton}
+                  style={[styles.addCustomButton, { borderStyle: 'dashed', backgroundColor: mode === 'dark' ? 'transparent' : '#f0fdf4' }]}
                 >
-                  <Text style={styles.addCustomButtonText}>Add custom task</Text>
+                  <Text style={styles.addCustomButtonText}>+ Add custom task</Text>
                 </Pressable>
               </View>
-            </LinearGradient>
+            </View>
 
             {composerOpen ? (
               <LinearGradient
-                colors={mode === 'dark' ? ['rgba(0, 176, 255, 0.15)', 'rgba(0, 176, 255, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(41, 98, 255, 0.12)']}
+                colors={mode === 'dark' ? ['rgba(31, 165, 91, 0.12)', 'rgba(30, 32, 44, 0.95)'] : ['rgba(31, 165, 91, 0.05)', '#ffffff']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={styles.composerCard}
               >
                 <View style={styles.composerHeader}>
                   <Text style={styles.composerTitle}>
-                    {editingTaskId ? 'Edit task' : 'Add custom task'}
+                    {editingTaskId ? 'Update task' : 'Add custom task'}
                   </Text>
-                  <Pressable onPress={() => setComposerOpen(false)}>
+                  <Pressable 
+                    onPress={() => setComposerOpen(false)}
+                    style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                  >
                     <Text style={styles.composerHide}>Hide</Text>
                   </Pressable>
                 </View>
@@ -367,9 +404,10 @@ export function DailyPlannerScreen() {
                   <TextInput
                     value={draft.title}
                     onChangeText={(value) => patchDraft('title', value)}
-                    placeholder="Write your task"
+                    placeholder="E.g. Morning Meditation"
                     placeholderTextColor={palette.textSoft}
                     style={styles.primaryInput}
+                    selectionColor={palette.green}
                   />
                 </View>
 
@@ -379,27 +417,31 @@ export function DailyPlannerScreen() {
                     <TextInput
                       value={draft.startTime}
                       onChangeText={(value) => patchDraft('startTime', value)}
-                      placeholder="09:00"
+                      placeholder="09:00 AM"
                       placeholderTextColor={palette.textSoft}
                       style={styles.secondaryInput}
+                      selectionColor={palette.green}
                     />
                   </View>
 
                   <View style={[styles.inputShell, styles.halfInput]}>
-                    <Text style={styles.inputLabel}>Minutes</Text>
-                    <TextInput
-                      value={draft.durationMinutes}
-                      onChangeText={handleDurationChange}
-                      keyboardType="number-pad"
-                      placeholder="45"
-                      placeholderTextColor={palette.textSoft}
-                      style={styles.secondaryInput}
-                    />
+                    <Text style={styles.inputLabel}>Duration</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <TextInput
+                        value={draft.durationMinutes}
+                        onChangeText={handleDurationChange}
+                        keyboardType="number-pad"
+                        placeholder="45"
+                        placeholderTextColor={palette.textSoft}
+                        style={[styles.secondaryInput, { flex: 1 }]}
+                        selectionColor={palette.green}
+                      />
+                    </View>
                   </View>
                 </View>
 
                 <View style={styles.inputShell}>
-                  <Text style={styles.inputLabel}>Focus minutes</Text>
+                  <Text style={styles.inputLabel}>Deep focus duration (min)</Text>
                   <TextInput
                     value={draft.focusPresetMinutes}
                     onChangeText={(value) =>
@@ -409,6 +451,7 @@ export function DailyPlannerScreen() {
                     placeholder="45"
                     placeholderTextColor={palette.textSoft}
                     style={styles.secondaryInput}
+                    selectionColor={palette.green}
                   />
                 </View>
 
@@ -423,11 +466,21 @@ export function DailyPlannerScreen() {
                         onPress={() => patchDraft('category', category)}
                         style={[
                           styles.categoryChip,
-                          active ? { backgroundColor: categoryStyle.bg, borderColor: categoryStyle.text } : null,
+                          active ? { 
+                            backgroundColor: categoryStyle.bg, 
+                            borderColor: categoryStyle.text,
+                            shadowColor: categoryStyle.text,
+                            shadowOpacity: 0.2,
+                            shadowRadius: 8,
+                            elevation: 2
+                          } : null,
                         ]}
                       >
-                        <Ionicons name={categoryStyle.icon} size={15} color={categoryStyle.text} />
-                        <Text style={[styles.categoryChipLabel, { color: categoryStyle.text }]}>
+                        <Ionicons name={categoryStyle.icon} size={16} color={active ? categoryStyle.text : palette.textMuted} />
+                        <Text style={[
+                          styles.categoryChipLabel, 
+                          { color: active ? categoryStyle.text : palette.textMuted }
+                        ]}>
                           {category}
                         </Text>
                       </Pressable>
@@ -435,12 +488,19 @@ export function DailyPlannerScreen() {
                   })}
                 </View>
 
-                <Pressable onPress={handleSubmitTask} style={styles.saveButton}>
+                <Pressable 
+                  onPress={handleSubmitTask} 
+                  style={({ pressed }) => [
+                    styles.saveButton,
+                    { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] }
+                  ]}
+                >
                   <Text style={styles.saveButtonText}>
-                    {editingTaskId ? 'Save task' : 'Create task'}
+                    {editingTaskId ? 'Save Changes' : 'Create task'}
                   </Text>
                 </Pressable>
               </LinearGradient>
+
             ) : null}
 
             <View style={styles.tasksSectionHeader}>
@@ -455,91 +515,74 @@ export function DailyPlannerScreen() {
             ) : (
               plannerView.visibleTasks.map((task) => {
                 const categoryStyle = categoryStyles[task.category];
-                const catGlow = (categoryGlows as any)[task.category] || categoryGlows.Work;
-                const glowColor = task.category === 'Study' ? '#00b0ff' : 
-                                 task.category === 'Work' ? '#00c853' :
-                                 task.category === 'Health' ? '#ffab00' : '#d500f9';
-
                 return (
-                  <LinearGradient
-                    key={task.id}
-                    colors={catGlow}
-                    style={[styles.taskCard, {
-                      borderColor: mode === 'dark' ? `${glowColor}35` : `${glowColor}15`,
-                      shadowColor: glowColor,
-                      shadowOpacity: mode === 'dark' ? 0.25 : 0.08,
-                      shadowRadius: 15,
-                      elevation: 6,
-                      borderWidth: 1.5,
-                    }]}
-                  >
+                  <View key={task.id} style={[styles.taskCard, task.completed && styles.taskCardCompleted]}>
                     <View style={styles.taskTop}>
                       <View style={styles.taskIdentity}>
                         <View style={[styles.taskIconWrap, { backgroundColor: categoryStyle.bg }]}>
                           <Ionicons
                             name={categoryStyle.icon}
-                            size={18}
+                            size={20}
                             color={categoryStyle.text}
                           />
                         </View>
 
                         <View style={styles.taskCopy}>
-                          <Text style={styles.taskTitle}>{task.title}</Text>
+                          <Text style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
+                            {task.title}
+                          </Text>
                           <Text style={styles.taskMeta}>
-                            {`${task.startTime} | ${task.durationMinutes} min`}
+                            {`${task.startTime} • ${task.durationMinutes} min`}
                             {activeSession && activeSession.linkedTaskId === task.id && (
-                              <Text style={{ color: palette.green, fontWeight: '800' }}>
-                                {` | Live: ${formatCountdown(activeSession.remainingSeconds)}`}
+                              <Text style={{ color: palette.green }}>
+                                {` • Live ${formatCountdown(activeSession.remainingSeconds)}`}
                               </Text>
                             )}
                           </Text>
                         </View>
                       </View>
 
-                      <View
-                        style={[
-                          styles.statusBadge,
-                          task.completed
-                            ? styles.statusBadgeDone
-                            : styles.statusBadgeOpen,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.statusBadgeText,
-                            task.completed
-                              ? styles.statusBadgeTextDone
-                              : styles.statusBadgeTextOpen,
-                          ]}
-                        >
-                          {task.completed ? 'Done' : 'Open'}
-                        </Text>
-                      </View>
+                      {task.completed ? (
+                        <View style={styles.completedBadge}>
+                          <Ionicons name="checkmark-circle" size={14} color={palette.green} />
+                          <Text style={styles.completedBadgeText}>Done</Text>
+                        </View>
+                      ) : (
+                        <Pressable style={styles.openButton}>
+                          <Text style={styles.openButtonText}>Open</Text>
+                          <Ionicons name="chevron-forward" size={14} color={palette.blue} />
+                        </Pressable>
+                      )}
                     </View>
 
                     <View style={styles.actionsGrid}>
                       <PlannerQuickAction
-                        icon={task.completed ? 'refresh-outline' : 'checkmark-outline'}
+                        icon={task.completed ? 'refresh-outline' : 'checkmark-done-outline'}
                         label={task.completed ? 'Undo' : 'Complete'}
                         tone="success"
                         onPress={() => toggleTaskCompleted(task.id)}
                         palette={palette}
                         styles={styles}
                       />
-                      <PlannerQuickAction
-                        icon="play-outline"
-                        label="Start focus"
-                        onPress={() => handleStartFocus(task)}
-                        palette={palette}
-                        styles={styles}
-                      />
-                      <PlannerQuickAction
-                        icon="create-outline"
-                        label="Edit"
-                        onPress={() => openComposer(task)}
-                        palette={palette}
-                        styles={styles}
-                      />
+                      {!task.completed && (
+                        <>
+                          <PlannerQuickAction
+                            icon="play-outline"
+                            label="Start focus"
+                            tone="primary"
+                            onPress={() => handleStartFocus(task)}
+                            palette={palette}
+                            styles={styles}
+                          />
+                          <PlannerQuickAction
+                            icon="create-outline"
+                            label="Edit"
+                            onPress={() => openComposer(task)}
+                            palette={palette}
+                            styles={styles}
+                          />
+                        </>
+                      )}
                       <PlannerQuickAction
                         icon="trash-outline"
                         label="Delete"
@@ -549,12 +592,16 @@ export function DailyPlannerScreen() {
                         styles={styles}
                       />
                     </View>
-                  </LinearGradient>
+                  </View>
                 );
               })
             )}
           </ScrollView>
         </KeyboardAvoidingView>
+        <FocusCompleteModal
+          visible={showCompleteModal}
+          onClose={() => setShowCompleteModal(false)}
+        />
       </AnimatedThemeBackdrop>
     </SafeAreaView>
   );
@@ -572,7 +619,7 @@ type PlannerQuickActionProps = {
   onPress: () => void;
   palette: ScreenPalette;
   styles: any;
-  tone?: 'default' | 'success' | 'danger';
+  tone?: 'default' | 'success' | 'danger' | 'primary';
 };
 
 function PlannerQuickAction({
@@ -585,24 +632,29 @@ function PlannerQuickAction({
 }: PlannerQuickActionProps) {
   const isDanger = tone === 'danger';
   const isSuccess = tone === 'success';
+  const isPrimary = tone === 'primary';
 
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.quickAction,
-        isDanger ? styles.quickActionDanger : isSuccess ? styles.quickActionSuccess : null,
+        isDanger ? styles.quickActionDanger : 
+        isSuccess ? styles.quickActionSuccess : 
+        isPrimary ? styles.quickActionPrimary : null,
       ]}
     >
       <Ionicons
         name={icon}
-        size={18}
-        color={isDanger ? palette.red : isSuccess ? palette.green : palette.text}
+        size={16}
+        color={isDanger ? palette.red : isSuccess ? palette.green : isPrimary ? palette.blue : palette.text}
       />
       <Text
         style={[
           styles.quickActionLabel,
-          isDanger ? { color: palette.red } : isSuccess ? { color: palette.green } : null,
+          isDanger ? { color: palette.red } : 
+          isSuccess ? { color: palette.green } : 
+          isPrimary ? { color: palette.blue } : null,
         ]}
       >
         {label}

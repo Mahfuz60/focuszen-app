@@ -1,65 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
-
-export const darkPalette = {
-  backgroundTop: '#0f111a',
-  backgroundBottom: '#181124',
-  screenGlow: 'rgba(0, 255, 170, 0.25)',
-  screenGlowSoft: 'rgba(255, 51, 153, 0.2)',
-  screenGlowAccent: 'rgba(51, 153, 255, 0.25)',
-  surface: 'rgba(255, 255, 255, 0.12)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.08)',
-  surfaceButton: 'rgba(255, 255, 255, 0.15)',
-  stroke: 'rgba(255, 255, 255, 0.2)',
-  text: '#ffffff',
-  textMuted: '#e2e8f0',
-  textSoft: '#94a3b8',
-  green: '#00ff9d',
-  greenGlow: 'rgba(0, 255, 157, 0.25)',
-  greenDeep: '#00cc7e',
-  greenSoft: 'rgba(0, 255, 157, 0.25)',
-  white: '#ffffff',
-  shadow: 'rgba(0, 0, 0, 0.5)',
-  ringTrack: 'rgba(0, 255, 157, 0.25)',
-  ringDisc: 'rgba(20, 20, 30, 0.6)',
-  ringGlowSolid: '#00ff9d',
-  ringDiscBorder: 'rgba(255, 255, 255, 0.15)',
-  ringDiscShadow: '#000000',
-  ringDiscShadowOpacity: 0.8,
-};
-
-export const lightPalette = {
-  backgroundTop: '#e8f5e9',
-  backgroundBottom: '#f3e5f5',
-  screenGlow: 'rgba(0, 200, 83, 0.15)',
-  screenGlowSoft: 'rgba(170, 0, 255, 0.12)',
-  screenGlowAccent: 'rgba(41, 98, 255, 0.15)',
-  surface: 'rgba(255, 255, 255, 0.8)',
-  surfaceSoft: 'rgba(255, 255, 255, 0.6)',
-  surfaceButton: 'rgba(255, 255, 255, 0.9)',
-  stroke: 'rgba(255, 255, 255, 0.9)',
-  text: '#0f172a',
-  textMuted: '#475569',
-  textSoft: '#94a3b8',
-  green: '#00c853',
-  greenGlow: 'rgba(0, 200, 83, 0.2)',
-  greenDeep: '#00a344',
-  greenSoft: 'rgba(0, 200, 83, 0.15)',
-  white: '#ffffff',
-  shadow: 'rgba(0, 0, 0, 0.06)',
-  ringTrack: 'rgba(16, 185, 129, 0.2)',
-  ringDisc: 'rgba(255, 255, 255, 0.8)',
-  ringGlowSolid: '#00c853',
-  ringDiscBorder: 'rgba(255, 255, 255, 1)',
-  ringDiscShadow: 'rgba(0, 0, 0, 0.1)',
-  ringDiscShadowOpacity: 0.12,
-};
-
-export type ScreenPalette = typeof darkPalette & {
-  screenGlow: string;
-  screenGlowSoft: string;
-  screenGlowAccent: string;
-};
+import { ScreenPalette } from '../theme/screenPalettes';
 
 export function createFocusStyles(palette: ScreenPalette, mode: 'light' | 'dark') {
   return StyleSheet.create({

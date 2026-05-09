@@ -21,10 +21,8 @@ import {
 } from '../stores/useBodyCareStore';
 import {
   createEyeWellnessStyles,
-  darkPalette,
-  lightPalette,
-  ScreenPalette,
 } from '../styles/EyeWellnessScreen.styles';
+import { ScreenPalette } from '../theme/screenPalettes';
 
 const EYE_EXERCISES: { id: EyeRestLog['type']; title: string; desc: string; duration: string; icon: string; color: string }[] = [
   { id: '20-20-20', title: '20-20-20 Rule', desc: 'Look 20ft away for 20s', duration: '20s', icon: 'eye', color: '#10b981' },
@@ -52,17 +50,13 @@ function EyeIcon({ color }: { color: string }) {
 }
 
 export function EyeWellnessScreen() {
-  const { mode } = useAppTheme();
+  const { mode, getPalette } = useAppTheme();
+  const palette = useMemo(() => getPalette('eyeWellness'), [getPalette]);
+  const styles = useMemo(() => createEyeWellnessStyles(palette), [palette]);
   const navigation = useNavigation<any>();
 
   const eyeRestLogs = useBodyCareStore((s) => s.eyeRestLogs);
   const logEyeRest = useBodyCareStore((s) => s.logEyeRest);
-
-  const palette = useMemo(
-    () => (mode === 'dark' ? ({ ...darkPalette } as ScreenPalette) : ({ ...lightPalette } as ScreenPalette)),
-    [mode]
-  );
-  const styles = useMemo(() => createEyeWellnessStyles(palette), [palette]);
 
   const [activeExercise, setActiveExercise] = useState<typeof EYE_EXERCISES[0] | null>(null);
   const [exerciseTimer, setExerciseTimer] = useState(0);
