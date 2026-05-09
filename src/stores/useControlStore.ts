@@ -30,7 +30,8 @@ type ControlState = {
   toggleSafeBrowsing: (key: keyof Omit<SafeBrowsingSettings, 'customDomains' | 'status'>) => void;
   setCustomDomains: (domains: string[]) => void;
   toggleStrictMode: () => void;
-  grantPermissions: () => void;
+  checkPermissions: () => Promise<void>;
+  requestPermissions: () => void;
   syncAllSettings: () => void;
 };
 
@@ -41,7 +42,33 @@ export const useControlStore = create<ControlState>()(
       safeBrowsing: seedSafeBrowsing,
       strictModeEnabled: false,
       permissionsGranted: false,
-      grantPermissions: () => set({ permissionsGranted: true }),
+
+      // NEW: Check if accessibility service is enabled
+      checkPermissions: async () => {
+        if (!FocusZenSettings?.isAccessibilityServiceEnabled) {
+          return;
+        }
+        
+        try {
+          const enabled = await FocusZenSettings.isAccessibilityServiceEnabled();
+          set({ permissionsGranted: enabled });
+          
+          // Auto-sync settings if permissions just got granted
+          if (enabled) {
+            get().syncAllSettings();
+          }
+        } catch (error) {
+          console.error('Failed to check permissions:', error);
+        }
+      },
+
+      // NEW: Open accessibility settings
+      requestPermissions: () => {
+        if (FocusZenSettings?.openAccessibilitySettings) {
+          FocusZenSettings.openAccessibilitySettings();
+        }
+      },
+
       syncAllSettings: () => {
         const state = get();
         if (FocusZenSettings) {

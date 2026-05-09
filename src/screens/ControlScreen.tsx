@@ -1,9 +1,11 @@
 import React, {
   startTransition,
   useDeferredValue,
+  useEffect,
   useMemo,
   useState,
 } from "react";
+import { AppState } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
@@ -125,16 +127,36 @@ export function ControlScreen() {
   const setThemeMode = useSettingsStore((state) => state.setThemeMode);
   const currentThemeMode = useSettingsStore((state) => state.settings.themeMode);
   const toggleFeature = useControlStore((state) => state.toggleFeature);
-  const toggleSafeBrowsing = useControlStore(
-    (state) => state.toggleSafeBrowsing,
-  );
+  const toggleSafeBrowsing = useControlStore((state) => state.toggleSafeBrowsing);
   const toggleStrictMode = useControlStore((state) => state.toggleStrictMode);
   const purifyDays = usePurifyStore((state) => state.purify.currentStreakDays);
+  const checkPermissions = useControlStore((state) => state.checkPermissions);
+  const requestPermissions = useControlStore((state) => state.requestPermissions);
+  const syncAllSettings = useControlStore((state) => state.syncAllSettings);
   const permissionsGranted = useControlStore(
     (state) => state.permissionsGranted,
   );
-  const grantPermissions = useControlStore((state) => state.grantPermissions);
   const controlsLocked = !permissionsGranted;
+
+  // NEW: Check permissions on mount and when app comes to foreground
+  useEffect(() => {
+    checkPermissions();
+    
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkPermissions();
+      }
+    });
+    
+    return () => subscription.remove();
+  }, [checkPermissions]);
+
+  // NEW: Sync all settings when permissions are granted
+  useEffect(() => {
+    if (permissionsGranted) {
+      syncAllSettings();
+    }
+  }, [permissionsGranted, syncAllSettings]);
 
   const [query, setQuery] = useState("");
   const [showAllApps, setShowAllApps] = useState(false);
@@ -220,10 +242,17 @@ export function ControlScreen() {
   function handlePermissionRequired() {
     Alert.alert(
       "Device access required",
-      "Enable Usage Access before turning on app blocks.",
+      "Enable Accessibility Service to activate app blocking.",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Setup access", onPress: grantPermissions },
+        { 
+          text: "Open Settings", 
+          onPress: () => {
+            requestPermissions();
+            // Check again after a delay (user might enable it)
+            setTimeout(() => checkPermissions(), 1000);
+          }
+        },
       ],
     );
   }
@@ -331,7 +360,7 @@ export function ControlScreen() {
 
               <Pressable
                 style={styles.permissionBtn}
-                onPress={grantPermissions}
+                onPress={requestPermissions}
               >
                 <Text style={styles.permissionBtnText}>Activate Controls</Text>
               </Pressable>
