@@ -43,7 +43,7 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         // ── Per-app feature blocking ─────────────────────────────────────────
-        val rootNode = rootInActiveWindow ?: return
+        val rootNode = rootInActiveWindow ?: event.source
 
         when (packageName) {
             "com.google.android.youtube"                          -> handleYouTube(rootNode)
@@ -68,7 +68,8 @@ class FocusAccessibilityService : AccessibilityService() {
 
     // ─── App Handlers ─────────────────────────────────────────────────────────
 
-    private fun handleYouTube(node: AccessibilityNodeInfo) {
+
+    private fun handleYouTube(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("YouTube", "blockApp")) {
             triggerBlockAction("YouTube is blocked", true); return
         }
@@ -76,37 +77,30 @@ class FocusAccessibilityService : AccessibilityService() {
         // Block Shorts — check view ID, content description, activity class, text
         if (isFeatureEnabled("YouTube", "blockShorts")) {
             val inShorts = lastActivityClass.contains("shorts", ignoreCase = true)
-                || hasNodeById(node, "com.google.android.youtube:id/shorts_player_container")
-                || hasNodeById(node, "com.google.android.youtube:id/reel_player_page_container")
-                || hasNodeByContentDesc(node, "Shorts")
-                || hasNodeById(node, "com.google.android.youtube:id/shorts_container")
+                || hasNodeWithIdLike(node, "shorts_player_container")
+                || hasNodeWithIdLike(node, "reel_player_page_container")
+                || hasNodeWithIdLike(node, "shorts_container")
             if (inShorts) { triggerBlockAction("YouTube Shorts blocked"); return }
         }
 
         // Block Search
         if (isFeatureEnabled("YouTube", "blockSearch")) {
             val inSearch = lastActivityClass.contains("search", ignoreCase = true)
-                || hasNodeById(node, "com.google.android.youtube:id/search_edit_text")
-                || hasNodeById(node, "com.google.android.youtube:id/toolbar_search_button")
-                    .let { _ ->
-                        hasNodeById(node, "com.google.android.youtube:id/search_box_text") ||
-                        hasNodeById(node, "com.google.android.youtube:id/search_edit_text")
-                    }
+                || hasNodeWithIdLike(node, "search_edit_text")
+                || hasNodeWithIdLike(node, "search_box_text")
             if (inSearch) { triggerBlockAction("YouTube Search blocked"); return }
         }
 
         // Block Comments
         if (isFeatureEnabled("YouTube", "blockComments")) {
-            val inComments = hasNodeById(node, "com.google.android.youtube:id/comments_entry_point_header_root")
-                || hasNodeById(node, "com.google.android.youtube:id/comment_text")
-                || hasNodeByContentDesc(node, "Comments")
-                || (hasNodeById(node, "com.google.android.youtube:id/comments_panel") &&
-                    hasNodeById(node, "com.google.android.youtube:id/add_a_comment_button"))
+            val inComments = hasNodeWithIdLike(node, "comments_entry_point_header_root")
+                || hasNodeWithIdLike(node, "comment_text")
+                || (hasNodeWithIdLike(node, "comments_panel") && hasNodeWithIdLike(node, "add_a_comment_button"))
             if (inComments) { triggerBlockAction("YouTube Comments blocked"); return }
         }
     }
 
-    private fun handleFacebook(node: AccessibilityNodeInfo) {
+    private fun handleFacebook(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Facebook", "blockApp")) {
             triggerBlockAction("Facebook is blocked", true); return
         }
@@ -114,76 +108,71 @@ class FocusAccessibilityService : AccessibilityService() {
         // Block Reels — must be in a Reels-specific context
         if (isFeatureEnabled("Facebook", "blockReels")) {
             val inReels = lastActivityClass.contains("reel", ignoreCase = true)
-                || hasNodeById(node, "com.facebook.katana:id/reels_video_container")
-                || hasNodeById(node, "com.facebook.katana:id/reel_player_element_container")
-                || hasNodeByContentDesc(node, "Reels")
-                || (hasNodeByText(node, "Reels") && hasNodeById(node, "com.facebook.katana:id/video_player"))
+                || hasNodeWithIdLike(node, "reels_video_container")
+                || hasNodeWithIdLike(node, "reel_player_element_container")
+                || (hasNodeByText(node, "Reels") && hasNodeWithIdLike(node, "video_player"))
             if (inReels) { triggerBlockAction("Facebook Reels blocked"); return }
         }
 
         // Block Stories
         if (isFeatureEnabled("Facebook", "blockStories")) {
             val inStories = lastActivityClass.contains("story", ignoreCase = true)
-                || hasNodeById(node, "com.facebook.katana:id/stories_tray")
-                || hasNodeById(node, "com.facebook.katana:id/story_viewer_container")
-                || hasNodeByContentDesc(node, "Story")
-                || (hasNodeByText(node, "Stories") && hasNodeById(node, "com.facebook.katana:id/media_viewer_root"))
+                || hasNodeWithIdLike(node, "stories_tray")
+                || hasNodeWithIdLike(node, "story_viewer_container")
+                || (hasNodeByText(node, "Stories") && hasNodeWithIdLike(node, "media_viewer_root"))
             if (inStories) { triggerBlockAction("Facebook Stories blocked"); return }
         }
 
         // Block Feed — only trigger on actual feed scroll area, not just "Home" tab text
         if (isFeatureEnabled("Facebook", "blockFeed")) {
-            val inFeed = hasNodeById(node, "com.facebook.katana:id/news_feed_recycler_view")
-                || hasNodeById(node, "com.facebook.katana:id/feed_unit_root")
-                || hasNodeById(node, "com.facebook.katana:id/timeline_list_view")
+            val inFeed = hasNodeWithIdLike(node, "news_feed_recycler_view")
+                || hasNodeWithIdLike(node, "feed_unit_root")
+                || hasNodeWithIdLike(node, "timeline_list_view")
                 || (lastActivityClass.contains("NewsFeed", ignoreCase = true))
             if (inFeed) { triggerBlockAction("Facebook Feed blocked"); return }
         }
     }
 
-    private fun handleInstagram(node: AccessibilityNodeInfo) {
+    private fun handleInstagram(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Instagram", "blockApp")) {
             triggerBlockAction("Instagram is blocked", true); return
         }
 
         if (isFeatureEnabled("Instagram", "blockReels")) {
             val inReels = lastActivityClass.contains("reel", ignoreCase = true)
-                || hasNodeById(node, "com.instagram.android:id/clips_player_container")
-                || hasNodeById(node, "com.instagram.android:id/reels_tray_container")
-                || hasNodeByContentDesc(node, "Reels")
+                || hasNodeWithIdLike(node, "clips_player_container")
+                || hasNodeWithIdLike(node, "reels_tray_container")
             if (inReels) { triggerBlockAction("Instagram Reels blocked"); return }
         }
 
         if (isFeatureEnabled("Instagram", "blockStories")) {
             val inStories = lastActivityClass.contains("story", ignoreCase = true)
-                || hasNodeById(node, "com.instagram.android:id/reel_viewer_root")
-                || hasNodeById(node, "com.instagram.android:id/story_viewer_container")
-                || hasNodeByContentDesc(node, "Story")
+                || hasNodeWithIdLike(node, "reel_viewer_root")
+                || hasNodeWithIdLike(node, "story_viewer_container")
             if (inStories) { triggerBlockAction("Instagram Stories blocked"); return }
         }
 
         if (isFeatureEnabled("Instagram", "blockExplore")) {
-            val inExplore = hasNodeById(node, "com.instagram.android:id/explore_fragment_container")
+            val inExplore = hasNodeWithIdLike(node, "explore_fragment_container")
                 || hasNodeByContentDesc(node, "Search and explore")
             if (inExplore) { triggerBlockAction("Instagram Explore blocked"); return }
         }
     }
 
-    private fun handleTikTok(node: AccessibilityNodeInfo) {
+    private fun handleTikTok(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("TikTok", "blockApp")) {
             triggerBlockAction("TikTok is blocked", true); return
         }
 
         if (isFeatureEnabled("TikTok", "blockReels")) {
             // TikTok IS essentially a reels feed — block main feed view
-            val inFeed = hasNodeById(node, "com.zhiliaoapp.musically:id/feed")
-                || hasNodeById(node, "com.ss.android.ugc.trill:id/feed")
+            val inFeed = hasNodeWithIdLike(node, "id/feed")
                 || hasNodeByContentDesc(node, "For You")
             if (inFeed) { triggerBlockAction("TikTok Feed blocked"); return }
         }
 
         if (isFeatureEnabled("TikTok", "blockSearch")) {
-            val inSearch = hasNodeById(node, "com.zhiliaoapp.musically:id/search_input")
+            val inSearch = hasNodeWithIdLike(node, "search_input")
                 || hasNodeByContentDesc(node, "Search")
                 || lastActivityClass.contains("search", ignoreCase = true)
             if (inSearch) { triggerBlockAction("TikTok Search blocked"); return }
@@ -191,19 +180,19 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("TikTok", "blockComments")) {
             val inComments = hasNodeByContentDesc(node, "Comments")
-                || hasNodeById(node, "com.zhiliaoapp.musically:id/comment_input")
+                || hasNodeWithIdLike(node, "comment_input")
             if (inComments) { triggerBlockAction("TikTok Comments blocked"); return }
         }
     }
 
-    private fun handleSnapchat(node: AccessibilityNodeInfo) {
+    private fun handleSnapchat(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Snapchat", "blockApp")) {
             triggerBlockAction("Snapchat is blocked", true); return
         }
 
         if (isFeatureEnabled("Snapchat", "blockSpotlight")) {
             val inSpotlight = hasNodeByContentDesc(node, "Spotlight")
-                || hasNodeById(node, "com.snapchat.android:id/spotlight_header")
+                || hasNodeWithIdLike(node, "spotlight_header")
                 || lastActivityClass.contains("spotlight", ignoreCase = true)
             if (inSpotlight) { triggerBlockAction("Snapchat Spotlight blocked"); return }
         }
@@ -215,7 +204,7 @@ class FocusAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun handleWhatsApp(node: AccessibilityNodeInfo) {
+    private fun handleWhatsApp(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("WhatsApp", "blockApp")) {
             triggerBlockAction("WhatsApp is blocked", true); return
         }
@@ -235,7 +224,7 @@ class FocusAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun handleX(node: AccessibilityNodeInfo) {
+    private fun handleX(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("X", "blockApp")) {
             triggerBlockAction("X is blocked", true); return
         }
@@ -248,7 +237,7 @@ class FocusAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun handleTelegram(node: AccessibilityNodeInfo) {
+    private fun handleTelegram(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Telegram", "blockApp")) {
             triggerBlockAction("Telegram is blocked", true); return
         }
@@ -260,7 +249,7 @@ class FocusAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun handleMessenger(node: AccessibilityNodeInfo) {
+    private fun handleMessenger(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Messenger", "blockApp")) {
             triggerBlockAction("Messenger is blocked", true); return
         }
@@ -274,7 +263,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     // ─── Browser URL Blocking ────────────────────────────────────────────────
 
-    private fun handleBrowser(node: AccessibilityNodeInfo, packageName: String) {
+    private fun handleBrowser(node: AccessibilityNodeInfo?, packageName: String) {
         val prefs = getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
         val adultBlock = prefs.getBoolean("adultContentBlock", false)
         val gamblingBlock = prefs.getBoolean("gamblingBlock", false)
@@ -295,7 +284,7 @@ class FocusAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun extractBrowserUrl(node: AccessibilityNodeInfo, packageName: String): String? {
+    private fun extractBrowserUrl(node: AccessibilityNodeInfo?, packageName: String): String? {
         // Known URL bar view IDs per browser
         val knownIds = when (packageName) {
             "com.android.chrome" -> listOf(
@@ -446,14 +435,28 @@ class FocusAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun hasNodeByText(node: AccessibilityNodeInfo, text: String): Boolean {
+    private fun hasNodeByText(node: AccessibilityNodeInfo?, text: String): Boolean {
+        if (node == null) return false
         val results = node.findAccessibilityNodeInfosByText(text)
         return results != null && results.isNotEmpty()
     }
 
-    private fun hasNodeById(node: AccessibilityNodeInfo, id: String): Boolean {
+    private fun hasNodeById(node: AccessibilityNodeInfo?, id: String): Boolean {
+        if (node == null) return false
         val results = node.findAccessibilityNodeInfosByViewId(id)
         return results != null && results.isNotEmpty()
+    }
+
+    private fun hasNodeWithIdLike(node: AccessibilityNodeInfo?, idContains: String): Boolean {
+        if (node == null) return false
+        val viewId = node.viewIdResourceName?.lowercase() ?: ""
+        val shortId = if (viewId.contains(":id/")) viewId.substringAfter(":id/") else viewId
+        if (shortId.contains(idContains.lowercase())) return true
+        
+        for (i in 0 until node.childCount) {
+            if (hasNodeWithIdLike(node.getChild(i), idContains)) return true
+        }
+        return false
     }
 
     private fun hasNodeByContentDesc(node: AccessibilityNodeInfo?, desc: String): Boolean {
