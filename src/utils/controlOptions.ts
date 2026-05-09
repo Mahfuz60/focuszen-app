@@ -29,9 +29,9 @@ const APP_OPTION_MAP: Record<AppControlTarget, ControlOptionDescriptor[]> = {
     { key: 'blockStories', label: 'Block stories', icon: 'albums-outline' },
   ],
   Facebook: [
-    { key: 'blockFeed', label: 'Block feed', icon: 'newspaper-outline' },
-    { key: 'blockStories', label: 'Block stories', icon: 'albums-outline' },
     { key: 'blockReels', label: 'Block reels', icon: 'film-outline' },
+    { key: 'blockStories', label: 'Block stories', icon: 'albums-outline' },
+    { key: 'blockFeed', label: 'Block feed', icon: 'newspaper-outline' },
   ],
   Snapchat: [
     { key: 'blockSpotlight', label: 'Block spotlight', icon: 'flashlight-outline' },

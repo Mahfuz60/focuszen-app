@@ -83,21 +83,27 @@ export const useControlStore = create<ControlState>()(
       toggleFeature: (appName, feature) =>
         set((state) => {
           if (state.strictModeEnabled) return {};
-          const newControls = (state.controls || []).map((control) =>
-            control.appName === appName
-              ? {
-                  ...control,
-                  blocked: feature === 'blockApp' ? !(control.features[feature] ?? false) : control.blocked,
-                  features: {
-                    ...control.features,
-                    [feature]: !(control.features[feature] ?? false),
-                  },
-                }
-              : control
-          );
+          
+          const newControls = (state.controls || []).map((control) => {
+            if (control.appName !== appName) return control;
+            
+            const nextValue = !(control.features[feature] ?? false);
+            const updatedFeatures = {
+              ...control.features,
+              [feature]: nextValue,
+            };
+
+            return {
+              ...control,
+              // Only affect 'blocked' if the feature is specifically 'blockApp'
+              blocked: feature === 'blockApp' ? nextValue : control.blocked,
+              features: updatedFeatures,
+            };
+          });
           
           const updatedControl = newControls.find(c => c.appName === appName);
           if (updatedControl && FocusZenSettings) {
+            // Explicitly sync the features map to the native side
             FocusZenSettings.updateAppFeatures(appName, updatedControl.features);
           }
           
