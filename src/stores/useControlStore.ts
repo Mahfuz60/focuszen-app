@@ -87,7 +87,7 @@ export const useControlStore = create<ControlState>()(
           }
         }
       },
-      toggleAppBlocked: (appName) =>
+      toggleAppBlocked: (appName) => {
         set((state) => {
           if (state.strictModeEnabled) return {};
           return {
@@ -106,7 +106,13 @@ export const useControlStore = create<ControlState>()(
                 : control
             ),
           };
-        }),
+        });
+
+        const updatedControl = get().controls.find((c) => c.appName === appName);
+        if (updatedControl && FocusZenSettings) {
+          FocusZenSettings.updateAppFeatures(appName, updatedControl.features);
+        }
+      },
       toggleFeature: (appName, feature) =>
         set((state) => {
           if (state.strictModeEnabled) return {};

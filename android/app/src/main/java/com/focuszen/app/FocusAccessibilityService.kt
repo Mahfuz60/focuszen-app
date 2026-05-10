@@ -20,6 +20,22 @@ class FocusAccessibilityService : AccessibilityService() {
     private val BLOCK_COOLDOWN_MS = 1200L // prevent rapid back-loop
 
     // ─── Event Handler ───────────────────────────────────────────────────────
+    
+    private val PACKAGE_MAP = mapOf(
+        "com.google.android.youtube" to "YouTube",
+        "com.instagram.android" to "Instagram",
+        "com.facebook.katana" to "Facebook",
+        "com.snapchat.android" to "Snapchat",
+        "com.zhiliaoapp.musically" to "TikTok",
+        "com.ss.android.ugc.trill" to "TikTok",
+        "org.telegram.messenger" to "Telegram",
+        "jp.naver.line.android" to "Line",
+        "com.facebook.orca" to "Messenger",
+        "com.facebook.mlite" to "Messenger",
+        "com.whatsapp" to "WhatsApp",
+        "com.twitter.android" to "X",
+        "com.x.android" to "X"
+    )
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val packageName = event.packageName?.toString() ?: return
@@ -36,14 +52,24 @@ class FocusAccessibilityService : AccessibilityService() {
         val focusActive = prefs.getBoolean("focus_active", false)
         val focusDeepWork = prefs.getBoolean("focus_deep_work", false)
 
+        // ── Check Generic Full App Block ─────────────────────────────────────
+        val appName = PACKAGE_MAP[packageName]
+        if (appName != null) {
+            if (isFeatureEnabled(appName, "blockApp")) {
+                triggerBlockAction("$appName is blocked", isFullBlock = true)
+                return
+            }
+        }
+
+
         // ── Strict / Deep Work: full block of distracting apps ───────────────
         if ((strictMode || (focusActive && focusDeepWork)) && isDistractingApp(packageName)) {
-            triggerBlockAction("Blocked by FocusZen", isFullBlock = true)
+            triggerBlockAction("Blocked by Deep Focus", isFullBlock = true)
             return
         }
 
         // ── Per-app feature blocking ─────────────────────────────────────────
-        val rootNode = rootInActiveWindow ?: event.source
+        val rootNode = rootInActiveWindow ?: event.source ?: return
 
         when (packageName) {
             "com.google.android.youtube"                          -> handleYouTube(rootNode)
@@ -54,7 +80,8 @@ class FocusAccessibilityService : AccessibilityService() {
             "com.whatsapp"                                        -> handleWhatsApp(rootNode)
             "com.twitter.android", "com.x.android"               -> handleX(rootNode)
             "org.telegram.messenger"                              -> handleTelegram(rootNode)
-            "com.facebook.mlite"                                  -> handleMessenger(rootNode)
+            "com.facebook.orca", "com.facebook.mlite"            -> handleMessenger(rootNode)
+            "jp.naver.line.android"                              -> handleLine(rootNode)
             // Browsers
             "com.android.chrome",
             "com.sec.android.app.sbrowser",
@@ -79,6 +106,7 @@ class FocusAccessibilityService : AccessibilityService() {
             val inShorts = lastActivityClass.contains("shorts", ignoreCase = true)
                 || hasNodeWithIdLike(node, "shorts_player_container")
                 || hasNodeWithIdLike(node, "reel_player_page_container")
+                || hasNodeByContentDesc(node, "Shorts")
                 || hasNodeWithIdLike(node, "shorts_container")
             if (inShorts) { triggerBlockAction("YouTube Shorts blocked"); return }
         }
@@ -141,6 +169,7 @@ class FocusAccessibilityService : AccessibilityService() {
         if (isFeatureEnabled("Instagram", "blockReels")) {
             val inReels = lastActivityClass.contains("reel", ignoreCase = true)
                 || hasNodeWithIdLike(node, "clips_player_container")
+                || hasNodeByContentDesc(node, "Reels")
                 || hasNodeWithIdLike(node, "reels_tray_container")
             if (inReels) { triggerBlockAction("Instagram Reels blocked"); return }
         }
@@ -258,6 +287,18 @@ class FocusAccessibilityService : AccessibilityService() {
             val inStories = lastActivityClass.contains("story", ignoreCase = true)
                 || hasNodeByContentDesc(node, "Stories")
             if (inStories) { triggerBlockAction("Messenger Stories blocked"); return }
+        }
+    }
+
+    private fun handleLine(node: AccessibilityNodeInfo?) {
+        if (isFeatureEnabled("Line", "blockApp")) {
+            triggerBlockAction("Line is blocked", true); return
+        }
+
+        if (isFeatureEnabled("Line", "blockVoom")) {
+            val inVoom = lastActivityClass.contains("voom", ignoreCase = true)
+                || hasNodeByText(node, "VOOM")
+            if (inVoom) { triggerBlockAction("Line VOOM blocked"); return }
         }
     }
 
@@ -390,14 +431,15 @@ class FocusAccessibilityService : AccessibilityService() {
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
+
     private fun isDistractingApp(packageName: String): Boolean {
         return packageName in listOf(
-            "com.facebook.katana", "com.google.android.youtube",
-            "com.instagram.android", "com.zhiliaoapp.musically",
-            "com.ss.android.ugc.trill", "com.whatsapp",
-            "com.twitter.android", "com.x.android",
+            "com.facebook.katana", "com.facebook.orca", "com.facebook.mlite",
+            "com.google.android.youtube", "com.instagram.android",
+            "com.zhiliaoapp.musically", "com.ss.android.ugc.trill",
+            "com.whatsapp", "com.twitter.android", "com.x.android",
             "com.snapchat.android", "org.telegram.messenger",
-            "com.facebook.mlite"
+            "jp.naver.line.android"
         )
     }
 

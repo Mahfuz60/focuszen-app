@@ -31,7 +31,7 @@ export function PermissionsSetupScreen() {
   const palette = useMemo(() => getPalette('permissionsSetup'), [getPalette]);
   const styles = useMemo(() => createStyles(palette), [palette]);
   const completePermissionsSetup = useSettingsStore((state) => state.completePermissionsSetup);
-  const grantPermissions = useControlStore((state) => state.grantPermissions);
+  const requestPermissions = useControlStore((state) => state.requestPermissions);
 
   const [completed, setCompleted] = useState<Record<string, boolean>>({
     usage: false,
@@ -90,7 +90,7 @@ export function PermissionsSetupScreen() {
   const handleFinish = () => {
     if (!allCompleted) return;
     completePermissionsSetup();
-    grantPermissions();
+    requestPermissions();
     navigation.replace('MainTabs');
   };
 
