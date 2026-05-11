@@ -106,7 +106,6 @@ class FocusAccessibilityService : AccessibilityService() {
             val inShorts = lastActivityClass.contains("shorts", ignoreCase = true)
                 || hasNodeWithIdLike(node, "shorts_player_container")
                 || hasNodeWithIdLike(node, "reel_player_page_container")
-                || hasNodeByContentDesc(node, "Shorts")
                 || hasNodeWithIdLike(node, "shorts_container")
             if (inShorts) { triggerBlockAction("YouTube Shorts blocked"); return }
         }
@@ -138,7 +137,6 @@ class FocusAccessibilityService : AccessibilityService() {
             val inReels = lastActivityClass.contains("reel", ignoreCase = true)
                 || hasNodeWithIdLike(node, "reels_video_container")
                 || hasNodeWithIdLike(node, "reel_player_element_container")
-                || (hasNodeByText(node, "Reels") && hasNodeWithIdLike(node, "video_player"))
             if (inReels) { triggerBlockAction("Facebook Reels blocked"); return }
         }
 
@@ -147,7 +145,6 @@ class FocusAccessibilityService : AccessibilityService() {
             val inStories = lastActivityClass.contains("story", ignoreCase = true)
                 || hasNodeWithIdLike(node, "stories_tray")
                 || hasNodeWithIdLike(node, "story_viewer_container")
-                || (hasNodeByText(node, "Stories") && hasNodeWithIdLike(node, "media_viewer_root"))
             if (inStories) { triggerBlockAction("Facebook Stories blocked"); return }
         }
 
@@ -169,7 +166,6 @@ class FocusAccessibilityService : AccessibilityService() {
         if (isFeatureEnabled("Instagram", "blockReels")) {
             val inReels = lastActivityClass.contains("reel", ignoreCase = true)
                 || hasNodeWithIdLike(node, "clips_player_container")
-                || hasNodeByContentDesc(node, "Reels")
                 || hasNodeWithIdLike(node, "reels_tray_container")
             if (inReels) { triggerBlockAction("Instagram Reels blocked"); return }
         }
@@ -183,7 +179,6 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("Instagram", "blockExplore")) {
             val inExplore = hasNodeWithIdLike(node, "explore_fragment_container")
-                || hasNodeByContentDesc(node, "Search and explore")
             if (inExplore) { triggerBlockAction("Instagram Explore blocked"); return }
         }
     }
@@ -195,21 +190,18 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("TikTok", "blockReels")) {
             // TikTok IS essentially a reels feed — block main feed view
-            val inFeed = hasNodeWithIdLike(node, "id/feed")
-                || hasNodeByContentDesc(node, "For You")
+            val inFeed = hasNodeWithIdLike(node, "id/feed") || hasNodeWithIdLike(node, "vertical_view_pager")
             if (inFeed) { triggerBlockAction("TikTok Feed blocked"); return }
         }
 
         if (isFeatureEnabled("TikTok", "blockSearch")) {
             val inSearch = hasNodeWithIdLike(node, "search_input")
-                || hasNodeByContentDesc(node, "Search")
                 || lastActivityClass.contains("search", ignoreCase = true)
             if (inSearch) { triggerBlockAction("TikTok Search blocked"); return }
         }
 
         if (isFeatureEnabled("TikTok", "blockComments")) {
-            val inComments = hasNodeByContentDesc(node, "Comments")
-                || hasNodeWithIdLike(node, "comment_input")
+            val inComments = hasNodeWithIdLike(node, "comment_input")
             if (inComments) { triggerBlockAction("TikTok Comments blocked"); return }
         }
     }
@@ -220,15 +212,13 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFeatureEnabled("Snapchat", "blockSpotlight")) {
-            val inSpotlight = hasNodeByContentDesc(node, "Spotlight")
-                || hasNodeWithIdLike(node, "spotlight_header")
+            val inSpotlight = hasNodeWithIdLike(node, "spotlight_header")
                 || lastActivityClass.contains("spotlight", ignoreCase = true)
             if (inSpotlight) { triggerBlockAction("Snapchat Spotlight blocked"); return }
         }
 
         if (isFeatureEnabled("Snapchat", "blockStories")) {
-            val inStories = hasNodeByContentDesc(node, "Stories")
-                || lastActivityClass.contains("story", ignoreCase = true)
+            val inStories = lastActivityClass.contains("story", ignoreCase = true)
             if (inStories) { triggerBlockAction("Snapchat Stories blocked"); return }
         }
     }
@@ -239,16 +229,12 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFeatureEnabled("WhatsApp", "blockStatus")) {
-            val inStatus = hasNodeByText(node, "Status") || hasNodeByText(node, "Updates")
-                || hasNodeByContentDesc(node, "Status")
-                || lastActivityClass.contains("status", ignoreCase = true)
+            val inStatus = lastActivityClass.contains("status", ignoreCase = true)
             if (inStatus) { triggerBlockAction("WhatsApp Status blocked"); return }
         }
 
         if (isFeatureEnabled("WhatsApp", "blockChannels")) {
-            val inChannels = hasNodeByText(node, "Channels")
-                || hasNodeByContentDesc(node, "Channels")
-                || lastActivityClass.contains("channel", ignoreCase = true)
+            val inChannels = lastActivityClass.contains("channel", ignoreCase = true)
             if (inChannels) { triggerBlockAction("WhatsApp Channels blocked"); return }
         }
     }
@@ -259,9 +245,7 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFeatureEnabled("X", "blockExplore")) {
-            val inExplore = hasNodeByContentDesc(node, "Search and Explore")
-                || hasNodeByContentDesc(node, "Explore")
-                || lastActivityClass.contains("explore", ignoreCase = true)
+            val inExplore = lastActivityClass.contains("explore", ignoreCase = true)
             if (inExplore) { triggerBlockAction("X Explore blocked"); return }
         }
     }
@@ -273,7 +257,6 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("Telegram", "blockChannels")) {
             val inChannels = lastActivityClass.contains("channel", ignoreCase = true)
-                || hasNodeByContentDesc(node, "Channels")
             if (inChannels) { triggerBlockAction("Telegram Channels blocked"); return }
         }
     }
@@ -285,7 +268,6 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("Messenger", "blockStories")) {
             val inStories = lastActivityClass.contains("story", ignoreCase = true)
-                || hasNodeByContentDesc(node, "Stories")
             if (inStories) { triggerBlockAction("Messenger Stories blocked"); return }
         }
     }
@@ -297,7 +279,6 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("Line", "blockVoom")) {
             val inVoom = lastActivityClass.contains("voom", ignoreCase = true)
-                || hasNodeByText(node, "VOOM")
             if (inVoom) { triggerBlockAction("Line VOOM blocked"); return }
         }
     }

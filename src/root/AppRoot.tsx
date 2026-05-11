@@ -67,17 +67,26 @@ export function AppRoot() {
     Roboto_900Black,
   });
 
+  // Sync all settings once on startup (after store rehydrates from AsyncStorage)
   useEffect(() => {
     ensureAppMeta();
-    syncAllSettings();
+    // Small delay ensures Zustand has rehydrated persisted state before syncing to native
+    const timer = setTimeout(() => {
+      syncAllSettings();
+    }, 300);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync focus session state whenever it changes
+  useEffect(() => {
     if (FocusZenSettings) {
-      // Sync focus session state on startup
       FocusZenSettings.setFocusSession(
-        activeFocusSession ? !activeFocusSession.paused : false, 
+        activeFocusSession ? !activeFocusSession.paused : false,
         deepWorkEnabled
       );
     }
-  }, [syncAllSettings, activeFocusSession, deepWorkEnabled]);
+  }, [activeFocusSession, deepWorkEnabled]);
 
   // Global Alarm Monitor
   useEffect(() => {

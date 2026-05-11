@@ -151,7 +151,7 @@ export function ControlScreen() {
     return () => subscription.remove();
   }, [checkPermissions]);
 
-  // NEW: Sync all settings when permissions are granted
+  // Sync all settings when permissions are granted OR when app comes to foreground
   useEffect(() => {
     if (permissionsGranted) {
       syncAllSettings();

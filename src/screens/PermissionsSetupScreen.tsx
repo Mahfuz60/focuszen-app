@@ -1,13 +1,11 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   Pressable,
   StatusBar,
-  StyleSheet,
   Text,
   View,
   ScrollView,
   Platform,
-  Alert,
   NativeModules,
   AppState,
 } from 'react-native';
@@ -31,7 +29,8 @@ export function PermissionsSetupScreen() {
   const palette = useMemo(() => getPalette('permissionsSetup'), [getPalette]);
   const styles = useMemo(() => createStyles(palette), [palette]);
   const completePermissionsSetup = useSettingsStore((state) => state.completePermissionsSetup);
-  const requestPermissions = useControlStore((state) => state.requestPermissions);
+  const syncAllSettings = useControlStore((state) => state.syncAllSettings);
+  const checkPermissions = useControlStore((state) => state.checkPermissions);
 
   const [completed, setCompleted] = useState<Record<string, boolean>>({
     usage: false,
@@ -40,27 +39,20 @@ export function PermissionsSetupScreen() {
     battery: false,
   });
 
-  const checkAllPermissions = async () => {
+  const checkAllPermissions = useCallback(async () => {
     if (Platform.OS !== 'android' || !PermissionChecker) return;
-    
+
     const usage = await PermissionChecker.checkUsageAccess();
     const accessibility = await PermissionChecker.checkAccessibility();
     const overlay = await PermissionChecker.checkOverlay();
     const battery = await PermissionChecker.checkBatteryOptimization();
 
-    setCompleted({
-      usage,
-      accessibility,
-      overlay,
-      battery,
-    });
-  };
+    setCompleted({ usage, accessibility, overlay, battery });
+  }, []);
 
   useEffect(() => {
-    // Initial check when screen loads
     checkAllPermissions();
 
-    // Re-check when app comes back to foreground from settings
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
         checkAllPermissions();
@@ -68,7 +60,7 @@ export function PermissionsSetupScreen() {
     });
 
     return () => subscription.remove();
-  }, []);
+  }, [checkAllPermissions]);
 
   const openSettings = async (action: string, key: string, dataUri?: string) => {
     if (Platform.OS === 'android') {
@@ -85,12 +77,13 @@ export function PermissionsSetupScreen() {
   };
 
   const allCompleted = Object.values(completed).every((v) => v === true);
-  // const allCompleted = true;
 
   const handleFinish = () => {
     if (!allCompleted) return;
     completePermissionsSetup();
-    requestPermissions();
+    // Sync all JS store settings to native SharedPreferences now that permissions are granted
+    syncAllSettings();
+    checkPermissions();
     navigation.replace('MainTabs');
   };
 

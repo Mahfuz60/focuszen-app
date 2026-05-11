@@ -88,60 +88,63 @@ export const useControlStore = create<ControlState>()(
         }
       },
       toggleAppBlocked: (appName) => {
-        set((state) => {
-          if (state.strictModeEnabled) return {};
-          return {
-            controls: (state.controls || []).map((control) =>
-              control.appName === appName
-                ? {
-                    ...control,
-                    blocked: !control.blocked,
-                    features: !control.blocked
-                      ? (getControlOptionDescriptors(control.appName) || []).reduce((acc, opt) => {
-                          acc[opt.key] = true;
-                          return acc;
-                        }, { ...control.features } as Record<AppFeatureKey, boolean>)
-                      : control.features,
-                  }
-                : control
-            ),
-          };
-        });
+        const state = get();
+        if (state.strictModeEnabled) return;
 
-        const updatedControl = get().controls.find((c) => c.appName === appName);
-        if (updatedControl && FocusZenSettings) {
-          FocusZenSettings.updateAppFeatures(appName, updatedControl.features);
+        const control = state.controls.find((c) => c.appName === appName);
+        if (!control) return;
+
+        const nextBlocked = !control.blocked;
+
+        // When blocking: set blockApp + all feature flags to true
+        // When unblocking: clear blockApp flag only, keep other features as-is
+        const nextFeatures: Partial<Record<AppFeatureKey, boolean>> = nextBlocked
+          ? (getControlOptionDescriptors(appName) || []).reduce(
+              (acc, opt) => { acc[opt.key] = true; return acc; },
+              { ...control.features, blockApp: true } as Partial<Record<AppFeatureKey, boolean>>
+            )
+          : { ...control.features, blockApp: false };
+
+        set((s) => ({
+          controls: s.controls.map((c) =>
+            c.appName === appName
+              ? { ...c, blocked: nextBlocked, features: nextFeatures }
+              : c
+          ),
+        }));
+
+        if (FocusZenSettings) {
+          FocusZenSettings.updateAppFeatures(appName, nextFeatures);
         }
       },
-      toggleFeature: (appName, feature) =>
-        set((state) => {
-          if (state.strictModeEnabled) return {};
-          
-          const newControls = (state.controls || []).map((control) => {
-            if (control.appName !== appName) return control;
-            
-            const nextValue = !(control.features[feature] ?? false);
-            const updatedFeatures = {
-              ...control.features,
-              [feature]: nextValue,
-            };
+      toggleFeature: (appName, feature) => {
+        const state = get();
+        if (state.strictModeEnabled) return;
 
+        const control = state.controls.find((c) => c.appName === appName);
+        if (!control) return;
+
+        const nextValue = !(control.features[feature] ?? false);
+        const nextFeatures: Partial<Record<AppFeatureKey, boolean>> = {
+          ...control.features,
+          [feature]: nextValue,
+        };
+
+        set((s) => ({
+          controls: s.controls.map((c) => {
+            if (c.appName !== appName) return c;
             return {
-              ...control,
-              // Only affect 'blocked' if the feature is specifically 'blockApp'
-              blocked: feature === 'blockApp' ? nextValue : control.blocked,
-              features: updatedFeatures,
+              ...c,
+              blocked: feature === 'blockApp' ? nextValue : c.blocked,
+              features: nextFeatures,
             };
-          });
-          
-          const updatedControl = newControls.find(c => c.appName === appName);
-          if (updatedControl && FocusZenSettings) {
-            // Explicitly sync the features map to the native side
-            FocusZenSettings.updateAppFeatures(appName, updatedControl.features);
-          }
-          
-          return { controls: newControls };
-        }),
+          }),
+        }));
+
+        if (FocusZenSettings) {
+          FocusZenSettings.updateAppFeatures(appName, nextFeatures);
+        }
+      },
       setTimeLimit: (appName, minutes) =>
         set((state) => ({
           controls: (state.controls || []).map((control) =>
