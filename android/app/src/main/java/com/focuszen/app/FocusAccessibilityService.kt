@@ -17,7 +17,9 @@ class FocusAccessibilityService : AccessibilityService() {
     private val TAG = "FocusZenBlocker"
     private var lastActivityClass: String = ""
     private var lastBlockedAt: Long = 0L
+    private var lastTreeScanAt: Long = 0L
     private val BLOCK_COOLDOWN_MS = 1200L // prevent rapid back-loop
+    private val SCAN_COOLDOWN_MS = 200L // throttle deep view hierarchy scans
 
     // ─── Event Handler ───────────────────────────────────────────────────────
     
@@ -67,6 +69,11 @@ class FocusAccessibilityService : AccessibilityService() {
             triggerBlockAction("Blocked by Deep Focus", isFullBlock = true)
             return
         }
+
+        // Throttle deep tree scanning to prevent ANR and silent service unbinding
+        val now = System.currentTimeMillis()
+        if (now - lastTreeScanAt < SCAN_COOLDOWN_MS) return
+        lastTreeScanAt = now
 
         // ── Per-app feature blocking ─────────────────────────────────────────
         val rootNode = rootInActiveWindow ?: event.source ?: return
