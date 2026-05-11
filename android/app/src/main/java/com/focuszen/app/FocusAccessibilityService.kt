@@ -50,9 +50,6 @@ class FocusAccessibilityService : AccessibilityService() {
         if (packageName == "com.focuszen.app") return
 
         val prefs = getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
-        val strictMode = prefs.getBoolean("strict_mode", false)
-        val focusActive = prefs.getBoolean("focus_active", false)
-        val focusDeepWork = prefs.getBoolean("focus_deep_work", false)
 
         // ── Check Generic Full App Block ─────────────────────────────────────
         val appName = PACKAGE_MAP[packageName]
@@ -61,13 +58,6 @@ class FocusAccessibilityService : AccessibilityService() {
                 triggerBlockAction("$appName is blocked", isFullBlock = true)
                 return
             }
-        }
-
-
-        // ── Strict / Deep Work: full block of distracting apps ───────────────
-        if ((strictMode || (focusActive && focusDeepWork)) && isDistractingApp(packageName)) {
-            triggerBlockAction("Blocked by Deep Focus", isFullBlock = true)
-            return
         }
 
         // Throttle deep tree scanning to prevent ANR and silent service unbinding
@@ -108,12 +98,15 @@ class FocusAccessibilityService : AccessibilityService() {
             triggerBlockAction("YouTube is blocked", true); return
         }
 
-        // Block Shorts — check view ID, content description, activity class, text
+        // Block Shorts — check highly specific accessibility content descriptions inside the player
         if (isFeatureEnabled("YouTube", "blockShorts")) {
-            val inShorts = lastActivityClass.contains("shorts", ignoreCase = true)
+            val inShorts = lastActivityClass.contains("ReelWatch", ignoreCase = true)
+                || lastActivityClass.contains("Shorts", ignoreCase = true)
+                || hasNodeByContentDesc(node, "Like this Short")
+                || hasNodeByContentDesc(node, "Dislike this Short")
+                || hasNodeByContentDesc(node, "Remix this Short")
                 || hasNodeWithIdLike(node, "shorts_player_container")
                 || hasNodeWithIdLike(node, "reel_player_page_container")
-                || hasNodeWithIdLike(node, "shorts_container")
             if (inShorts) { triggerBlockAction("YouTube Shorts blocked"); return }
         }
 
@@ -122,14 +115,17 @@ class FocusAccessibilityService : AccessibilityService() {
             val inSearch = lastActivityClass.contains("search", ignoreCase = true)
                 || hasNodeWithIdLike(node, "search_edit_text")
                 || hasNodeWithIdLike(node, "search_box_text")
+                || hasNodeByText(node, "Search YouTube")
             if (inSearch) { triggerBlockAction("YouTube Search blocked"); return }
         }
 
         // Block Comments
         if (isFeatureEnabled("YouTube", "blockComments")) {
-            val inComments = hasNodeWithIdLike(node, "comments_entry_point_header_root")
+            val inComments = lastActivityClass.contains("comment", ignoreCase = true)
+                || hasNodeWithIdLike(node, "comments_entry_point_header_root")
                 || hasNodeWithIdLike(node, "comment_text")
                 || (hasNodeWithIdLike(node, "comments_panel") && hasNodeWithIdLike(node, "add_a_comment_button"))
+                || hasNodeByText(node, "Add a comment")
             if (inComments) { triggerBlockAction("YouTube Comments blocked"); return }
         }
     }
@@ -141,7 +137,11 @@ class FocusAccessibilityService : AccessibilityService() {
 
         // Block Reels — must be in a Reels-specific context
         if (isFeatureEnabled("Facebook", "blockReels")) {
-            val inReels = lastActivityClass.contains("reel", ignoreCase = true)
+            val inReels = lastActivityClass.contains("Reel", ignoreCase = true)
+                || lastActivityClass.contains("Shorts", ignoreCase = true)
+                || hasNodeByContentDesc(node, "Like this reel")
+                || hasNodeByContentDesc(node, "Comment on this reel")
+                || hasNodeByContentDesc(node, "Share this reel")
                 || hasNodeWithIdLike(node, "reels_video_container")
                 || hasNodeWithIdLike(node, "reel_player_element_container")
             if (inReels) { triggerBlockAction("Facebook Reels blocked"); return }
@@ -171,7 +171,11 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFeatureEnabled("Instagram", "blockReels")) {
-            val inReels = lastActivityClass.contains("reel", ignoreCase = true)
+            val inReels = lastActivityClass.contains("Reel", ignoreCase = true)
+                || lastActivityClass.contains("Clip", ignoreCase = true)
+                || hasNodeByContentDesc(node, "Like this reel")
+                || hasNodeByContentDesc(node, "Comment on this reel")
+                || hasNodeByContentDesc(node, "Share this reel")
                 || hasNodeWithIdLike(node, "clips_player_container")
                 || hasNodeWithIdLike(node, "reels_tray_container")
             if (inReels) { triggerBlockAction("Instagram Reels blocked"); return }
@@ -185,7 +189,9 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFeatureEnabled("Instagram", "blockExplore")) {
-            val inExplore = hasNodeWithIdLike(node, "explore_fragment_container")
+            val inExplore = lastActivityClass.contains("explore", ignoreCase = true)
+                || hasNodeWithIdLike(node, "explore_fragment_container")
+                || hasNodeByText(node, "Search")
             if (inExplore) { triggerBlockAction("Instagram Explore blocked"); return }
         }
     }
@@ -208,7 +214,9 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFeatureEnabled("TikTok", "blockComments")) {
-            val inComments = hasNodeWithIdLike(node, "comment_input")
+            val inComments = lastActivityClass.contains("comment", ignoreCase = true)
+                || hasNodeWithIdLike(node, "comment_input")
+                || hasNodeByText(node, "Add comment")
             if (inComments) { triggerBlockAction("TikTok Comments blocked"); return }
         }
     }
@@ -459,7 +467,17 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFullBlock) {
-            performGlobalAction(GLOBAL_ACTION_HOME)
+            val success = performGlobalAction(GLOBAL_ACTION_HOME)
+            if (!success) {
+                // Fallback for strict OS environments (MIUI, ColorOS)
+                try {
+                    val homeIntent = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
+                        addCategory(android.content.Intent.CATEGORY_HOME)
+                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    startActivity(homeIntent)
+                } catch (e: Exception) {}
+            }
         } else {
             performGlobalAction(GLOBAL_ACTION_BACK)
         }

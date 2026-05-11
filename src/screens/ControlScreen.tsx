@@ -41,13 +41,6 @@ import {
 
 const safeBrowsingRows = [
   {
-    key: "strict-mode",
-    label: "Strict mode",
-    subtitle: "Blocks all distractions",
-    icon: "lock-closed-outline",
-    kind: "strict" as const,
-  },
-  {
     key: "adultContentBlock",
     label: "Adult content",
     subtitle: "Blocks adult sites",
@@ -123,12 +116,10 @@ export function ControlScreen() {
   );
   const controls = useControlStore((state) => state.controls);
   const safeBrowsing = useControlStore((state) => state.safeBrowsing);
-  const strictModeEnabled = useControlStore((state) => state.strictModeEnabled);
   const setThemeMode = useSettingsStore((state) => state.setThemeMode);
   const currentThemeMode = useSettingsStore((state) => state.settings.themeMode);
   const toggleFeature = useControlStore((state) => state.toggleFeature);
   const toggleSafeBrowsing = useControlStore((state) => state.toggleSafeBrowsing);
-  const toggleStrictMode = useControlStore((state) => state.toggleStrictMode);
   const purifyDays = usePurifyStore((state) => state.purify.currentStreakDays);
   const checkPermissions = useControlStore((state) => state.checkPermissions);
   const requestPermissions = useControlStore((state) => state.requestPermissions);
@@ -197,7 +188,6 @@ export function ControlScreen() {
       (total, control) => total + countEnabledOptions(control),
       0,
     ) +
-    (strictModeEnabled ? 1 : 0) +
     Number(safeBrowsing.adultContentBlock) +
     Number(safeBrowsing.gamblingBlock);
   const metricCards = [
@@ -535,13 +525,6 @@ export function ControlScreen() {
                               <ToggleTrack
                                 value={control.features[option.key] ?? false}
                                   onPress={() => {
-                                    if (strictModeEnabled) {
-                                      Alert.alert(
-                                        "Strict Mode Active",
-                                        "You cannot change rules while Strict Mode is enabled.",
-                                      );
-                                      return;
-                                    }
                                     toggleFeature(control.appName, option.key);
                                   }}
                                 disabled={controlsLocked}
@@ -591,10 +574,7 @@ export function ControlScreen() {
                 <Text style={styles.sectionEyebrow}>Protection modes</Text>
 
                 {safeBrowsingRows.map((row, index) => {
-                  const value =
-                    row.kind === "strict"
-                      ? strictModeEnabled
-                      : safeBrowsing[row.key];
+                  const value = safeBrowsing[row.key as keyof typeof safeBrowsing];
 
                   return (
                     <View
@@ -623,11 +603,7 @@ export function ControlScreen() {
 
                       <ToggleTrack
                         value={Boolean(value)}
-                        onPress={() =>
-                          row.kind === "strict"
-                            ? toggleStrictMode()
-                            : toggleSafeBrowsing(row.key)
-                        }
+                        onPress={() => toggleSafeBrowsing(row.key as keyof typeof safeBrowsing)}
                         disabled={controlsLocked}
                         onDisabledPress={handlePermissionRequired}
                         palette={palette}

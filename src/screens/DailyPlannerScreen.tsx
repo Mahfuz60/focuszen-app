@@ -228,15 +228,15 @@ export function DailyPlannerScreen() {
       <AnimatedThemeBackdrop
         colors={[palette.backgroundTop, palette.backgroundBottom]}
         mode={mode}
-        primaryGlow={mode === 'dark' ? palette.greenSoft : 'rgba(31, 165, 91, 0.1)'}
-        secondaryGlow={mode === 'dark' ? palette.purpleSoft : 'rgba(140, 92, 255, 0.08)'}
+        primaryGlow={mode === 'dark' ? (palette.greenSoft ?? 'rgba(0,255,157,0.1)') : 'rgba(31, 165, 91, 0.1)'}
+        secondaryGlow={mode === 'dark' ? (palette.purpleSoft ?? 'rgba(217,70,239,0.1)') : 'rgba(140, 92, 255, 0.08)'}
         accentGlow={mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.42)'}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.flex}
         >
-          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xl }]} showsVerticalScrollIndicator={false}>
             <View style={styles.topBar}>
               <Pressable onPress={() => navigation.goBack()} style={styles.topIconButton}>
                 <Ionicons name="arrow-back" size={18} color={palette.text} />
@@ -375,7 +375,7 @@ export function DailyPlannerScreen() {
                   onPress={() => setComposerOpen((current) => !current)}
                   style={[styles.addCustomButton, { borderStyle: 'dashed', backgroundColor: mode === 'dark' ? 'transparent' : '#f0fdf4' }]}
                 >
-                  <Text style={styles.addCustomButtonText}>+ Add custom task</Text>
+                  <Text style={styles.addCustomButtonText}>Add custom task</Text>
                 </Pressable>
               </View>
             </View>

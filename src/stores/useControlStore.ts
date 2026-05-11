@@ -21,7 +21,6 @@ const seedSafeBrowsing: SafeBrowsingSettings = {
 type ControlState = {
   controls: AppControlSettings[];
   safeBrowsing: SafeBrowsingSettings;
-  strictModeEnabled: boolean;
   permissionsGranted: boolean;
   toggleAppBlocked: (appName: AppControlTarget) => void;
   toggleFeature: (appName: AppControlTarget, feature: AppFeatureKey) => void;
@@ -29,7 +28,6 @@ type ControlState = {
   setScheduleRule: (appName: AppControlTarget, rule: ScheduleRule) => void;
   toggleSafeBrowsing: (key: keyof Omit<SafeBrowsingSettings, 'customDomains' | 'status'>) => void;
   setCustomDomains: (domains: string[]) => void;
-  toggleStrictMode: () => void;
   checkPermissions: () => Promise<void>;
   requestPermissions: () => void;
   syncAllSettings: () => void;
@@ -40,7 +38,6 @@ export const useControlStore = create<ControlState>()(
     (set, get) => ({
       controls: seedControlSettings,
       safeBrowsing: seedSafeBrowsing,
-      strictModeEnabled: false,
       permissionsGranted: false,
 
       // NEW: Check if accessibility service is enabled
@@ -75,7 +72,6 @@ export const useControlStore = create<ControlState>()(
           state.controls.forEach(control => {
             FocusZenSettings.updateAppFeatures(control.appName, control.features);
           });
-          FocusZenSettings.setStrictMode(state.strictModeEnabled);
           if (FocusZenSettings.setSafeBrowsing) {
             FocusZenSettings.setSafeBrowsing(
               state.safeBrowsing.adultContentBlock ?? false,
@@ -89,7 +85,6 @@ export const useControlStore = create<ControlState>()(
       },
       toggleAppBlocked: (appName) => {
         const state = get();
-        if (state.strictModeEnabled) return;
 
         const control = state.controls.find((c) => c.appName === appName);
         if (!control) return;
@@ -119,7 +114,6 @@ export const useControlStore = create<ControlState>()(
       },
       toggleFeature: (appName, feature) => {
         const state = get();
-        if (state.strictModeEnabled) return;
 
         const control = state.controls.find((c) => c.appName === appName);
         if (!control) return;
@@ -159,7 +153,6 @@ export const useControlStore = create<ControlState>()(
         })),
       toggleSafeBrowsing: (key) =>
         set((state) => {
-          if (state.strictModeEnabled) return {};
           const updated = {
             ...state.safeBrowsing,
             [key]: !state.safeBrowsing[key],
@@ -180,13 +173,6 @@ export const useControlStore = create<ControlState>()(
         set((state) => ({
           safeBrowsing: { ...state.safeBrowsing, customDomains: domains },
         })),
-      toggleStrictMode: () => set((state) => {
-        const next = !state.strictModeEnabled;
-        if (FocusZenSettings) {
-          FocusZenSettings.setStrictMode(next);
-        }
-        return { strictModeEnabled: next };
-      }),
     }),
     {
       name: STORAGE_KEYS.control,

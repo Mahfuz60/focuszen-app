@@ -25,10 +25,16 @@ class SettingsModule(reactContext: ReactApplicationContext) :
         val featureKeys = features.keySetIterator()
         while (featureKeys.hasNextKey()) {
             val key = featureKeys.nextKey()
-            val value = features.getBoolean(key)
-            editor.putBoolean("${appName}_${key}", value)
+            try {
+                if (features.getType(key) == com.facebook.react.bridge.ReadableType.Boolean) {
+                    val value = features.getBoolean(key)
+                    editor.putBoolean("${appName}_${key}", value)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-        editor.apply()
+        editor.commit() // Synchronous write to ensure AccessibilityService gets it immediately
     }
     
     @ReactMethod
