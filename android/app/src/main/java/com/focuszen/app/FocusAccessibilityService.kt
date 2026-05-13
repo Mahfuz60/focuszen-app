@@ -19,7 +19,7 @@ class FocusAccessibilityService : AccessibilityService() {
     private var lastBlockedAt: Long = 0L
     private var lastTreeScanAt: Long = 0L
     private val BLOCK_COOLDOWN_MS = 1200L // prevent rapid back-loop
-    private val SCAN_COOLDOWN_MS = 200L // throttle deep view hierarchy scans
+  private val SCAN_COOLDOWN_MS = 80L // throttle deep view hierarchy scans
 
     // ─── Event Handler ───────────────────────────────────────────────────────
     
@@ -40,10 +40,23 @@ class FocusAccessibilityService : AccessibilityService() {
     )
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        val packageName = event.packageName?.toString() ?: return
+        if (
+        event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+        event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
+        event.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED &&
+        event.eventType != AccessibilityEvent.TYPE_VIEW_CLICKED &&
+        event.eventType != AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED &&
+        event.eventType != AccessibilityEvent.TYPE_VIEW_FOCUSED
+    ) return
 
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            lastActivityClass = event.className?.toString() ?: ""
+    val packageName = event.packageName?.toString() ?: return
+
+       if (
+        event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+        event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED ||
+        event.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED
+        ) {
+        lastActivityClass = event.className?.toString() ?: lastActivityClass
         }
 
         // Ignore our own app
@@ -441,7 +454,10 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun isFeatureEnabled(appName: String, feature: String): Boolean {
         val prefs = getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
-        return prefs.getBoolean("${appName}_${feature}", false)
+        val key = "${appName}_${feature}"
+        val value = prefs.getBoolean(key, false)
+        Log.d(TAG, "Feature check: $key=$value")
+        return value
     }
 
     private fun triggerBlockAction(reason: String, isFullBlock: Boolean = false) {

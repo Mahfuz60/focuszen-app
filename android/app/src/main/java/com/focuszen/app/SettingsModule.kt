@@ -1,5 +1,5 @@
 package com.focuszen.app
-
+import android.util.Log
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -11,7 +11,7 @@ import com.facebook.react.bridge.ReadableMap
 
 class SettingsModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
-
+    private val TAG = "FocusZenSettings"
     private val prefs: SharedPreferences =
         reactContext.getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
 
@@ -27,8 +27,10 @@ class SettingsModule(reactContext: ReactApplicationContext) :
             val key = featureKeys.nextKey()
             try {
                 if (features.getType(key) == com.facebook.react.bridge.ReadableType.Boolean) {
-                    val value = features.getBoolean(key)
-                    editor.putBoolean("${appName}_${key}", value)
+                   val value = features.getBoolean(key)
+                    val prefKey = "${appName}_${key}"
+                    Log.d(TAG, "Saving $prefKey=$value")
+                    editor.putBoolean(prefKey, value)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
