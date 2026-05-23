@@ -26,8 +26,8 @@ import {
 } from '../stores/useBodyCareStore';
 import {
   createBodyCareStyles,
-  ScreenPalette,
 } from '../styles/BodyCareScreen.styles';
+import { spacing } from '../theme/tokens';
 
 import { WaveProgress } from '../components/WaveProgress';
 import { HydrationAddModal } from '../components/HydrationAddModal';
@@ -35,7 +35,7 @@ import { HydrationAddModal } from '../components/HydrationAddModal';
 export function HydrationScreen() {
   const { mode, getPalette } = useAppTheme();
   const palette = useMemo(() => getPalette('bodyCare'), [getPalette]);
-  const styles = useMemo(() => createBodyCareStyles(palette), [palette]);
+  const styles = useMemo(() => createBodyCareStyles(palette, mode), [palette, mode]);
   const navigation = useNavigation<any>();
 
   const { waterEntries, waterGoalMl, logWater, updateGoal, lastVolumes, lastType } = useBodyCareStore();
@@ -43,7 +43,7 @@ export function HydrationScreen() {
   const [initialModalType, setInitialModalType] = useState<DrinkType>('Water');
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showAllEntries, setShowAllEntries] = useState(false);
-  const [tempGoal, setTempGoal] = useState(waterGoalMl.toString());
+  const [tempGoal, setTempGoal] = useState((waterGoalMl || 2500).toString());
   const animatedProgress = useRef(new Animated.Value(0)).current;
   const [visibleProgress, setVisibleProgress] = useState(0);
   const [nextReminder, setNextReminder] = useState({ time: '11:00 AM', diff: '45 min' });
@@ -64,7 +64,7 @@ export function HydrationScreen() {
       const diffMins = Math.round(diffMs / 60000);
       
       setNextReminder({
-        time: next.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        time: next.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         diff: diffMins >= 60 
           ? `In ${Math.floor(diffMins/60)}h ${diffMins%60}m` 
           : `In ${diffMins} min`
@@ -80,12 +80,12 @@ export function HydrationScreen() {
   const todayEntries = useMemo(() => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    return waterEntries.filter((entry) => new Date(entry.loggedAt) >= todayStart);
+    return (waterEntries || []).filter((entry) => entry && entry.loggedAt && new Date(entry.loggedAt) >= todayStart);
   }, [waterEntries]);
   const totalWaterToday = useMemo(() => computeTodayWater(waterEntries), [waterEntries]);
-  const progress = Math.min(totalWaterToday / Math.max(waterGoalMl, 1), 1);
+  const progress = Math.min((totalWaterToday || 0) / Math.max(waterGoalMl || 2500, 1), 1);
   const visibleEntries = showAllEntries ? todayEntries : todayEntries.slice(0, 5);
-  const visualProgress = Math.max(visibleProgress, 0.05);
+  const visualProgress = Math.max(Number.isFinite(visibleProgress) ? visibleProgress : 0, 0.05);
 
   useEffect(() => {
     const listenerId = animatedProgress.addListener(({ value }) => {
@@ -107,15 +107,16 @@ export function HydrationScreen() {
   const handleLogWater = (ml: number, type: DrinkType = 'Water') => {
     logWater(ml, type);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const goal = Math.max(waterGoalMl || 2500, 1);
     // Trigger progress animation
     Animated.sequence([
-      Animated.timing(animatedProgress, { toValue: progress + (ml / waterGoalMl), duration: 200, useNativeDriver: false }),
-      Animated.spring(animatedProgress, { toValue: (totalWaterToday + ml) / waterGoalMl, tension: 20, friction: 5, useNativeDriver: false })
+      Animated.timing(animatedProgress, { toValue: progress + (ml / goal), duration: 200, useNativeDriver: false }),
+      Animated.spring(animatedProgress, { toValue: ((totalWaterToday || 0) + ml) / goal, tension: 20, friction: 5, useNativeDriver: false })
     ]).start();
   };
 
   const openGoalModal = () => {
-    setTempGoal(waterGoalMl.toString());
+    setTempGoal((waterGoalMl || 2500).toString());
     setShowGoalModal(true);
   };
 
@@ -142,7 +143,7 @@ export function HydrationScreen() {
             </Pressable>
             <Text style={styles.topTitle}>Hydration</Text>
             <Pressable onPress={() => navigation.navigate('Insights')} style={styles.topIconButton}>
-              <Ionicons name="settings-outline" size={20} color={palette.text} />
+              <Ionicons name="stats-chart" size={20} color={palette.text} />
             </Pressable>
           </View>
 
@@ -159,7 +160,7 @@ export function HydrationScreen() {
                </View>
                <View>
                   <Text style={styles.goalLabel}>Daily goal</Text>
-                  <Text style={styles.goalValue}>{(waterGoalMl/1000).toFixed(1)} L</Text>
+                  <Text style={styles.goalValue}>{((waterGoalMl || 2500)/1000).toFixed(1)} L</Text>
                </View>
             </View>
             <Pressable onPress={openGoalModal} style={styles.editBtn}>
@@ -174,15 +175,15 @@ export function HydrationScreen() {
                <WaveProgress 
                   progress={visualProgress} 
                   size={280} 
-                  color={palette.blue} 
+                  color={palette.blue || '#3b82f6'} 
                   mode={mode}
                />
                <View style={styles.circleContent}>
                   <Text style={styles.currentIntake}>
-                    {((visibleProgress * waterGoalMl)/1000).toFixed(1)}<Text style={[styles.intakeUnit, { color: palette.blue }]}>L</Text>
+                    {(((Number.isFinite(visibleProgress) ? visibleProgress : 0) * (waterGoalMl || 2500))/1000).toFixed(1)}<Text style={[styles.intakeUnit, { color: palette.blue }]}>L</Text>
                   </Text>
-                  <Text style={styles.goalSuffix}>of {(waterGoalMl/1000).toFixed(1)} L</Text>
-                  <Text style={styles.percentText}>{Math.round(visibleProgress * 100)}% of daily goal</Text>
+                  <Text style={styles.goalSuffix}>of {((waterGoalMl || 2500)/1000).toFixed(1)} L</Text>
+                  <Text style={styles.percentText}>{Math.round((Number.isFinite(visibleProgress) ? visibleProgress : 0) * 100)}% of daily goal</Text>
                </View>
             </Pressable>
             
@@ -190,11 +191,11 @@ export function HydrationScreen() {
 
             <Pressable 
               onPress={() => {
-                const vol = lastVolumes?.[lastType] || 250;
-                handleLogWater(vol, lastType);
+                const vol = lastVolumes?.[lastType || 'Water'] || 250;
+                handleLogWater(vol, lastType || 'Water');
               }} 
               onLongPress={() => {
-                setInitialModalType(lastType);
+                setInitialModalType(lastType || 'Water');
                 setShowAddModal(true);
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               }}
@@ -202,7 +203,7 @@ export function HydrationScreen() {
               style={[styles.addDrinkBtn, { paddingHorizontal: 32 }]}
             >
                <Ionicons name="add-circle" size={24} color="#fff" />
-               <Text style={styles.addDrinkText}>Log {lastVolumes?.[lastType] || 250}ml {lastType}</Text>
+               <Text style={styles.addDrinkText}>Log {lastVolumes?.[lastType || 'Water'] || 250}ml {lastType || 'Water'}</Text>
             </Pressable>
           </View>
 
@@ -212,7 +213,7 @@ export function HydrationScreen() {
           <View style={styles.quickAddGrid}>
              {WATER_PRESETS_ML.map(ml => (
                <Pressable key={ml} style={styles.quickAddPressable} onPress={() => handleLogWater(ml)}>
-                <GradientBorderCard colors={['rgba(56, 189, 248, 0.35)', 'rgba(148, 163, 184, 0.1)']} containerStyle={styles.quickAddPressable} innerStyle={styles.quickAddBox}>
+                 <GradientBorderCard style={{ flex: 1 }} colors={['rgba(56, 189, 248, 0.35)', 'rgba(148, 163, 184, 0.1)']} innerStyle={styles.quickAddBox}>
                    <Ionicons name="pint-outline" size={24} color={palette.blue} />
                    <Text style={styles.quickAddVal}>{ml >= 1000 ? `${ml/1000}L` : `${ml}ml`}</Text>
                 </GradientBorderCard>
@@ -224,7 +225,12 @@ export function HydrationScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Drink Types</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            style={styles.horizontalScroll}
+            contentContainerStyle={{ paddingHorizontal: spacing.md }}
+          >
              {DRINK_TYPES.map(d => (
                <View key={d.type} style={styles.drinkTypeBox}>
                   <Pressable 
@@ -238,7 +244,7 @@ export function HydrationScreen() {
                       { 
                         backgroundColor: lastType === d.type ? `${d.color}25` : `${d.color}10`, 
                         borderWidth: 1.5, 
-                        borderColor: lastType === d.type ? d.color : 'transparent' 
+                        borderColor: lastType === d.type ? d.color : (mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)') 
                       }
                     ]}
                   >
@@ -257,24 +263,28 @@ export function HydrationScreen() {
 
           {/* Tips Cards */}
           <View style={styles.cardsRow}>
-             <GradientBorderCard colors={['rgba(56, 189, 248, 0.4)', 'rgba(148, 163, 184, 0.1)']} containerStyle={{ flex: 1 }} innerStyle={styles.tipCard}>
+             <View style={{ flex: 1 }}>
+               <GradientBorderCard style={{ flex: 1 }} colors={['rgba(56, 189, 248, 0.4)', 'rgba(148, 163, 184, 0.1)']} innerStyle={styles.tipCard}>
                 <View style={[styles.tipIcon, { backgroundColor: 'rgba(56, 189, 248, 0.1)' }]}>
                    <Ionicons name="notifications" size={18} color={palette.blue} />
                 </View>
                 <Text style={styles.tipTitle}>Next reminder</Text>
                 <Text style={styles.tipVal}>{nextReminder.diff}</Text>
                 <Text style={styles.tipSub}>{nextReminder.time}</Text>
-             </GradientBorderCard>
-             <GradientBorderCard colors={['rgba(16, 185, 129, 0.4)', 'rgba(148, 163, 184, 0.1)']} containerStyle={{ flex: 1 }} innerStyle={styles.tipCard}>
-                <View style={[styles.tipIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
-                   <Ionicons name="sparkles" size={18} color={palette.green} />
-                </View>
-                <Text style={styles.tipTitle}>You're doing great!</Text>
-                <Text style={styles.tipVal}>Keep it up</Text>
-                <View style={styles.tipMascot}>
-                   <Ionicons name="happy-outline" size={32} color={palette.blue} />
-                </View>
-             </GradientBorderCard>
+               </GradientBorderCard>
+             </View>
+             <View style={{ flex: 1 }}>
+               <GradientBorderCard style={{ flex: 1 }} colors={['rgba(16, 185, 129, 0.4)', 'rgba(148, 163, 184, 0.1)']} innerStyle={styles.tipCard}>
+                  <View style={[styles.tipIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+                     <Ionicons name="sparkles" size={18} color={palette.green} />
+                  </View>
+                  <Text style={styles.tipTitle}>You're doing great!</Text>
+                  <Text style={styles.tipVal}>Keep it up</Text>
+                  <View style={styles.tipMascot}>
+                     <Ionicons name="happy-outline" size={32} color={palette.blue} />
+                  </View>
+               </GradientBorderCard>
+             </View>
           </View>
 
           {/* Overview Grid */}

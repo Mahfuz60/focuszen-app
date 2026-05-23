@@ -54,7 +54,12 @@ export function PurifyScreen() {
   const styles = useMemo(() => createStyles(palette), [palette]);
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-  const tabBarHeight = useBottomTabBarHeight();
+  let tabBarHeight = 0;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch (e) {
+    tabBarHeight = 0;
+  }
 
   const purify = usePurifyStore((state) => state.purify);
   const startPurify = usePurifyStore((state) => state.startPurify);
@@ -219,7 +224,7 @@ export function PurifyScreen() {
                 onPress={() => navigation.navigate('Insights')}
                 style={styles.topIconButton}
               >
-                <Ionicons name="settings-outline" size={20} color={palette.text} />
+                <Ionicons name="stats-chart" size={20} color={palette.text} />
               </Pressable>
             </View>
           </View>

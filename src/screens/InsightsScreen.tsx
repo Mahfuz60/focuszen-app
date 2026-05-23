@@ -94,7 +94,7 @@ function formatHourWindow(hour: number | null) {
 export function InsightsScreen() {
   const { mode, getPalette } = useAppTheme();
   const palette = useMemo(() => getPalette('insights'), [getPalette]);
-  const styles = useMemo(() => createStyles(palette), [palette]);
+  const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<InsightTab>('overview');
@@ -570,33 +570,61 @@ export function InsightsScreen() {
             ))}
           </View>
           <View style={styles.timelineWrap}>
-             <Text style={styles.summaryLabel}>Live Streak</Text>
-             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                <Text style={styles.summaryValue}>{purifyStatus.currentStreakLabel || '0 day streak'}</Text>
-                <View style={{ backgroundColor: `${palette.purple}15`, padding: 8, borderRadius: 12 }}>
-                   <Ionicons name="rocket" size={20} color={palette.purple} />
-                </View>
+             <Text style={styles.summaryLabel}>Streak Progress Ring</Text>
+             
+             <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 16 }}>
+               <View style={{ width: 140, height: 140, alignItems: 'center', justifyContent: 'center' }}>
+                 <Svg width={140} height={140} viewBox="0 0 140 140" style={{ transform: [{ rotate: '-90deg' }] }}>
+                   <Defs>
+                     <SvgLinearGradient id="streakGrad" x1="0" y1="0" x2="1" y2="1">
+                       <Stop offset="0" stopColor="#8b5cf6" />
+                       <Stop offset="1" stopColor="#d946ef" />
+                     </SvgLinearGradient>
+                   </Defs>
+                   {/* Background Circle */}
+                   <Circle
+                     cx="70"
+                     cy="70"
+                     r="55"
+                     stroke={mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(139, 92, 246, 0.08)'}
+                     strokeWidth="8"
+                     fill="none"
+                   />
+                   {/* Active Progress Circle */}
+                   <Circle
+                     cx="70"
+                     cy="70"
+                     r="55"
+                     stroke="url(#streakGrad)"
+                     strokeWidth="8"
+                     fill="none"
+                     strokeDasharray={`${2 * Math.PI * 55}`}
+                     strokeDashoffset={`${2 * Math.PI * 55 * (1 - getPurifyRingProgress(purifyStatus.currentStreakDays))}`}
+                     strokeLinecap="round"
+                   />
+                 </Svg>
+                 <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
+                   <Text style={{ fontSize: 32, fontWeight: '900', color: palette.purple }}>
+                     {purifyStatus.currentStreakDays}
+                   </Text>
+                   <Text style={{ fontSize: 9, fontWeight: '900', color: mode === 'dark' ? '#cbd5e1' : '#475569', letterSpacing: 1, textTransform: 'uppercase', marginTop: 2 }}>
+                     Day Streak
+                   </Text>
+                 </View>
+               </View>
              </View>
 
-             <View style={{ marginTop: 24 }}>
-                <View style={[styles.timelineRow, { height: 12, backgroundColor: palette.stroke + (mode === 'dark' ? '15' : '30'), overflow: 'hidden' }]}>
-                   <View style={{ 
-                     position: 'absolute', 
-                     left: 0, 
-                     top: 0, 
-                     bottom: 0, 
-                     width: `${Math.max(2, getPurifyRingProgress(purifyStatus.currentStreakDays) * 100)}%`, 
-                     backgroundColor: palette.purple,
-                     borderRadius: 6,
-                     shadowColor: palette.purple,
-                     shadowOpacity: 0.6,
-                     shadowRadius: 12,
-                     elevation: 5
-                   }} />
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
-                  <Text style={styles.timelineText}>{purifyStatus.stageProgressText}</Text>
-                  <Text style={styles.timelineText}>{purifyStatus.nextMilestoneLabel}</Text>
+             <View style={{ marginTop: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.02)' : '#f8fafc', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16, borderWidth: 1.5, borderColor: mode === 'dark' ? '#334155' : '#cbd5e1' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#8b5cf6' }} />
+                    <Text style={{ fontSize: 12, fontWeight: '800', color: mode === 'dark' ? '#cbd5e1' : '#475569' }}>
+                      {purifyStatus.stageProgressText}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 11, fontWeight: '900', color: palette.purple, textTransform: 'uppercase' }}>
+                    {purifyStatus.nextMilestoneLabel}
+                  </Text>
                 </View>
              </View>
           </View>
@@ -667,14 +695,44 @@ export function InsightsScreen() {
               {data.map((bucket, i) => {
                 const val = (bucket as any)[selectedWellnessMetric];
                 const heightPercent = (val / maxVal) * 100;
-                const activeMetricColor = metrics.find(m => m.id === selectedWellnessMetric)?.color || palette.green;
+                const showLabel = data.length <= 7 || i === 0 || i === data.length - 1 || i % Math.ceil(data.length / 5) === 0;
+
+                const formatBarValue = (v: number) => {
+                  if (v === 0) return '';
+                  if (selectedWellnessMetric === 'water') {
+                    return v >= 1000 ? `${(v / 1000).toFixed(1)}L` : `${v}`;
+                  }
+                  return `${v}m`;
+                };
 
                 return (
                   <View key={bucket.key} style={styles.wellnessCol}>
+                    <Text style={styles.wellnessBarValue} numberOfLines={1}>
+                      {formatBarValue(val)}
+                    </Text>
                     <View style={styles.barTrack}>
-                       <View style={[styles.barFill, { height: `${Math.max(4, heightPercent)}%`, backgroundColor: activeMetricColor }]} />
+                      {heightPercent > 0 && (
+                        <LinearGradient
+                          colors={
+                            selectedWellnessMetric === 'water'
+                              ? ['#38bdf8', '#0284c7']
+                              : selectedWellnessMetric === 'breathe'
+                                ? ['#c084fc', '#7c3aed']
+                                : ['#34d399', '#059669']
+                          }
+                          style={[styles.barFill, { height: `${heightPercent}%` }]}
+                        />
+                      )}
                     </View>
-                    <Text style={styles.barLabel}>{bucket.shortLabel}</Text>
+                    <Text 
+                      style={[
+                        styles.barLabel, 
+                        { opacity: showLabel ? 1 : 0 }
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {bucket.shortLabel}
+                    </Text>
                   </View>
                 );
               })}

@@ -74,7 +74,7 @@ class SettingsModule(reactContext: ReactApplicationContext) :
         prefs.edit()
             .putBoolean("adultContentBlock", adultContentBlock)
             .putBoolean("gamblingBlock", gamblingBlock)
-            .apply()
+            .commit()
     }
 
     @ReactMethod
@@ -84,7 +84,7 @@ class SettingsModule(reactContext: ReactApplicationContext) :
             if (i > 0) sb.append(",")
             sb.append(domains.getString(i))
         }
-        prefs.edit().putString("custom_blocked_domains", sb.toString()).apply()
+        prefs.edit().putString("custom_blocked_domains", sb.toString()).commit()
     }
 
     // NEW: Check if accessibility service is enabled

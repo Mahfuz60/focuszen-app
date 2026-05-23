@@ -2,6 +2,7 @@ import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { HomeScreen } from '../screens/HomeScreen';
 import { FocusScreen } from '../screens/FocusScreen';
 import { DailyPlannerScreen } from '../screens/DailyPlannerScreen';
@@ -33,58 +34,12 @@ const tabIcons: Record<
 };
 
 const tabAccentPalettes = {
-  Home: {
-    activeIcon: '#1fa55b',
-    activeBg: 'rgba(31, 165, 91, 0.12)',
-    activeBorder: 'rgba(31, 165, 91, 0.18)',
-    activeGlow: 'rgba(31, 165, 91, 0.14)',
-  },
-  Control: {
-    activeIcon: '#10b981',
-    activeBg: 'rgba(16, 185, 129, 0.12)',
-    activeBorder: 'rgba(16, 185, 129, 0.18)',
-    activeGlow: 'rgba(16, 185, 129, 0.14)',
-  },
-  Focus: {
-    activeIcon: '#059669',
-    activeBg: 'rgba(5, 150, 105, 0.12)',
-    activeBorder: 'rgba(5, 150, 105, 0.18)',
-    activeGlow: 'rgba(5, 150, 105, 0.14)',
-  },
-  Purify: {
-    activeIcon: '#8b5cf6',
-    activeBg: 'rgba(139, 92, 246, 0.12)',
-    activeBorder: 'rgba(139, 92, 246, 0.18)',
-    activeGlow: 'rgba(139, 92, 246, 0.14)',
-  },
-  Planner: {
-    activeIcon: '#3b82f6',
-    activeBg: 'rgba(59, 130, 246, 0.12)',
-    activeBorder: 'rgba(59, 130, 246, 0.18)',
-    activeGlow: 'rgba(59, 130, 246, 0.14)',
-  },
+  Home: { activeIcon: '#10b981' },
+  Control: { activeIcon: '#06b6d4' },
+  Focus: { activeIcon: '#f59e0b' },
+  Purify: { activeIcon: '#8b5cf6' },
+  Planner: { activeIcon: '#3b82f6' },
 } as const;
-
-function MultilineTabLabel({
-  color,
-  text,
-  focused,
-}: {
-  color: string;
-  text: string;
-  focused: boolean;
-}) {
-  return (
-    <Text 
-      style={[
-        styles.multilineLabel, 
-        { color, opacity: focused ? 1 : 0.7, transform: [{ translateY: focused ? -1 : 0 }] }
-      ]}
-    >
-      {text}
-    </Text>
-  );
-}
 
 export function MainTabs() {
   const { colors, mode } = useAppTheme();
@@ -99,25 +54,34 @@ export function MainTabs() {
         return {
           headerShown: false,
           tabBarActiveTintColor: accent.activeIcon,
-          tabBarInactiveTintColor: isDark ? '#94a3b8' : colors.textMuted,
+          tabBarInactiveTintColor: isDark ? '#64748b' : '#94a3b8',
           tabBarStyle: {
-            backgroundColor: isDark ? '#111d17' : '#ffffff',
+            backgroundColor: 'transparent',
             borderTopWidth: 0,
-            height: 84,
-            paddingBottom: 24,
+            height: 80,
+            paddingBottom: 20,
             paddingTop: 12,
             marginHorizontal: 16,
             marginBottom: 16,
-            borderRadius: 32,
+            borderRadius: 24,
             position: 'absolute',
             shadowColor: '#000',
-            shadowOpacity: isDark ? 0.4 : 0.08,
+            shadowOpacity: isDark ? 0.3 : 0.06,
             shadowRadius: 16,
-            shadowOffset: { width: 0, height: 8 },
-            elevation: 10,
-            borderWidth: 1,
-            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 8,
+            borderWidth: 1.5,
+            borderColor: isDark ? 'rgba(99, 102, 241, 0.25)' : 'rgba(99, 102, 241, 0.12)',
+            overflow: 'hidden',
           },
+          tabBarBackground: () => (
+            <LinearGradient
+              colors={isDark ? ['#1e1b4b', '#070a13'] : ['#ffffff', '#e0e7ff']}
+              style={[StyleSheet.absoluteFillObject, { borderRadius: 24 }]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+          ),
           tabBarItemStyle: {
             height: 60,
           },
@@ -125,18 +89,25 @@ export function MainTabs() {
             fontSize: 10,
             fontFamily: fontFamily.black,
             marginTop: 2,
-            textTransform: 'uppercase',
           },
           tabBarIcon: ({ color, focused }) => (
-            <View
-              style={[
-                styles.tabBarIconShell,
-                {
-                  backgroundColor: focused ? accent.activeBg : 'transparent',
-                  borderColor: focused ? accent.activeBorder : 'transparent',
-                }
-              ]}
-            >
+            <View style={styles.tabBarIconShell}>
+              {focused && (
+                <View 
+                  style={{
+                    position: 'absolute',
+                    top: -12,
+                    width: 24,
+                    height: 3,
+                    borderRadius: 1.5,
+                    backgroundColor: accent.activeIcon,
+                    shadowColor: accent.activeIcon,
+                    shadowOpacity: 0.8,
+                    shadowRadius: 4,
+                    elevation: 3,
+                  }} 
+                />
+              )}
               <Ionicons
                 name={focused ? tabIcons[routeName].active : tabIcons[routeName].inactive}
                 color={focused ? accent.activeIcon : color}
@@ -152,7 +123,7 @@ export function MainTabs() {
         component={HomeScreen} 
         options={{
           tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>HOME</Text>
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.8 }]}>Home</Text>
           ),
         }}
       />
@@ -161,7 +132,7 @@ export function MainTabs() {
         component={ControlScreen}
         options={{
           tabBarLabel: ({ color, focused }) => (
-            <MultilineTabLabel color={color} text={'APP\nCONTROL'} focused={focused} />
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.8 }]}>Control</Text>
           ),
         }}
       />
@@ -170,7 +141,7 @@ export function MainTabs() {
         component={FocusScreen} 
         options={{
           tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>FOCUS</Text>
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.8 }]}>Focus</Text>
           ),
         }}
       />
@@ -179,7 +150,7 @@ export function MainTabs() {
         component={PurifyScreen} 
         options={{
           tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>PURIFY</Text>
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.8 }]}>Purify</Text>
           ),
         }}
       />
@@ -188,7 +159,7 @@ export function MainTabs() {
         component={DailyPlannerScreen} 
         options={{
           tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.7 }]}>PLANNER</Text>
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.8 }]}>Planner</Text>
           ),
         }}
       />
@@ -200,25 +171,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     fontFamily: fontFamily.black,
-    letterSpacing: 0,
+    letterSpacing: 0.2,
     marginTop: 2,
     textAlign: 'center',
   },
-  multilineLabel: {
-    fontSize: 9,
-    fontFamily: fontFamily.black,
-    letterSpacing: 0,
-    marginTop: 1,
-    lineHeight: 10,
-    textAlign: 'center',
-  },
   tabBarIconShell: {
-    width: 44,
-    height: 30,
-    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    marginBottom: 2,
+    marginBottom: 4,
   },
 });

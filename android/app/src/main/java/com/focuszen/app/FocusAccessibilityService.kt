@@ -11,6 +11,15 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
+import android.graphics.Color
+import android.graphics.PixelFormat
+import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
+import android.widget.FrameLayout
+import android.app.PendingIntent
+import android.content.Intent
+import android.net.Uri
 
 class FocusAccessibilityService : AccessibilityService() {
 
@@ -18,8 +27,11 @@ class FocusAccessibilityService : AccessibilityService() {
     private var lastActivityClass: String = ""
     private var lastBlockedAt: Long = 0L
     private var lastTreeScanAt: Long = 0L
-    private val BLOCK_COOLDOWN_MS = 1200L // prevent rapid back-loop
-  private val SCAN_COOLDOWN_MS = 80L // throttle deep view hierarchy scans
+    private val BLOCK_COOLDOWN_MS = 400L // Reduced for instant StayFree-style reaction
+    private val SCAN_COOLDOWN_MS = 60L // Faster scanning for smoothness
+
+    private var blackoutView: View? = null
+    private var isBlackoutActive = false
 
     // ─── Event Handler ───────────────────────────────────────────────────────
     
@@ -64,11 +76,25 @@ class FocusAccessibilityService : AccessibilityService() {
 
         val prefs = getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
 
+        // ── Check Strict Mode ───────────────────────────────────────────────
+        if (prefs.getBoolean("strict_mode", false)) {
+            if (packageName == "com.android.settings" || packageName == "com.miui.securitycenter") {
+                val rootNodeCheck = rootInActiveWindow ?: event.source
+                if (hasNodeByText(rootNodeCheck, "Accessibility") ||
+                    hasNodeByText(rootNodeCheck, "FocusZen") ||
+                    hasNodeByText(rootNodeCheck, "Device admin")
+                ) {
+                    triggerBlockAction("Strict mode active - Settings blocked", isFullBlock = true, appName = "Settings")
+                    return
+                }
+            }
+        }
+
         // ── Check Generic Full App Block ─────────────────────────────────────
         val appName = PACKAGE_MAP[packageName]
         if (appName != null) {
             if (isFeatureEnabled(appName, "blockApp")) {
-                triggerBlockAction("$appName is blocked", isFullBlock = true)
+                triggerBlockAction("$appName is blocked", isFullBlock = true, appName = appName)
                 return
             }
         }
@@ -108,7 +134,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleYouTube(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("YouTube", "blockApp")) {
-            triggerBlockAction("YouTube is blocked", true); return
+            triggerBlockAction("YouTube is blocked", true, "YouTube"); return
         }
 
         // Block Shorts — check highly specific accessibility content descriptions inside the player
@@ -145,7 +171,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleFacebook(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Facebook", "blockApp")) {
-            triggerBlockAction("Facebook is blocked", true); return
+            triggerBlockAction("Facebook is blocked", true, "Facebook"); return
         }
 
         // Block Reels — must be in a Reels-specific context
@@ -180,7 +206,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleInstagram(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Instagram", "blockApp")) {
-            triggerBlockAction("Instagram is blocked", true); return
+            triggerBlockAction("Instagram is blocked", true, "Instagram"); return
         }
 
         if (isFeatureEnabled("Instagram", "blockReels")) {
@@ -211,7 +237,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleTikTok(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("TikTok", "blockApp")) {
-            triggerBlockAction("TikTok is blocked", true); return
+            triggerBlockAction("TikTok is blocked", true, "TikTok"); return
         }
 
         if (isFeatureEnabled("TikTok", "blockReels")) {
@@ -236,7 +262,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleSnapchat(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Snapchat", "blockApp")) {
-            triggerBlockAction("Snapchat is blocked", true); return
+            triggerBlockAction("Snapchat is blocked", true, "Snapchat"); return
         }
 
         if (isFeatureEnabled("Snapchat", "blockSpotlight")) {
@@ -253,7 +279,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleWhatsApp(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("WhatsApp", "blockApp")) {
-            triggerBlockAction("WhatsApp is blocked", true); return
+            triggerBlockAction("WhatsApp is blocked", true, "WhatsApp"); return
         }
 
         if (isFeatureEnabled("WhatsApp", "blockStatus")) {
@@ -269,7 +295,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleX(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("X", "blockApp")) {
-            triggerBlockAction("X is blocked", true); return
+            triggerBlockAction("X is blocked", true, "X"); return
         }
 
         if (isFeatureEnabled("X", "blockExplore")) {
@@ -280,7 +306,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleTelegram(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Telegram", "blockApp")) {
-            triggerBlockAction("Telegram is blocked", true); return
+            triggerBlockAction("Telegram is blocked", true, "Telegram"); return
         }
 
         if (isFeatureEnabled("Telegram", "blockChannels")) {
@@ -291,7 +317,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleMessenger(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Messenger", "blockApp")) {
-            triggerBlockAction("Messenger is blocked", true); return
+            triggerBlockAction("Messenger is blocked", true, "Messenger"); return
         }
 
         if (isFeatureEnabled("Messenger", "blockStories")) {
@@ -302,7 +328,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
     private fun handleLine(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("Line", "blockApp")) {
-            triggerBlockAction("Line is blocked", true); return
+            triggerBlockAction("Line is blocked", true, "Line"); return
         }
 
         if (isFeatureEnabled("Line", "blockVoom")) {
@@ -326,11 +352,11 @@ class FocusAccessibilityService : AccessibilityService() {
 
         when {
             adultBlock && isAdultSite(urlText) ->
-                triggerBlockAction("Adult content blocked", isFullBlock = false)
+                triggerBlockAction("Adult content blocked", isFullBlock = true, appName = "Website")
             gamblingBlock && isGamblingSite(urlText) ->
-                triggerBlockAction("Gambling site blocked", isFullBlock = false)
+                triggerBlockAction("Gambling site blocked", isFullBlock = true, appName = "Website")
             customDomains.isNotEmpty() && isCustomBlocked(urlText, customDomains) ->
-                triggerBlockAction("Site blocked by FocusZen", isFullBlock = false)
+                triggerBlockAction("Site blocked by FocusZen", isFullBlock = true, appName = "Website")
         }
     }
 
@@ -460,7 +486,7 @@ class FocusAccessibilityService : AccessibilityService() {
         return value
     }
 
-    private fun triggerBlockAction(reason: String, isFullBlock: Boolean = false) {
+    private fun triggerBlockAction(reason: String, isFullBlock: Boolean = false, appName: String? = null) {
         val now = System.currentTimeMillis()
         if (now - lastBlockedAt < BLOCK_COOLDOWN_MS) return // cooldown
         lastBlockedAt = now
@@ -483,19 +509,106 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFullBlock) {
-            val success = performGlobalAction(GLOBAL_ACTION_HOME)
-            if (!success) {
-                // Fallback for strict OS environments (MIUI, ColorOS)
-                try {
-                    val homeIntent = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
-                        addCategory(android.content.Intent.CATEGORY_HOME)
-                        flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    startActivity(homeIntent)
-                } catch (e: Exception) {}
+            try {
+                // 1. Send the blocked app away first so enforcement works even if activity launch is restricted.
+                sendHome()
+
+                // 2. Draw Native Blackout Overlay instantly to hide the distracting app
+                showBlackoutOverlay()
+
+                // 3. Launch the React Native Block Screen using an Explicit PendingIntent
+                // This bypasses Background Activity Start restrictions on most Android devices.
+                val blockIntent = Intent(this, MainActivity::class.java).apply {
+                    action = Intent.ACTION_VIEW
+                    data = Uri.parse("focuszen://blocked/${appName ?: "App"}")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                
+                val pendingIntent = PendingIntent.getActivity(
+                    this,
+                    0,
+                    blockIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                
+                pendingIntent.send()
+
+                // 4. Remove the blackout overlay after the React Native app has had time to load
+                Handler(Looper.getMainLooper()).postDelayed({
+                    removeBlackoutOverlay()
+                }, 1200) // Slightly faster transition
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Block Intent failed: ${e.message}")
+                removeBlackoutOverlay()
+                // Absolute Fallback: Go to Home Screen
+                sendHome()
             }
         } else {
             performGlobalAction(GLOBAL_ACTION_BACK)
+        }
+    }
+
+    private fun sendHome() {
+        val success = performGlobalAction(GLOBAL_ACTION_HOME)
+        if (!success) {
+            try {
+                val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_HOME)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                startActivity(homeIntent)
+            } catch (e: Exception) {}
+        }
+    }
+
+    private fun showBlackoutOverlay() {
+        if (isBlackoutActive) return
+        Handler(Looper.getMainLooper()).post {
+            try {
+                val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                blackoutView = FrameLayout(this).apply {
+                    setBackgroundColor(Color.parseColor("#0f172a")) // Slate 900 (FocusZen Dark Theme)
+                }
+
+                val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.MATCH_PARENT,
+                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    gravity = Gravity.CENTER
+                    // Ensure the overlay is truly full screen and covers everything (status bar, etc.)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    }
+                }
+
+                windowManager.addView(blackoutView, params)
+                isBlackoutActive = true
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to show blackout overlay: ${e.message}")
+            }
+        }
+    }
+
+    private fun removeBlackoutOverlay() {
+        if (!isBlackoutActive || blackoutView == null) return
+        Handler(Looper.getMainLooper()).post {
+            try {
+                val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                windowManager.removeView(blackoutView)
+                blackoutView = null
+                isBlackoutActive = false
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to remove blackout overlay: ${e.message}")
+            }
         }
     }
 

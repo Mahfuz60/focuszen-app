@@ -1,3 +1,4 @@
+import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -36,9 +37,15 @@ export const useSettingsStore = create<SettingsState>()(
           privacy: { ...state.privacy, permissionsSetupCompleted: true },
         })),
       toggleStrictMode: () =>
-        set((state) => ({
-          settings: { ...state.settings, strictModeEnabled: !state.settings.strictModeEnabled },
-        })),
+        set((state) => {
+          const nextVal = !state.settings.strictModeEnabled;
+          if (NativeModules.FocusZenSettings?.setStrictMode) {
+             NativeModules.FocusZenSettings.setStrictMode(nextVal);
+          }
+          return {
+            settings: { ...state.settings, strictModeEnabled: nextVal },
+          };
+        }),
       toggleNotifications: () =>
         set((state) => ({
           privacy: { ...state.privacy, notificationsEnabled: !state.privacy.notificationsEnabled },
@@ -55,6 +62,9 @@ export const useSettingsStore = create<SettingsState>()(
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
+        if (state && NativeModules.FocusZenSettings?.setStrictMode) {
+          NativeModules.FocusZenSettings.setStrictMode(state.settings.strictModeEnabled);
+        }
       },
     }
   )

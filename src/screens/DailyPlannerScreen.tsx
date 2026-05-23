@@ -50,7 +50,13 @@ import { FocusCompleteModal } from '../components/FocusCompleteModal';
 export function DailyPlannerScreen() {
   const { mode, getPalette } = useAppTheme();
   const palette = useMemo(() => getPalette('dailyPlanner'), [getPalette]);
-  const tabBarHeight = useBottomTabBarHeight();
+  let tabBarHeight = 0;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch (e) {
+    // tab bar not loaded or screen rendered outside tab context
+    tabBarHeight = 0;
+  }
   const navigation = useNavigation<any>();
   const selectedDate = usePlannerStore((state) => state.selectedDate);
   const tasks = usePlannerStore((state) => state.tasks);
@@ -248,7 +254,7 @@ export function DailyPlannerScreen() {
                 onPress={() => navigation.navigate('Insights')}
                 style={styles.topIconButton}
               >
-                <Ionicons name="settings-outline" size={18} color={palette.text} />
+                <Ionicons name="stats-chart" size={18} color={palette.text} />
               </Pressable>
             </View>
 
@@ -268,62 +274,73 @@ export function DailyPlannerScreen() {
 
               {activeSession ? (
                 <View style={styles.liveFocusCard}>
-                  <View style={styles.liveFocusRing}>
-                     <Svg width={64} height={64} viewBox="0 0 64 64">
-                       <Circle cx="32" cy="32" r="28" stroke={mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} strokeWidth="4" fill="none" />
-                       <Circle 
-                        cx="32" cy="32" r="28" 
-                        stroke="#10b981" 
-                        strokeWidth="4" 
-                        fill="none" 
-                        strokeDasharray={2 * Math.PI * 28}
-                        strokeDashoffset={2 * Math.PI * 28 * (1 - activeSession.remainingSeconds / (activeSession.presetMinutes * 60 || 1))}
-                        strokeLinecap="round"
-                        transform="rotate(-90 32 32)"
-                       />
-                     </Svg>
-                     <View style={{ position: 'absolute' }}>
-                        <Ionicons 
-                          name={activeTask ? (getCategoryStyles(palette)[activeTask.category]?.icon || 'flash') : 'flash'} 
-                          size={24} 
-                          color="#10b981" 
-                        />
-                     </View>
-                  </View>
-
-                  <View style={styles.liveFocusCopy}>
-                    <View style={styles.liveFocusChip}>
-                      <Text style={styles.liveFocusChipText}>FOCUSING NOW</Text>
+                  {/* Top Row: Circular Ring and Title Info */}
+                  <View style={styles.liveFocusTopRow}>
+                    <View style={styles.liveFocusRing}>
+                       <Svg width={54} height={54} viewBox="0 0 64 64">
+                         <Circle cx="32" cy="32" r="28" stroke={mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} strokeWidth="4" fill="none" />
+                         <Circle 
+                          cx="32" cy="32" r="28" 
+                          stroke="#10b981" 
+                          strokeWidth="4" 
+                          fill="none" 
+                          strokeDasharray={2 * Math.PI * 28}
+                          strokeDashoffset={2 * Math.PI * 28 * (1 - activeSession.remainingSeconds / (activeSession.presetMinutes * 60 || 1))}
+                          strokeLinecap="round"
+                          transform="rotate(-90 32 32)"
+                         />
+                       </Svg>
+                       <View style={{ position: 'absolute' }}>
+                          <Ionicons 
+                            name={activeTask ? (getCategoryStyles(palette)[activeTask.category]?.icon || 'flash') : 'flash'} 
+                            size={20} 
+                            color="#10b981" 
+                          />
+                       </View>
                     </View>
-                    <Text style={styles.liveFocusTitle}>{activeTask?.title || 'Focus Session'}</Text>
-                    <View style={styles.liveFocusMeta}>
-                      <Ionicons name="time-outline" size={14} color={palette.textMuted} />
-                      <Text style={styles.liveFocusMetaText}>
-                        {activeTask ? `${activeTask.startTime} • ${activeTask.durationMinutes} min` : 'Custom focus'}
+
+                    <View style={styles.liveFocusCopy}>
+                      <View style={styles.liveFocusChip}>
+                        <Text style={styles.liveFocusChipText}>FOCUSING NOW</Text>
+                      </View>
+                      <Text style={styles.liveFocusTitle} numberOfLines={1} ellipsizeMode="tail">
+                        {activeTask?.title || 'Focus Session'}
                       </Text>
+                      <View style={styles.liveFocusMeta}>
+                        <Ionicons name="time-outline" size={14} color={palette.textMuted} />
+                        <Text style={styles.liveFocusMetaText}>
+                          {activeTask ? `${activeTask.startTime} • ${activeTask.durationMinutes} min` : 'Custom focus'}
+                        </Text>
+                      </View>
                     </View>
                   </View>
 
-                  <View style={styles.liveFocusTimerWrap}>
-                    <Text style={styles.liveFocusRemaining}>
-                      {formatCountdown(activeSession.remainingSeconds)}
-                    </Text>
-                    <Text style={styles.liveFocusRemainingLabel}>remaining</Text>
-                  </View>
+                  {/* Elegant Divider */}
+                  <View style={styles.liveFocusDivider} />
 
-                  <Pressable
-                    onPress={activeSession.paused ? resumeSession : pauseSession}
-                    style={styles.liveFocusButton}
-                  >
-                    <Ionicons 
-                      name={activeSession.paused ? 'play-outline' : 'pause-outline'} 
-                      size={20} 
-                      color="#10b981" 
-                    />
-                    <Text style={styles.liveFocusButtonText}>
-                      {activeSession.paused ? 'Resume' : 'Pause'}
-                    </Text>
-                  </Pressable>
+                  {/* Bottom Row: Remaining Time and Action Buttons */}
+                  <View style={styles.liveFocusBottomRow}>
+                    <View style={styles.liveFocusTimerWrap}>
+                      <Text style={styles.liveFocusRemaining}>
+                        {formatCountdown(activeSession.remainingSeconds)}
+                      </Text>
+                      <Text style={styles.liveFocusRemainingLabel}>remaining</Text>
+                    </View>
+
+                    <Pressable
+                      onPress={activeSession.paused ? resumeSession : pauseSession}
+                      style={styles.liveFocusButton}
+                    >
+                      <Ionicons 
+                        name={activeSession.paused ? 'play' : 'pause'} 
+                        size={16} 
+                        color="#10b981" 
+                      />
+                      <Text style={styles.liveFocusButtonText}>
+                        {activeSession.paused ? 'Resume' : 'Pause'}
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               ) : null}
 
@@ -558,7 +575,7 @@ export function DailyPlannerScreen() {
                     <View style={styles.actionsGrid}>
                       <PlannerQuickAction
                         icon={task.completed ? 'refresh-outline' : 'checkmark-done-outline'}
-                        label={task.completed ? 'Undo' : 'Complete'}
+                        label={task.completed ? 'Undo' : 'Done'}
                         tone="success"
                         onPress={() => toggleTaskCompleted(task.id)}
                         palette={palette}
@@ -568,7 +585,7 @@ export function DailyPlannerScreen() {
                         <>
                           <PlannerQuickAction
                             icon="play-outline"
-                            label="Start focus"
+                            label="Focus"
                             tone="primary"
                             onPress={() => handleStartFocus(task)}
                             palette={palette}
@@ -641,20 +658,20 @@ function PlannerQuickAction({
         styles.quickAction,
         isDanger ? styles.quickActionDanger : 
         isSuccess ? styles.quickActionSuccess : 
-        isPrimary ? styles.quickActionPrimary : null,
+        isPrimary ? styles.quickActionPrimary : styles.quickActionDefault,
       ]}
     >
       <Ionicons
         name={icon}
-        size={16}
-        color={isDanger ? palette.red : isSuccess ? palette.green : isPrimary ? palette.blue : palette.text}
+        size={14}
+        color={isDanger ? '#ef4444' : isSuccess ? '#10b981' : isPrimary ? '#0284c7' : '#64748b'}
       />
       <Text
+        numberOfLines={1}
+        ellipsizeMode="tail"
         style={[
           styles.quickActionLabel,
-          isDanger ? { color: palette.red } : 
-          isSuccess ? { color: palette.green } : 
-          isPrimary ? { color: palette.blue } : null,
+          { color: isDanger ? '#ef4444' : isSuccess ? '#10b981' : isPrimary ? '#0284c7' : '#64748b' }
         ]}
       >
         {label}

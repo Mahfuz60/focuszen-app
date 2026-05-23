@@ -45,7 +45,12 @@ export function FocusScreen() {
   const defaultFocusMinutes = 30;
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-  const tabBarHeight = useBottomTabBarHeight();
+  let tabBarHeight = 0;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch (e) {
+    tabBarHeight = 0;
+  }
   const activeSession = useFocusStore((state) => state.activeSession);
   const sessions = useFocusStore((state) => state.sessions);
   const selectedPreset = useFocusStore((state) => state.selectedPreset);
@@ -242,7 +247,7 @@ export function FocusScreen() {
               </Text>
             </View>
             <Pressable onPress={() => navigation.navigate('Insights')} style={styles.backButton}>
-              <Ionicons name="settings-outline" size={20} color={palette.text} />
+              <Ionicons name="stats-chart" size={20} color={palette.text} />
             </Pressable>
           </View>
 

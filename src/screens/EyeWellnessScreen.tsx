@@ -65,12 +65,7 @@ export function EyeWellnessScreen() {
 
   // Next break logic (20 min interval)
   const [nextBreakSeconds, setNextBreakSeconds] = useState(1200); // 20 min
-  useEffect(() => {
-    const int = setInterval(() => {
-      setNextBreakSeconds((prev) => (prev <= 0 ? 1200 : prev - 1));
-    }, 1000);
-    return () => clearInterval(int);
-  }, []);
+  const [isBreakTimerRunning, setIsBreakTimerRunning] = useState(false);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -98,6 +93,21 @@ export function EyeWellnessScreen() {
       });
     }, 1000);
   };
+
+  useEffect(() => {
+    if (!isBreakTimerRunning) return;
+    const int = setInterval(() => {
+      setNextBreakSeconds((prev) => {
+        if (prev <= 1) {
+          setIsBreakTimerRunning(false);
+          startExercise(EYE_EXERCISES[0]);
+          return 1200;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(int);
+  }, [isBreakTimerRunning]);
 
   const todayLogs = useMemo(() => {
     const todayStart = new Date();
@@ -169,11 +179,29 @@ export function EyeWellnessScreen() {
              </View>
 
              <View style={styles.startBtnWrap}>
-                <Pressable onPress={() => startExercise(EYE_EXERCISES[0])} style={styles.startBtn}>
-                   <Ionicons name="play" size={40} color="#000" style={{ marginLeft: 6 }} />
-                   <Text style={styles.startBtnText}>START</Text>
+                <Pressable 
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setIsBreakTimerRunning(prev => !prev);
+                  }} 
+                  style={[
+                    styles.startBtn,
+                    isBreakTimerRunning && { backgroundColor: '#ef4444' }
+                  ]}
+                >
+                   <Ionicons 
+                     name={isBreakTimerRunning ? "pause" : "play"} 
+                     size={40} 
+                     color={isBreakTimerRunning ? "#fff" : "#000"} 
+                     style={!isBreakTimerRunning && { marginLeft: 6 }} 
+                   />
+                   <Text style={[styles.startBtnText, isBreakTimerRunning && { color: '#fff' }]}>
+                     {isBreakTimerRunning ? "PAUSE" : "START"}
+                   </Text>
                 </Pressable>
-                <Text style={styles.annotationText}>Start your eye care{"\n"}session now</Text>
+                <Text style={styles.annotationText}>
+                  {isBreakTimerRunning ? "Break timer running" : "Start your eye care\nsession now"}
+                </Text>
              </View>
           </View>
 
@@ -218,27 +246,33 @@ export function EyeWellnessScreen() {
           <View style={styles.sectionHeader}>
              <Text style={styles.sectionTitle}>Recommended Exercises</Text>
           </View>
-          <GradientBorderCard colors={['rgba(56, 189, 248, 0.35)', 'rgba(148, 163, 184, 0.1)']} innerStyle={styles.listCard}>
-             {EYE_EXERCISES.map((ex, idx) => (
-               <Pressable 
-                 key={ex.id} 
-                 onPress={() => startExercise(ex)}
-                 style={[styles.listItem, idx === EYE_EXERCISES.length - 1 && styles.listItemNoBorder]}
-               >
-                  <View style={[styles.listIconWrap, { backgroundColor: `${ex.color}20` }]}>
-                     <Ionicons name={ex.icon as any} size={24} color={ex.color} />
-                  </View>
-                  <View style={styles.listContent}>
-                     <Text style={styles.listTitle}>{ex.title}</Text>
-                     <Text style={styles.listSub}>{ex.desc}</Text>
-                  </View>
-                  <View style={styles.listBadge}>
-                     <Text style={styles.listBadgeText}>{ex.duration}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={palette.textDim} />
-               </Pressable>
+          <View style={{ marginBottom: 18 }}>
+             {EYE_EXERCISES.map((ex) => (
+                <GradientBorderCard 
+                  key={ex.id}
+                  style={{ marginBottom: 12 }}
+                  colors={['rgba(56, 189, 248, 0.35)', 'rgba(148, 163, 184, 0.1)']} 
+                  innerStyle={styles.exerciseCard}
+                >
+                   <Pressable 
+                     onPress={() => startExercise(ex)}
+                     style={styles.listItem}
+                   >
+                      <View style={[styles.listIconWrap, { backgroundColor: `${ex.color}20` }]}>
+                         <Ionicons name={ex.icon as any} size={24} color={ex.color} />
+                      </View>
+                      <View style={styles.listContent}>
+                         <Text style={styles.listTitle}>{ex.title}</Text>
+                         <Text style={styles.listSub}>{ex.desc}</Text>
+                      </View>
+                      <View style={styles.listBadge}>
+                         <Text style={styles.listBadgeText}>{ex.duration}</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={palette.textDim} />
+                   </Pressable>
+                </GradientBorderCard>
              ))}
-          </GradientBorderCard>
+          </View>
 
           {/* Recent Activity */}
           <View style={styles.sectionHeader}>

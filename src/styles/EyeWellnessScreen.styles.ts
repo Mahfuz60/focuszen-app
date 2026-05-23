@@ -55,12 +55,12 @@ export function createEyeWellnessStyles(palette: ScreenPalette) {
 
 
     // List Items
-    listCard: {
-      backgroundColor: palette.surface, borderRadius: 24, padding: 4, marginBottom: 30,
+    exerciseCard: {
+      backgroundColor: palette.surface,
+      borderRadius: 20,
     },
     listItem: { 
       flexDirection: 'row', alignItems: 'center', padding: 16,
-      borderBottomWidth: 1, borderBottomColor: palette.stroke,
     },
     listItemNoBorder: { borderBottomWidth: 0 },
     listIconWrap: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 16 },

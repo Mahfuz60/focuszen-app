@@ -191,7 +191,7 @@ export function AlarmScreen() {
             </Pressable>
             <Text style={styles.topTitle}>Power Nap</Text>
             <Pressable onPress={() => navigation.navigate('Insights')} style={styles.topIconButton}>
-              <Ionicons name="settings-outline" size={20} color={palette.text} />
+              <Ionicons name="stats-chart" size={20} color={palette.text} />
             </Pressable>
           </View>
 

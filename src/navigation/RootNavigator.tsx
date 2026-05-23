@@ -11,6 +11,7 @@ import {
   HydrationScreen,
   EyeWellnessScreen,
   InsightsScreen,
+  BlockScreen,
 } from '../screens';
 import { MainTabs } from './MainTabs';
 import { RootStackParamList } from '../types/navigation';
@@ -45,8 +46,17 @@ export function RootNavigator() {
           colors: { ...DefaultTheme.colors, background: colors.background, card: colors.surface, text: colors.textPrimary, border: colors.border, primary: colors.focus },
         };
 
+  const linking = {
+    prefixes: ['focuszen://'],
+    config: {
+      screens: {
+        BlockScreen: 'blocked/:appName',
+      },
+    },
+  };
+
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer theme={navigationTheme} linking={linking}>
       <Stack.Navigator
         initialRouteName={initialRouteName}
         screenOptions={{ headerShown: false }}
@@ -61,6 +71,7 @@ export function RootNavigator() {
         <Stack.Screen name="Hydration" component={HydrationScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="EyeWellness" component={EyeWellnessScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Insights" component={InsightsScreen} />
+        <Stack.Screen name="BlockScreen" component={BlockScreen} options={{ animation: 'fade', presentation: 'fullScreenModal' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

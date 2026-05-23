@@ -53,8 +53,8 @@ export function HydrationAddModal({ visible, initialType, onClose, onAdd, palett
   }, [visible, initialType]);
 
   const styles = useMemo(
-    () => createHydrationAddModalStyles(palette, width, height),
-    [height, palette, width]
+    () => createHydrationAddModalStyles(palette),
+    [palette]
   );
 
   // Ruler markings (100ml to 1000ml)
@@ -77,6 +77,7 @@ export function HydrationAddModal({ visible, initialType, onClose, onAdd, palett
   );
 
   const selectedDrink = DRINK_TYPES.find(d => d.type === selectedType) || DRINK_TYPES[0];
+  const goalRatio = Math.min(((totalWaterToday || 0) / Math.max(waterGoalMl || 2500, 1)) * 100, 100);
 
   return (
     <Modal visible={visible} animationType="fade" transparent>
@@ -87,10 +88,10 @@ export function HydrationAddModal({ visible, initialType, onClose, onAdd, palett
               <Text style={[styles.title, { color: palette.text }]}>Add Drink</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 6 }}>
                 <View style={{ width: 100, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.05)' }}>
-                  <View style={{ width: `${Math.min((totalWaterToday / waterGoalMl) * 100, 100)}%`, height: '100%', borderRadius: 2, backgroundColor: palette.blue }} />
+                  <View style={{ width: `${Number.isFinite(goalRatio) ? goalRatio : 0}%`, height: '100%', borderRadius: 2, backgroundColor: palette.blue }} />
                 </View>
                 <Text style={{ fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.4)' }}>
-                  {Math.round((totalWaterToday / waterGoalMl) * 100)}% of goal
+                  {Math.round(Number.isFinite(goalRatio) ? goalRatio : 0)}% of goal
                 </Text>
               </View>
             </View>

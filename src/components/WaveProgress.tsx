@@ -12,7 +12,7 @@ export function WaveProgress({ progress, size, color, mode }: { progress: number
       Animated.timing(waveAnim, {
         toValue: 1,
         duration: 3000,
-        useNativeDriver: true,
+        useNativeDriver: false,
       })
     ).start();
   }, []);

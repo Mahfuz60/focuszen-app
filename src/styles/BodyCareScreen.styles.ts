@@ -77,12 +77,12 @@ export function createBodyCareStyles(palette: ScreenPalette, mode: 'dark' | 'lig
     quickAddVal: { fontSize: 15, fontWeight: '900', color: palette.text, marginTop: 10 },
 
     // Drink Types
-    horizontalScroll: { marginHorizontal: -spacing.md, paddingHorizontal: spacing.md },
+    horizontalScroll: { marginHorizontal: -spacing.md },
     drinkTypeBox: {
-      alignItems: 'center', marginRight: 24,
+      alignItems: 'center', marginRight: 20,
     },
     drinkIconCircle: {
-      width: 58, height: 58, borderRadius: 22,
+      width: 60, height: 60, borderRadius: 22,
       alignItems: 'center', justifyContent: 'center',
     },
     drinkImageIcon: { width: 34, height: 34 },
@@ -102,16 +102,16 @@ export function createBodyCareStyles(palette: ScreenPalette, mode: 'dark' | 'lig
     drinkTypeBadgeText: { fontSize: 9, fontWeight: '900', color: palette.textSoft, textTransform: 'uppercase' },
 
     // Cards Row (Tips)
-    cardsRow: { flexDirection: 'row', gap: 12, marginTop: 20, width: '100%' },
+    cardsRow: { flexDirection: 'row', gap: 12, marginTop: 16, width: '100%' },
     tipCard: {
       flex: 1, backgroundColor: palette.surface, padding: 16, borderRadius: 24,
-      minHeight: 120,
+      minHeight: 130, justifyContent: 'space-between',
     },
-    tipIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+    tipIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
     tipTitle: { fontSize: 12, fontWeight: '800', color: palette.textSoft },
-    tipVal: { fontSize: 15, fontWeight: '900', color: palette.text, marginTop: 4 },
-    tipSub: { fontSize: 11, fontWeight: '700', color: palette.textSoft, marginTop: 4 },
-    tipMascot: { position: 'absolute', bottom: 10, right: 10, opacity: 0.6 },
+    tipVal: { fontSize: 15, fontWeight: '900', color: palette.text, marginTop: 2 },
+    tipSub: { fontSize: 11, fontWeight: '700', color: palette.textSoft, marginTop: 2 },
+    tipMascot: { position: 'absolute', bottom: 12, right: 12, opacity: 0.6 },
 
     // Overview Stats
     overviewGrid: {
@@ -165,7 +165,7 @@ export function createBodyCareStyles(palette: ScreenPalette, mode: 'dark' | 'lig
   });
 }
 
-export function createHydrationAddModalStyles(palette: ScreenPalette, mode: 'dark' | 'light', width: number, height: number) {
+export function createHydrationAddModalStyles(palette: ScreenPalette) {
   return StyleSheet.create({
     overlay: { flex: 1, backgroundColor: 'rgba(2, 6, 23, 0.9)', justifyContent: 'center', padding: 12 },
     sheet: {

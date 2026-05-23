@@ -213,7 +213,7 @@ export function BreatheScreen() {
             </Pressable>
             <Text style={styles.topTitle}>Breathe</Text>
             <Pressable onPress={() => navigation.navigate('Insights')} style={styles.topIconButton}>
-              <Ionicons name="settings-outline" size={20} color={palette.text} />
+              <Ionicons name="stats-chart" size={20} color={palette.text} />
             </Pressable>
           </View>
 

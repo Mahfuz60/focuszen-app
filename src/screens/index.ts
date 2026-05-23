@@ -12,3 +12,4 @@ export * from './InsightsScreen';
 export * from './NameSetupScreen';
 export * from './PermissionsSetupScreen';
 export * from './PurifyScreen';
+export * from './BlockScreen';

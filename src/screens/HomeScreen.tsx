@@ -65,7 +65,12 @@ export function HomeScreen() {
   const palette = useMemo(() => getPalette('home'), [getPalette]);
   const styles = useMemo(() => createStyles(palette, mode), [palette, mode]);
   const navigation = useNavigation<any>();
-  const tabBarHeight = useBottomTabBarHeight();
+  let tabBarHeight = 0;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch (e) {
+    tabBarHeight = 0;
+  }
   const systemScheme = useColorScheme();
   const settings = useSettingsStore((state) => state.settings);
   const profile = useProfileStore((state) => state.profile);
@@ -275,7 +280,7 @@ export function HomeScreen() {
                 onPress={() => navigation.navigate('Insights')}
                 style={styles.headerIconButton}
               >
-                <Ionicons name="settings-outline" size={20} color={palette.text} />
+                <Ionicons name="stats-chart" size={20} color={palette.text} />
               </Pressable>
             </View>
           </View>
@@ -581,8 +586,8 @@ export function HomeScreen() {
             <View style={styles.usageChartContainer}>
               <Svg width={200} height={200} viewBox="0 0 200 200">
                 {usageChartSegments.map((segment) => {
-                  const strokeW = 24;
-                  const gap = 6;
+                  const strokeW = 14;
+                  const gap = 4;
                   const segmentLen = (segment.visualPercent * usageChartCircumference);
                   const dashLen = Math.max(0.1, segmentLen - strokeW - gap);
                   const dashOffset = segment.dashOffset - (strokeW / 2) - (gap / 2);

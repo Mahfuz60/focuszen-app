@@ -53,6 +53,13 @@ export const useControlStore = create<ControlState>()(
           // Auto-sync settings if permissions just got granted
           if (enabled) {
             get().syncAllSettings();
+            if (FocusZenSettings.startService) {
+              FocusZenSettings.startService();
+            }
+          } else {
+            if (FocusZenSettings.stopService) {
+              FocusZenSettings.stopService();
+            }
           }
         } catch (error) {
           console.error('Failed to check permissions:', error);

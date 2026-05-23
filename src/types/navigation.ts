@@ -9,6 +9,7 @@ export type RootStackParamList = {
   Hydration: undefined;
   EyeWellness: undefined;
   Insights: undefined;
+  BlockScreen: { appName: string };
 };
 
 export type MainTabParamList = {

@@ -107,7 +107,12 @@ function ToggleTrack({
 
 export function ControlScreen() {
   const navigation = useNavigation<any>();
-  const tabBarHeight = useBottomTabBarHeight();
+  let tabBarHeight = 0;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch (e) {
+    tabBarHeight = 0;
+  }
   const { mode, getPalette } = useAppTheme();
   const palette = useMemo(() => getPalette('control'), [getPalette]);
   const styles = useMemo(
@@ -119,6 +124,7 @@ export function ControlScreen() {
   const setThemeMode = useSettingsStore((state) => state.setThemeMode);
   const currentThemeMode = useSettingsStore((state) => state.settings.themeMode);
   const toggleFeature = useControlStore((state) => state.toggleFeature);
+  const toggleAppBlocked = useControlStore((state) => state.toggleAppBlocked);
   const toggleSafeBrowsing = useControlStore((state) => state.toggleSafeBrowsing);
   const purifyDays = usePurifyStore((state) => state.purify.currentStreakDays);
   const checkPermissions = useControlStore((state) => state.checkPermissions);
@@ -293,8 +299,8 @@ export function ControlScreen() {
                 style={styles.topIconButton}
               >
                 <Ionicons
-                  name="settings-outline"
-                  size={24}
+                  name="stats-chart"
+                  size={22}
                   color={palette.text}
                 />
               </Pressable>
@@ -524,9 +530,13 @@ export function ControlScreen() {
                               </View>
                               <ToggleTrack
                                 value={control.features[option.key] ?? false}
-                                  onPress={() => {
+                                onPress={() => {
+                                  if (option.key === 'blockApp') {
+                                    toggleAppBlocked(control.appName);
+                                  } else {
                                     toggleFeature(control.appName, option.key);
-                                  }}
+                                  }
+                                }}
                                 disabled={controlsLocked}
                                 onDisabledPress={handlePermissionRequired}
                                 palette={palette}
@@ -628,35 +638,53 @@ export function ControlScreen() {
                 <Text style={styles.sectionEyebrow}>Appearance</Text>
                 <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
                   {(['system', 'light', 'dark'] as const).map((t) => {
-                    // Ensure it always selects 'system' by default if no preference is found
                     const active = (currentThemeMode || 'system') === t;
+                    const themeColors = {
+                      system: {
+                        color: '#6366f1',
+                        bgActive: mode === 'dark' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.08)',
+                        icon: 'settings'
+                      },
+                      light: {
+                        color: '#f59e0b',
+                        bgActive: mode === 'dark' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.08)',
+                        icon: 'sunny'
+                      },
+                      dark: {
+                        color: '#8b5cf6',
+                        bgActive: mode === 'dark' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.08)',
+                        icon: 'moon'
+                      }
+                    } as const;
+
+                    const cfg = themeColors[t];
                     return (
                       <Pressable
                         key={t}
                         onPress={() => setThemeMode(t)}
                         style={{
                           flex: 1,
-                          paddingVertical: 12,
+                          paddingVertical: 14,
                           borderRadius: 16,
                           alignItems: 'center',
                           justifyContent: 'center',
                           backgroundColor: active 
-                            ? (mode === 'dark' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)')
-                            : (mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
-                          borderWidth: 1,
-                          borderColor: active ? '#3b82f6' : 'transparent',
+                            ? cfg.bgActive
+                            : (mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#f8fafc'),
+                          borderWidth: active ? 2 : 1.5,
+                          borderColor: active ? cfg.color : (mode === 'dark' ? '#334155' : '#cbd5e1'),
                         }}
                       >
                         <Ionicons 
-                          name={t === 'system' ? 'settings-outline' : t === 'light' ? 'sunny-outline' : 'moon-outline'} 
-                          size={18} 
-                          color={active ? '#3b82f6' : (mode === 'dark' ? '#94a3b8' : '#64748b')} 
+                          name={cfg.icon as any} 
+                          size={20} 
+                          color={active ? cfg.color : (mode === 'dark' ? `${cfg.color}75` : `${cfg.color}a5`)} 
                         />
                         <Text style={{ 
                           fontSize: 10, 
-                          fontWeight: 'bold', 
-                          marginTop: 4, 
-                          color: active ? '#3b82f6' : (mode === 'dark' ? '#94a3b8' : '#64748b'),
+                          fontWeight: '900', 
+                          marginTop: 6, 
+                          color: active ? cfg.color : (mode === 'dark' ? '#94a3b8' : '#64748b'),
                           textTransform: 'uppercase'
                         }}>
                           {t}

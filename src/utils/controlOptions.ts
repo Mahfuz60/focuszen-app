@@ -65,8 +65,7 @@ export function getAppDisplayName(appName: AppControlTarget) {
 }
 
 export function countEnabledOptions(control: AppControlSettings) {
-  const featureCount = Object.values(control.features).filter((v) => v === true).length;
-  return featureCount + (control.blocked ? 1 : 0);
+  return Object.values(control.features).filter((v) => v === true).length;
 }
 
 export function sortControlsByUsage(controls: AppControlSettings[]) {

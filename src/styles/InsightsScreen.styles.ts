@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { spacing } from '../theme/tokens';
 import { ScreenPalette } from '../theme/screenPalettes';
 
-export function createInsightsStyles(palette: ScreenPalette) {
+export function createInsightsStyles(palette: ScreenPalette, mode: 'dark' | 'light') {
   return StyleSheet.create({
     safeArea: {
       flex: 1,
@@ -45,17 +45,20 @@ export function createInsightsStyles(palette: ScreenPalette) {
       flex: 1,
       paddingVertical: 10,
       borderRadius: 14,
+      borderWidth: 1,
+      borderColor: 'transparent',
     },
     tabChipActive: {
       backgroundColor: palette.surface,
+      borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
       shadowColor: palette.shadow,
-      shadowOpacity: 0.1,
-      shadowRadius: 10,
-      elevation: 4,
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
     },
     tabChipText: {
       fontSize: 13,
-      fontWeight: '700',
+      fontWeight: '900',
       color: palette.textSoft,
       textAlign: 'center',
     },
@@ -119,10 +122,26 @@ export function createInsightsStyles(palette: ScreenPalette) {
     weekChipText: { fontSize: 13, fontWeight: '800', color: palette.text },
 
     periodToggle: { flexDirection: 'row', gap: 8, marginBottom: spacing.md },
-    periodBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: palette.surfaceSoft, alignItems: 'center' },
-    periodBtnActive: { backgroundColor: palette.greenSoft, borderWidth: 1, borderColor: palette.green + '40' },
-    periodText: { fontSize: 12, fontWeight: '700', color: palette.textSoft },
-    periodTextActive: { color: palette.green },
+    periodBtn: { 
+      flex: 1, 
+      paddingVertical: 10, 
+      borderRadius: 12, 
+      backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', 
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: mode === 'dark' ? '#334155' : '#cbd5e1',
+    },
+    periodBtnActive: { 
+      backgroundColor: mode === 'dark' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.06)', 
+      borderWidth: 1.5, 
+      borderColor: palette.green,
+    },
+    periodText: { 
+      fontSize: 11, 
+      fontWeight: '800', 
+      color: mode === 'dark' ? '#cbd5e1' : '#475569',
+    },
+    periodTextActive: { color: palette.green, fontWeight: '900' },
 
     heroMinutes: { fontSize: 36, fontWeight: '900', color: palette.text, letterSpacing: -1 },
     heroMeta: { fontSize: 18, fontWeight: '700', color: palette.text, marginTop: -2 },
@@ -201,11 +220,38 @@ export function createInsightsStyles(palette: ScreenPalette) {
     barTrack: { width: 14, height: 140, backgroundColor: palette.stroke + '30', borderRadius: 7, overflow: 'hidden', justifyContent: 'flex-end' },
     barFill: { width: '100%', borderRadius: 7 },
     barLabel: { fontSize: 10, fontWeight: '900', color: palette.textSoft, marginTop: 12, textTransform: 'uppercase' },
+    wellnessBarValue: {
+      fontSize: 9,
+      fontWeight: '900',
+      color: mode === 'dark' ? '#cbd5e1' : '#475569',
+      marginBottom: 6,
+      textAlign: 'center',
+      height: 12,
+    },
 
-    metricBtn: { flex: 1, height: 48, borderRadius: 16, backgroundColor: palette.surfaceSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-    metricBtnActive: { backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.blue + '30' },
-    metricText: { fontSize: 13, fontWeight: '700', color: palette.textSoft },
-    metricTextActive: { color: palette.text },
+    metricBtn: { 
+      flex: 1, 
+      height: 44, 
+      borderRadius: 14, 
+      backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      gap: 6,
+      borderWidth: 1.5,
+      borderColor: mode === 'dark' ? '#334155' : '#cbd5e1',
+    },
+    metricBtnActive: { 
+      backgroundColor: mode === 'dark' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.06)', 
+      borderWidth: 1.5, 
+      borderColor: palette.blue, 
+    },
+    metricText: { 
+      fontSize: 12, 
+      fontWeight: '800', 
+      color: mode === 'dark' ? '#cbd5e1' : '#475569',
+    },
+    metricTextActive: { color: palette.blue, fontWeight: '900' },
 
     seeAllBtn: { 
       marginTop: 16, 

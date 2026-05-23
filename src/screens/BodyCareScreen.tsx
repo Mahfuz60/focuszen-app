@@ -56,7 +56,7 @@ function WaterMascot({ color }: { color: string }) {
 export function BodyCareScreen() {
   const { mode, getPalette } = useAppTheme();
   const palette = useMemo(() => getPalette('bodyCare'), [getPalette]);
-  const styles = useMemo(() => createBodyCareStyles(palette), [palette]);
+  const styles = useMemo(() => createBodyCareStyles(palette, mode), [palette, mode]);
   const navigation = useNavigation<any>();
 
   const waterGoalMl = useBodyCareStore((s) => s.waterGoalMl);
@@ -68,21 +68,24 @@ export function BodyCareScreen() {
   const todayEntries = useMemo(() => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    return waterEntries.filter((e) => new Date(e.loggedAt) >= todayStart);
+    return (waterEntries || []).filter((e) => e && e.loggedAt && new Date(e.loggedAt) >= todayStart);
   }, [waterEntries, currentDay]);
 
   const drinkBreakdown = useMemo(() => {
     const counts: Record<DrinkType, number> = {
-      water: 0, coffee: 0, tea: 0, juice: 0, milk: 0, soda: 0
-    };
+      Water: 0, Coffee: 0, Tea: 0, Juice: 0, Milk: 0
+    } as any;
     todayEntries.forEach(e => {
-      counts[e.type] = (counts[e.type] || 0) + e.amountMl;
+      if (e && e.type) {
+        const key = (e.type.charAt(0).toUpperCase() + e.type.slice(1)) as DrinkType;
+        counts[key] = (counts[key] || 0) + e.amountMl;
+      }
     });
     return counts;
   }, [todayEntries]);
 
   const totalWaterToday = useMemo(() => Object.values(drinkBreakdown).reduce((a, b) => a + b, 0), [drinkBreakdown]);
-  const progress = Math.min(totalWaterToday / waterGoalMl, 1);
+  const progress = Math.min(totalWaterToday / Math.max(waterGoalMl || 2500, 1), 1);
 
   const [activeExercise, setActiveExercise] = useState<typeof EYE_EXERCISES[0] | null>(null);
   const [exerciseTimer, setExerciseTimer] = useState(0);
@@ -149,14 +152,14 @@ export function BodyCareScreen() {
              {/* Segmented Progress Bar at the Top of Card */}
              <View style={styles.segmentedBar}>
                 {DRINK_TYPES.map(d => {
-                  const amount = drinkBreakdown[d.type];
+                  const amount = drinkBreakdown[d.type] || 0;
                   if (amount === 0) return null;
-                  const widthPct = (amount / waterGoalMl) * 100;
+                  const widthPct = (amount / Math.max(waterGoalMl || 2500, 1)) * 100;
                   return (
                     <View 
                       key={d.type} 
                       style={{ 
-                        width: `${widthPct}%`, 
+                        width: `${Number.isFinite(widthPct) ? widthPct : 0}%`, 
                         height: '100%', 
                         backgroundColor: d.color,
                         borderRadius: 4,
