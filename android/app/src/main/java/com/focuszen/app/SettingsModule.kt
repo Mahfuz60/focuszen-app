@@ -1,4 +1,5 @@
 package com.focuszen.app
+
 import android.util.Log
 import android.content.Context
 import android.content.Intent
@@ -12,8 +13,14 @@ import com.facebook.react.bridge.ReadableMap
 class SettingsModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
     private val TAG = "FocusZenSettings"
-    private val prefs: SharedPreferences =
-        reactContext.getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = run {
+        val safeContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            reactContext.createDeviceProtectedStorageContext()
+        } else {
+            reactContext
+        }
+        safeContext.getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
+    }
 
     override fun getName(): String {
         return "FocusZenSettings"
@@ -26,12 +33,15 @@ class SettingsModule(reactContext: ReactApplicationContext) :
         while (featureKeys.hasNextKey()) {
             val key = featureKeys.nextKey()
             try {
-                if (features.getType(key) == com.facebook.react.bridge.ReadableType.Boolean) {
-                   val value = features.getBoolean(key)
-                    val prefKey = "${appName}_${key}"
-                    Log.d(TAG, "Saving $prefKey=$value")
-                    editor.putBoolean(prefKey, value)
+                val value = when (features.getType(key)) {
+                    com.facebook.react.bridge.ReadableType.Boolean -> features.getBoolean(key)
+                    com.facebook.react.bridge.ReadableType.String -> features.getString(key)?.toBoolean() ?: false
+                    com.facebook.react.bridge.ReadableType.Number -> features.getDouble(key) > 0
+                    else -> false
                 }
+                val prefKey = "${appName}_${key}"
+                Log.d(TAG, "Saving $prefKey=$value")
+                editor.putBoolean(prefKey, value)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -111,12 +121,11 @@ class SettingsModule(reactContext: ReactApplicationContext) :
     }
 
     private fun isServiceEnabled(): Boolean {
-        val serviceName = "${reactApplicationContext.packageName}/${FocusAccessibilityService::class.java.name}"
-        val settingValue = android.provider.Settings.Secure.getString(
-            reactApplicationContext.contentResolver,
-            android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        )
-        return settingValue?.contains(serviceName) == true
+        val am = reactApplicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+        val enabledServices = am.getEnabledAccessibilityServiceList(android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC)
+        return enabledServices.any {
+            it.resolveInfo.serviceInfo.packageName == reactApplicationContext.packageName &&
+            it.resolveInfo.serviceInfo.name == FocusAccessibilityService::class.java.name
+        }
     }
 }
-

@@ -74,7 +74,7 @@ class FocusAccessibilityService : AccessibilityService() {
         // Ignore our own app
         if (packageName == "com.focuszen.app") return
 
-        val prefs = getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
+        val prefs = getSafePrefs()
 
         // ── Check Strict Mode ───────────────────────────────────────────────
         if (prefs.getBoolean("strict_mode", false)) {
@@ -340,7 +340,7 @@ class FocusAccessibilityService : AccessibilityService() {
     // ─── Browser URL Blocking ────────────────────────────────────────────────
 
     private fun handleBrowser(node: AccessibilityNodeInfo?, packageName: String) {
-        val prefs = getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
+        val prefs = getSafePrefs()
         val adultBlock = prefs.getBoolean("adultContentBlock", false)
         val gamblingBlock = prefs.getBoolean("gamblingBlock", false)
         val customDomains = prefs.getString("custom_blocked_domains", "")
@@ -478,8 +478,17 @@ class FocusAccessibilityService : AccessibilityService() {
         )
     }
 
+    private fun getSafePrefs(): android.content.SharedPreferences {
+        val safeContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            createDeviceProtectedStorageContext()
+        } else {
+            this
+        }
+        return safeContext.getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
+    }
+
     private fun isFeatureEnabled(appName: String, feature: String): Boolean {
-        val prefs = getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
+        val prefs = getSafePrefs()
         val key = "${appName}_${feature}"
         val value = prefs.getBoolean(key, false)
         Log.d(TAG, "Feature check: $key=$value")
