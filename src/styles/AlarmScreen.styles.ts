@@ -13,7 +13,6 @@ export function createAlarmStyles(palette: ScreenPalette) {
       shadowColor: palette.shadow, shadowOpacity: 0.18, shadowRadius: 16, shadowOffset: { width: 0, height: 8 },
     },
     topTitle: { fontSize: 22, fontWeight: '900', color: palette.text },
-    napCount: { fontSize: 12, fontWeight: '800', color: palette.accent },
     timerSection: { alignItems: 'center', marginVertical: spacing.lg },
     timerRing: {
       width: 258, height: 258, borderRadius: 129,

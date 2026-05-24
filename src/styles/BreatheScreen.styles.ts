@@ -55,7 +55,6 @@ export function createBreatheStyles(palette: ScreenPalette) {
     lungsIcon: { marginBottom: 8, opacity: 0.8 },
     phaseLabel: { fontSize: 34, fontWeight: '900', color: palette.text, letterSpacing: -0.5 },
     phaseSub: { fontSize: 15, color: palette.textSoft, textAlign: 'center', marginTop: 6, paddingHorizontal: 40, lineHeight: 22 },
-    phaseCount: { fontSize: 72, fontWeight: '900', color: palette.accent, marginTop: -8 },
     
     leafContainer: { position: 'absolute', width: '100%', height: '100%' },
     leaf: { position: 'absolute', opacity: 0.6 },

@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import {
   Pressable,
   StatusBar,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -13,7 +12,6 @@ import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useProfileStore } from '../stores/useProfileStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import { spacing } from '../theme/tokens';
 import {
   createNameSetupStyles as createStyles,
 } from '../styles/NameSetupScreen.styles';
@@ -29,9 +27,9 @@ export function NameSetupScreen() {
   const [name, setName] = useState(currentName === 'FocusZen User' ? '' : currentName);
 
   const trimmedName = name.trim();
-  const disabled = trimmedName.length < 2;
+  const disabled = trimmedName.length < 4 || trimmedName.length > 15;
   const preview = useMemo(
-    () => (trimmedName ? trimmedName : 'You'),
+    () => (trimmedName ? trimmedName : 'You'), 
     [trimmedName]
   );
 
@@ -110,5 +108,4 @@ export function NameSetupScreen() {
     </SafeAreaView>
   );
 }
-
 

@@ -19,7 +19,6 @@ import { spacing } from '../theme/tokens';
 import {
   createAlarmStyles,
 } from '../styles/AlarmScreen.styles';
-import { ScreenPalette } from '../theme/screenPalettes';
 
 export function AlarmScreen() {
   const { mode, getPalette } = useAppTheme();
@@ -34,8 +33,6 @@ export function AlarmScreen() {
   const isAlarmFiring = useAlarmStore((s) => s.isAlarmFiring);
   const setAlarmFiring = useAlarmStore((s) => s.setAlarmFiring);
   const sessions = useAlarmStore((s) => s.sessions);
-  const totalNaps = useAlarmStore((s) => s.totalNapsTaken);
-
   const [selectedPreset, setSelectedPreset] = useState<NapPreset>('20min');
   const [customMinutes, setCustomMinutes] = useState('20');
   const [isRunning, setIsRunning] = useState(false);

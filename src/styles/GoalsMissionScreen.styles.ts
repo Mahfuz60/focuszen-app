@@ -1,9 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { spacing, typography } from '../theme/tokens';
-
-import { ScreenPalette } from '../theme/screenPalettes';
-
-export function createGoalsMissionStyles(palette: ScreenPalette) {
+export function createGoalsMissionStyles() {
   return StyleSheet.create({
   levels: {
     marginTop: spacing.md,

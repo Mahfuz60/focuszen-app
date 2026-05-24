@@ -1,14 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import {
-  Animated,
   Pressable,
   ScrollView,
   StatusBar,
   Text,
   View,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -19,17 +17,12 @@ import {
   useBodyCareStore, 
   WATER_PRESETS_ML, 
   DRINK_TYPES, 
-  computeTodayWater,
   DrinkType,
   EyeRestLog
 } from '../stores/useBodyCareStore';
-import { spacing } from '../theme/tokens';
 import {
   createBodyCareStyles,
 } from '../styles/BodyCareScreen.styles';
-import { ScreenPalette } from '../theme/screenPalettes';
-
-const { width } = Dimensions.get('window');
 
 const EYE_EXERCISES: { id: EyeRestLog['type']; title: string; desc: string; duration: string; icon: string }[] = [
   { id: '20-20-20', title: '20-20-20 Rule', desc: 'Look 20ft away for 20s', duration: '20s', icon: 'eye' },
@@ -64,12 +57,11 @@ export function BodyCareScreen() {
   const logWater = useBodyCareStore((s) => s.logWater);
   const logEyeRest = useBodyCareStore((s) => s.logEyeRest);
 
-  const [currentDay, setCurrentDay] = useState(new Date().toDateString());
   const todayEntries = useMemo(() => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     return (waterEntries || []).filter((e) => e && e.loggedAt && new Date(e.loggedAt) >= todayStart);
-  }, [waterEntries, currentDay]);
+  }, [waterEntries]);
 
   const drinkBreakdown = useMemo(() => {
     const counts: Record<DrinkType, number> = {

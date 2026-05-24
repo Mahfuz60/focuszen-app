@@ -16,7 +16,7 @@ import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useAlarmStore } from '../stores/useAlarmStore';
 import { useBreatheStore } from '../stores/useBreatheStore';
-import { useBodyCareStore, computeTodayWater } from '../stores/useBodyCareStore';
+import { useBodyCareStore } from '../stores/useBodyCareStore';
 import { useControlStore } from '../stores/useControlStore';
 import { useFocusStore } from '../stores/useFocusStore';
 import { usePurifyStore } from '../stores/usePurifyStore';
@@ -27,8 +27,6 @@ import { spacing } from '../theme/tokens';
 import {
   createInsightsStyles as createStyles,
 } from '../styles/InsightsScreen.styles';
-import { ScreenPalette } from '../theme/screenPalettes';
-import { AppControlTarget } from '../types/models';
 import { buildControlInsightsOverview } from '../utils/controlInsightsOverview';
 import { 
   getLatestInsightsAnchorDate, 
@@ -46,7 +44,6 @@ import { buildPurifyStatus, getPurifyRingProgress } from '../utils/purifyProgres
 
 
 type InsightTab = 'overview' | 'focus' | 'control' | 'purify';
-type UsageFilter = 'all' | 'blocked' | 'used';
 
 function parseMinutes(value: string) {
   return Number.parseInt(value.replace(/[^\d]/g, ''), 10) || 0;
@@ -99,7 +96,6 @@ export function InsightsScreen() {
   const isFocused = useIsFocused();
   const [activeTab, setActiveTab] = useState<InsightTab>('overview');
   const [insightRange, setInsightRange] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('week');
-  const [usageFilter, setUsageFilter] = useState<UsageFilter>('all');
   const [selectedWellnessMetric, setSelectedWellnessMetric] = useState<'naps' | 'water' | 'breathe'>('water');
   const [showFullActivity, setShowFullActivity] = useState(false);
   const [nowIso, setNowIso] = useState(() => new Date().toISOString());
@@ -115,7 +111,6 @@ export function InsightsScreen() {
   const napSessions = useAlarmStore((state) => state.sessions);
   const breatheSessions = useBreatheStore((state) => state.sessions);
   const waterEntries = useBodyCareStore((state) => state.waterEntries);
-  const waterGoal = useBodyCareStore((state) => state.waterGoalMl);
   const statusBarStyle = mode === 'dark' ? 'light-content' : 'dark-content';
 
   useEffect(() => {

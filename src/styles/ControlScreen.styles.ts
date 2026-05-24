@@ -215,9 +215,6 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
     appSubtitleAvailable: {
       color: palette.green,
     },
-    appSubtitleBlocked: {
-      color: palette.danger,
-    },
     appSubtitleRule: {
       color: palette.purple,
     },
@@ -257,21 +254,6 @@ export function createControlStyles(palette: ScreenPalette, mode: 'light' | 'dar
       fontWeight: '600',
       color: palette.text,
       textTransform: 'capitalize',
-    },
-    toggleTrack: {
-      width: 50,
-      height: 28,
-      borderRadius: 14,
-      paddingHorizontal: 2,
-      alignItems: 'center',
-      flexDirection: 'row',
-      borderWidth: 1.5,
-      borderColor: mode === 'dark' ? '#475569' : '#cbd5e1',
-    },
-    toggleThumb: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
     },
     toggleSwitch: {
       transform: [{ scaleX: 0.92 }, { scaleY: 0.92 }],

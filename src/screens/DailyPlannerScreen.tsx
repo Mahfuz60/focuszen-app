@@ -28,8 +28,7 @@ import {
   createPlannerStyles as createStyles,
   getCategoryStyles,
 } from '../styles/DailyPlannerScreen.styles';
-import { ScreenPalette } from '../theme/screenPalettes';
-import type { PlannerCategory, PlannerTask } from '../types/models';
+import type { PlannerTask } from '../types/models';
 import {
   buildPlannerDraftFromTask,
   buildPlannerSuggestions,
@@ -84,7 +83,7 @@ export function DailyPlannerScreen() {
     [selectedDate, tasks]
   );
 
-  const [draft, setDraft] = useState<PlannerTaskDraft>(() => createPlannerDraft(selectedDate));
+  const [draft, setDraft] = useState<PlannerTaskDraft>(() => createPlannerDraft());
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -99,16 +98,6 @@ export function DailyPlannerScreen() {
     () => tasks.find((task) => task.id === activeSession?.linkedTaskId) ?? null,
     [activeSession?.linkedTaskId, tasks]
   );
-  const categoryGlows = useMemo(
-    () => ({
-      Study: mode === 'dark' ? ['rgba(0, 176, 255, 0.15)', 'rgba(0, 176, 255, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(41, 98, 255, 0.12)'],
-      Work: mode === 'dark' ? ['rgba(0, 255, 157, 0.15)', 'rgba(0, 255, 157, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(0, 200, 83, 0.12)'],
-      Health: mode === 'dark' ? ['rgba(255, 171, 0, 0.15)', 'rgba(255, 171, 0, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(255, 171, 0, 0.12)'],
-      Personal: mode === 'dark' ? ['rgba(213, 0, 249, 0.15)', 'rgba(213, 0, 249, 0.02)'] : ['rgba(255, 255, 255, 0.65)', 'rgba(170, 0, 255, 0.12)'],
-    }),
-    [mode]
-  );
-
   const completionPercent = plannerView.summary.completionRate;
   const progressWidth = `${completionPercent}%` as `${number}%`;
   const summaryText =
@@ -148,7 +137,7 @@ export function DailyPlannerScreen() {
   }
 
   function resetDraft() {
-    setDraft(createPlannerDraft(selectedDate));
+    setDraft(createPlannerDraft());
     setEditingTaskId(null);
   }
 
@@ -578,7 +567,6 @@ export function DailyPlannerScreen() {
                         label={task.completed ? 'Undo' : 'Done'}
                         tone="success"
                         onPress={() => toggleTaskCompleted(task.id)}
-                        palette={palette}
                         styles={styles}
                       />
                       {!task.completed && (
@@ -588,14 +576,12 @@ export function DailyPlannerScreen() {
                             label="Focus"
                             tone="primary"
                             onPress={() => handleStartFocus(task)}
-                            palette={palette}
                             styles={styles}
                           />
                           <PlannerQuickAction
                             icon="create-outline"
                             label="Edit"
                             onPress={() => openComposer(task)}
-                            palette={palette}
                             styles={styles}
                           />
                         </>
@@ -605,7 +591,6 @@ export function DailyPlannerScreen() {
                         label="Delete"
                         tone="danger"
                         onPress={() => deleteTask(task.id)}
-                        palette={palette}
                         styles={styles}
                       />
                     </View>
@@ -634,7 +619,6 @@ type PlannerQuickActionProps = {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
-  palette: ScreenPalette;
   styles: any;
   tone?: 'default' | 'success' | 'danger' | 'primary';
 };
@@ -643,7 +627,6 @@ function PlannerQuickAction({
   icon,
   label,
   onPress,
-  palette,
   styles,
   tone = 'default',
 }: PlannerQuickActionProps) {

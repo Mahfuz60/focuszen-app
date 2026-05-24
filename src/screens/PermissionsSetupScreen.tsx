@@ -62,7 +62,7 @@ export function PermissionsSetupScreen() {
     return () => subscription.remove();
   }, [checkAllPermissions]);
 
-  const openSettings = async (action: string, key: string, dataUri?: string) => {
+  const openSettings = async (action: string, dataUri?: string) => {
     if (Platform.OS === 'android') {
       try {
         if (dataUri) {
@@ -149,7 +149,7 @@ export function PermissionsSetupScreen() {
                     styles.card,
                     isCompleted && { borderColor: palette.green },
                   ]}
-                  onPress={() => openSettings(p.action, p.id, (p as any).dataUri)}
+                  onPress={() => openSettings(p.action, (p as any).dataUri)}
                 >
                   <View style={[styles.iconBox, { backgroundColor: isCompleted ? palette.green : palette.iconBg }]}>
                     <Ionicons 

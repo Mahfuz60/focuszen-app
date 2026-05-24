@@ -15,10 +15,6 @@ export function getPurifyMilestoneDays(milestone: PurifyMilestoneKey) {
   return PURIFY_MILESTONES.find((item) => item.key === milestone)?.days ?? 365;
 }
 
-function pluralize(value: number, singular: string, plural: string) {
-  return value === 1 ? singular : plural;
-}
-
 function toBanglaDigits(value: string) {
   const digits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
   return value
@@ -28,39 +24,6 @@ function toBanglaDigits(value: string) {
       return Number.isNaN(parsed) ? character : digits[parsed];
     })
     .join('');
-}
-
-function formatLocalizedCount(value: number, language: PurifyLanguage, enUnit: string, bnUnit: string) {
-  if (language === 'bn') {
-    return `${toBanglaDigits(String(value))} ${bnUnit}`;
-  }
-
-  return `${value} ${enUnit}`;
-}
-
-function formatPurifyElapsedFromDayCount(totalDays: number, language: PurifyLanguage) {
-  if (totalDays < 30) {
-    return formatLocalizedCount(totalDays, language, pluralize(totalDays, 'Day', 'Days'), 'দিন');
-  }
-
-  if (totalDays < 365) {
-    const months = Math.floor(totalDays / 30);
-    const days = totalDays % 30;
-    if (language === 'bn') {
-      return `${toBanglaDigits(String(months))} মাস ${toBanglaDigits(String(days))} দিন`;
-    }
-
-    return `${months} ${pluralize(months, 'Month', 'Months')} ${days} ${pluralize(days, 'Day', 'Days')}`;
-  }
-
-  const years = Math.floor(totalDays / 365);
-  const months = Math.floor((totalDays % 365) / 30);
-
-  if (language === 'bn') {
-    return `${toBanglaDigits(String(years))} বছর ${toBanglaDigits(String(months))} মাস`;
-  }
-
-  return `${years} ${pluralize(years, 'Year', 'Years')} ${months} ${pluralize(months, 'Month', 'Months')}`;
 }
 
 export function getPurifyElapsedSeconds(startedAt: string, nowIso: string) {

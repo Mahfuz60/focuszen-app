@@ -10,7 +10,6 @@ import { ControlScreen } from '../screens/ControlScreen';
 import { PurifyScreen } from '../screens/PurifyScreen';
 import { MainTabParamList } from '../types/navigation';
 import { useAppTheme } from '../hooks/useAppTheme';
-import { spacing } from '../theme/tokens';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -42,7 +41,7 @@ const tabAccentPalettes = {
 } as const;
 
 export function MainTabs() {
-  const { colors, mode } = useAppTheme();
+  const { mode } = useAppTheme();
   const isDark = mode === 'dark';
 
   return (
@@ -132,7 +131,7 @@ export function MainTabs() {
         component={ControlScreen}
         options={{
           tabBarLabel: ({ color, focused }) => (
-            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.8 }]}>Control</Text>
+            <Text style={[styles.label, { color, opacity: focused ? 1 : 0.8 }]}>App Control</Text>
           ),
         }}
       />

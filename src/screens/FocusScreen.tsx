@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -19,11 +18,10 @@ import { useAppTheme } from '../hooks/useAppTheme';
 import { useFocusStore } from '../stores/useFocusStore';
 import { useGoalsStore } from '../stores/useGoalsStore';
 import { usePlannerStore } from '../stores/usePlannerStore';
-import { spacing, typography } from '../theme/tokens';
+import { spacing } from '../theme/tokens';
 import {
   createFocusStyles as createStyles,
 } from '../styles/FocusScreen.styles';
-import { ScreenPalette } from '../theme/screenPalettes';
 import { isSameDay } from '../utils/date';
 
 

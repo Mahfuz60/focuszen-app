@@ -25,7 +25,7 @@ type HydrationAddModalProps = {
 
 export function HydrationAddModal({ visible, initialType, onClose, onAdd, palette }: HydrationAddModalProps) {
   const { totalWaterToday, waterGoalMl } = useBodyCareStore();
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const [selectedType, setSelectedType] = useState<DrinkType>(initialType || 'Water');
   const [volume, setVolume] = useState(250);
   const scrollX = useRef(new Animated.Value(0)).current;

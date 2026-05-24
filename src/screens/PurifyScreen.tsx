@@ -22,18 +22,15 @@ import { spacing } from '../theme/tokens';
 import {
   createPurifyStyles as createStyles,
 } from '../styles/PurifyScreen.styles';
-import { ScreenPalette } from '../theme/screenPalettes';
 import {
   buildPurifyStatus,
   getNextPurifyMilestone,
   getPurifyMilestoneDays,
-  getPurifyRingProgress,
 } from '../utils/purifyProgress';
 import {
   buildPurifyQuoteViewModel,
   getHourlyQuote,
   getPurifyQuotes,
-  getPurifyScreenCopy,
 } from '../utils/purify';
 
 
@@ -114,7 +111,6 @@ export function PurifyScreen() {
     return () => clearTimeout(timeout);
   }, [currentHour, isFocused]);
 
-  const copy = useMemo(() => getPurifyScreenCopy(purifyLanguage), [purifyLanguage]);
   const quotes = useMemo(() => getPurifyQuotes(purifyLanguage), [purifyLanguage]);
   const hourlyQuote = useMemo(() => getHourlyQuote(quotes, currentHour), [currentHour, quotes]);
   const quoteVm = useMemo(
@@ -138,12 +134,9 @@ export function PurifyScreen() {
     : purifyLanguage === 'bn'
       ? 'সর্বোচ্চ মাইলস্টোন পূর্ণ'
       : 'Highest milestone reached';
-  const elapsedSeconds = purify.startedAt ? Math.max(0, Math.floor((new Date(nowIso).getTime() - new Date(purify.startedAt).getTime()) / 1000)) : 0;
-  const ringProgress = status.active ? Math.max(0.01, (elapsedSeconds % 86400) / 86400) : 0;
   const ringTimerLabel = status.active
     ? status.elapsedLabel
     : '00:00:00';
-  const chipLabel = quoteVm.tagLabel;
   const statusBarStyle = mode === 'dark' ? 'light-content' : 'dark-content';
 
   function handleBack() {

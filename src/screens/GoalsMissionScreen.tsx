@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { ScreenContainer } from '../components/ScreenContainer';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { ProgressRing } from '../components/ProgressRing';
@@ -7,16 +7,14 @@ import { SectionHeader } from '../components/SectionHeader';
 import { MetricPill } from '../components/MetricPill';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useGoalsStore } from '../stores/useGoalsStore';
-import { spacing, typography } from '../theme/tokens';
 import {
   createGoalsMissionStyles as createStyles,
 } from '../styles/GoalsMissionScreen.styles';
-import { ScreenPalette } from '../theme/screenPalettes';
 
 export function GoalsMissionScreen() {
   const { mode, colors, getPalette } = useAppTheme();
   const palette = useMemo(() => getPalette('goalsMission'), [getPalette]);
-  const styles = useMemo(() => createStyles(palette), [palette]);
+  const styles = useMemo(() => createStyles(), []);
   const goals = useGoalsStore((state) => state.goals);
   const badges = useGoalsStore((state) => state.badges);
   const streak = useGoalsStore((state) => state.streak);
@@ -98,5 +96,3 @@ export function GoalsMissionScreen() {
     </ScreenContainer>
   );
 }
-
-

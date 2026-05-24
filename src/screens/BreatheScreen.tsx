@@ -20,7 +20,6 @@ import { spacing } from '../theme/tokens';
 import {
   createBreatheStyles,
 } from "../styles/BreatheScreen.styles"
-import { ScreenPalette } from '../theme/screenPalettes';
 
 const customPhases: { key: BreathePhase; label: string }[] = [
   { key: 'inhale', label: 'Inhale' },
@@ -44,7 +43,6 @@ export function BreatheScreen() {
   const [phase, setPhase] = useState<BreathePhase>('inhale');
   const [phaseCountdown, setPhaseCountdown] = useState(0);
   const [cycleCount, setCycleCount] = useState(0);
-  const [sessionStart, setSessionStart] = useState<string | null>(null);
   const [customDraft, setCustomDraft] = useState(customPattern);
   const [isCustomEditorOpen, setIsCustomEditorOpen] = useState(false);
 
@@ -154,7 +152,6 @@ export function BreatheScreen() {
   const startSession = useCallback(() => {
     const now = new Date().toISOString();
     startRef.current = now;
-    setSessionStart(now);
     cycleRef.current = 0;
     phaseRef.current = 'inhale';
     countdownRef.current = getDuration('inhale');

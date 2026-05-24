@@ -87,13 +87,6 @@ export function createBodyCareStyles(palette: ScreenPalette, mode: 'dark' | 'lig
     },
     drinkImageIcon: { width: 34, height: 34 },
     drinkTypeLabel: { fontSize: 13, fontWeight: '800', color: palette.text, marginTop: 8 },
-    drinkTypeEditBtn: {
-      position: 'absolute', top: -4, right: -4,
-      width: 22, height: 22, borderRadius: 11,
-      backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center',
-      borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)',
-      zIndex: 10,
-    },
     drinkTypeBadge: {
       marginTop: 4, paddingHorizontal: 6, paddingVertical: 2,
       borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.05)',
@@ -224,7 +217,6 @@ export function createHydrationAddModalStyles(palette: ScreenPalette) {
       width: '100%', maxWidth: 420, alignSelf: 'center',
       shadowColor: '#000', shadowOpacity: 0.6, shadowRadius: 30, elevation: 20,
     },
-    handle: { display: 'none' },
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
     title: { fontSize: 22, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
     closeBtn: {

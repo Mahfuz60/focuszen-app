@@ -7,7 +7,6 @@ import {
   ScrollView,
   StatusBar,
   Text,
-  useColorScheme,
   View,
   Image,
 } from 'react-native';
@@ -21,9 +20,9 @@ import { usePlannerStore } from '../stores/usePlannerStore';
 import { useProfileStore } from '../stores/useProfileStore';
 import { useStudyStore } from '../stores/useStudyStore';
 import { useUsageStore } from '../stores/useUsageStore';
-import { useSettingsStore } from '../stores/useSettingsStore';
 import { GradientBorderCard } from '../components/GradientBorderCard';
 import { spacing } from '../theme/tokens';
+import { RootStackParamList } from '../types/navigation';
 import {
   createHomeStyles as createStyles,
   brandZenStyle,
@@ -34,6 +33,8 @@ import {
   extraStyles,
 } from '../styles/HomeScreen.styles';
 import { buildHomeDashboard } from '../utils/homeDashboard';
+
+type RootQuickActionTarget = keyof Pick<RootStackParamList, 'Breathe' | 'Alarm' | 'Hydration' | 'EyeWellness'>;
 
 function formatCountdown(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60)
@@ -71,8 +72,6 @@ export function HomeScreen() {
   } catch (e) {
     tabBarHeight = 0;
   }
-  const systemScheme = useColorScheme();
-  const settings = useSettingsStore((state) => state.settings);
   const profile = useProfileStore((state) => state.profile);
   const focusSessions = useFocusStore((state) => state.sessions);
   const activeSession = useFocusStore((state) => state.activeSession);
@@ -247,11 +246,15 @@ export function HomeScreen() {
   }
 
   const localQuickActions = [
-    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', image: require('../../assets/breathe.png'), target: 'Breathe', color: '#4f46e5' },
-    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', image: require('../../assets/powerNap.png'), target: 'Alarm', color: '#f59e0b' },
-    { key: 'hydration', label: 'Hydration', sub: 'Water & Drinks', image: require('../../assets/wellness.png'), target: 'Hydration', color: '#0ea5e9' },
-    { key: 'eyewellness', label: 'Eye Care', sub: 'Rest & Exercises', image: require('../../assets/restEye.png'), target: 'EyeWellness', color: '#10b981' },
+    { key: 'breathe', label: 'Breathe', sub: 'Guided breathing', image: require('../../assets/breathe.png'), target: 'Breathe' as RootQuickActionTarget, color: '#4f46e5' },
+    { key: 'alarm', label: 'Power Nap', sub: 'Energy timer', image: require('../../assets/powerNap.png'), target: 'Alarm' as RootQuickActionTarget, color: '#f59e0b' },
+    { key: 'hydration', label: 'Hydration', sub: 'Water & Drinks', image: require('../../assets/wellness.png'), target: 'Hydration' as RootQuickActionTarget, color: '#0ea5e9' },
+    { key: 'eyewellness', label: 'Eye Care', sub: 'Rest & Exercises', image: require('../../assets/restEye.png'), target: 'EyeWellness' as RootQuickActionTarget, color: '#10b981' },
   ] as const;
+
+  function openQuickAction(target: RootQuickActionTarget) {
+    (navigation.getParent() ?? navigation).navigate(target);
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -398,7 +401,7 @@ export function HomeScreen() {
             {localQuickActions.map((action) => (
               <Pressable
                 key={action.key}
-                onPress={() => navigation.navigate(action.target)}
+                onPress={() => openQuickAction(action.target)}
                 style={styles.qaCardWrapper}
               >
                 <GradientBorderCard 
@@ -591,10 +594,6 @@ export function HomeScreen() {
                   const y1 = 100 + lineInner * Math.sin(rad);
                   const x2 = 100 + lineOuter * Math.cos(rad);
                   const y2 = 100 + lineOuter * Math.sin(rad);
-                  const labelDist = lineOuter + 22;
-                  const labelX = 100 + labelDist * Math.cos(rad);
-                  const labelY = 100 + labelDist * Math.sin(rad);
-
                   return (
                     <React.Fragment key={`seg-${segment.key}`}>
                       <Circle

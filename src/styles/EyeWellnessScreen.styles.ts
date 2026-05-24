@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { spacing } from '../theme/tokens';
 import { ScreenPalette } from '../theme/screenPalettes';
 
 export function createEyeWellnessStyles(palette: ScreenPalette) {

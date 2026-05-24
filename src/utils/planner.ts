@@ -103,7 +103,7 @@ export function formatAmPm(date: Date) {
   return `${padTime(hours)}:${padTime(minutes)} ${ampm}`;
 }
 
-export function createPlannerDraft(selectedDate: string) {
+export function createPlannerDraft() {
   const now = new Date();
 
   return {

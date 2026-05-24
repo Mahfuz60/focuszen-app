@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Text, TextInput, Vibration } from 'react-native';
+import { NativeModules, Text, TextInput, Vibration } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import {
   Roboto_100Thin,
@@ -21,7 +21,6 @@ import { useAppTheme } from '../hooks/useAppTheme';
 import { useAlarmStore } from '../stores/useAlarmStore';
 import { useControlStore } from '../stores/useControlStore';
 import { useFocusStore } from '../stores/useFocusStore';
-import { NativeModules, View } from 'react-native';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { palettes } from '../theme/tokens';
 

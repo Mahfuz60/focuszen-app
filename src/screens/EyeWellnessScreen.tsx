@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import {
   Pressable,
@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { GradientBorderCard } from '../components/GradientBorderCard';
@@ -22,7 +22,6 @@ import {
 import {
   createEyeWellnessStyles,
 } from '../styles/EyeWellnessScreen.styles';
-import { ScreenPalette } from '../theme/screenPalettes';
 
 const EYE_EXERCISES: { id: EyeRestLog['type']; title: string; desc: string; duration: string; icon: string; color: string }[] = [
   { id: '20-20-20', title: '20-20-20 Rule', desc: 'Look 20ft away for 20s', duration: '20s', icon: 'eye', color: '#10b981' },
@@ -374,7 +373,7 @@ export function EyeWellnessScreen() {
                        {eyeRestLogs.length === 0 ? (
                           <Text style={{ color: palette.textDim, textAlign: 'center', marginVertical: 40 }}>No activity logged yet.</Text>
                        ) : (
-                          [...eyeRestLogs].reverse().map((log, idx) => {
+                          [...eyeRestLogs].reverse().map((log) => {
                              const ex = EYE_EXERCISES.find(e => e.id === log.type) || EYE_EXERCISES[0];
                              return (
                                 <View key={log.id} style={[styles.activityItem, { borderBottomColor: 'rgba(255,255,255,0.05)' }]}>

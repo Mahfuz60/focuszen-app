@@ -184,6 +184,9 @@ export const useControlStore = create<ControlState>()(
     {
       name: STORAGE_KEYS.control,
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.syncAllSettings();
+      },
     }
   )
 );

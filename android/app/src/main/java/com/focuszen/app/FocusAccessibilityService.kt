@@ -22,9 +22,7 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.LinearLayout
-import android.app.PendingIntent
 import android.content.Intent
-import android.net.Uri
 
 class FocusAccessibilityService : AccessibilityService() {
 
@@ -62,6 +60,7 @@ class FocusAccessibilityService : AccessibilityService() {
         if (
             event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED &&
             event.eventType != AccessibilityEvent.TYPE_VIEW_CLICKED &&
             event.eventType != AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED &&
@@ -92,6 +91,8 @@ class FocusAccessibilityService : AccessibilityService() {
         }
         lastTreeScanAt = now
 
+        if (blockFullAppIfNeeded(packageName)) return
+
         val rootNode = rootInActiveWindow
         val isRootNode = rootNode != null
         val nodeToUse = rootNode ?: event.source ?: return
@@ -120,13 +121,7 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         // ── Check Generic Full App Block ─────────────────────────────────────
-        val appName = PACKAGE_MAP[packageName]
-        if (appName != null) {
-            if (isFeatureEnabled(appName, "blockApp")) {
-                triggerBlockAction("$appName is blocked", isFullBlock = true, appName = appName)
-                return
-            }
-        }
+        if (blockFullAppIfNeeded(packageName)) return
 
         // ── Per-app feature blocking ─────────────────────────────────────────
         when (packageName) {
@@ -152,6 +147,13 @@ class FocusAccessibilityService : AccessibilityService() {
     }
 
     // ─── App Handlers ─────────────────────────────────────────────────────────
+
+    private fun blockFullAppIfNeeded(packageName: String): Boolean {
+        val appName = PACKAGE_MAP[packageName] ?: return false
+        if (!isFeatureEnabled(appName, "blockApp")) return false
+        triggerBlockAction("$appName is blocked", isFullBlock = true, appName = appName)
+        return true
+    }
 
     private fun handleYouTube(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("YouTube", "blockApp")) {
@@ -588,7 +590,7 @@ class FocusAccessibilityService : AccessibilityService() {
                 sendHome()
             }
         } else {
-            performGlobalAction(GLOBAL_ACTION_BACK)
+            if (!performGlobalAction(GLOBAL_ACTION_BACK)) sendHome()
         }
     }
 
@@ -763,6 +765,7 @@ class FocusAccessibilityService : AccessibilityService() {
                 isBlackoutActive = true
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to show block overlay: ${e.message}")
+                sendHome()
             }
         }
     }

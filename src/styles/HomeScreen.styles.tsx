@@ -38,17 +38,6 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
       shadowRadius: 8,
       shadowOffset: { width: 0, height: 4 },
     },
-    notificationDot: {
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      backgroundColor: palette.green,
-      borderWidth: 2,
-      borderColor: palette.backgroundTop,
-    },
     heroRow: {
       marginTop: spacing.lg,
       flexDirection: 'row',
@@ -119,12 +108,6 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
-    streakSubLabel: {
-      marginTop: 2,
-      fontSize: 11,
-      fontWeight: '700',
-      color: palette.green,
-    },
     focusCard: {
       marginTop: spacing.lg,
       borderRadius: 32,
@@ -139,11 +122,6 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
       elevation: 6,
       flexDirection: 'row',
       alignItems: 'center',
-    },
-    focusHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
     },
     focusEyebrowRow: {
       flexDirection: 'row',
@@ -189,12 +167,6 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
     playIconActive: {
       marginLeft: 0,
     },
-    focusMiddleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginTop: spacing.md,
-    },
     focusTitle: {
       marginTop: spacing.md,
       fontSize: 32,
@@ -205,10 +177,6 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
     },
     focusFooter: {
       marginTop: spacing.md,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    focusFooterRight: {
       flexDirection: 'row',
       alignItems: 'center',
     },
@@ -356,12 +324,6 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
       padding: 24,
       borderRadius: 28,
       marginBottom: 16,
-    },
-    usageFullDivider: {
-      height: 1,
-      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
-      marginVertical: 20,
-      width: '100%',
     },
     usageHeroRow: {
       flexDirection: 'row',
@@ -541,11 +503,6 @@ export function createHomeStyles(palette: ScreenPalette, mode: 'dark' | 'light')
       color: palette.textSoft,
       marginTop: -2,
     },
-    usagePercentLabel: {
-      position: 'absolute',
-      fontSize: 12,
-      fontWeight: '700',
-    },
     usageDropdownWrap: {
       position: 'absolute',
       top: 48,
@@ -622,8 +579,5 @@ export const extraStyles = StyleSheet.create({
   streakBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-  },
-  focusCardContent: {
-    flex: 1,
   },
 });

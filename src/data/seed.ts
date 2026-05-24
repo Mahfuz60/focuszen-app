@@ -1,6 +1,5 @@
 import {
   AppControlSettings,
-  AppControlTarget,
   AppSettings,
   Badge,
   Goal,
