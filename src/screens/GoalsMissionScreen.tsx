@@ -69,7 +69,7 @@ export function GoalsMissionScreen() {
 
       <SurfaceCard delay={220} style={{
         borderColor: palette.stroke,
-        shadowColor: colors.purple,
+        shadowColor: (colors as any).purple || '#d946ef',
         shadowOpacity: mode === 'dark' ? 0.2 : 0.05,
         shadowRadius: 15,
         elevation: 6,

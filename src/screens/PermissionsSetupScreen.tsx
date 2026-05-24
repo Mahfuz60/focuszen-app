@@ -86,6 +86,7 @@ export function PermissionsSetupScreen() {
     syncAllSettings();
     checkPermissions();
     navigation.replace('MainTabs');
+  
   };
 
   const permissions = [

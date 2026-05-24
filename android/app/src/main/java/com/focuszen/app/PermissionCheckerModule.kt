@@ -40,10 +40,21 @@ class PermissionCheckerModule(reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun checkAccessibility(promise: Promise) {
-        val am = reactApplicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
+        val context = reactApplicationContext
+        val serviceName = "${context.packageName}/${FocusAccessibilityService::class.java.name}"
+        val settingValue = android.provider.Settings.Secure.getString(
+            context.contentResolver,
+            android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        )
+        if (settingValue?.contains(serviceName) == true) {
+            promise.resolve(true)
+            return
+        }
+
+        val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+        val enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
         val isEnabled = enabledServices.any {
-            it.resolveInfo.serviceInfo.packageName == reactApplicationContext.packageName &&
+            it.resolveInfo.serviceInfo.packageName == context.packageName &&
             it.resolveInfo.serviceInfo.name == FocusAccessibilityService::class.java.name
         }
         promise.resolve(isEnabled)

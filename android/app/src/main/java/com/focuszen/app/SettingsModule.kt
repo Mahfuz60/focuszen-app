@@ -13,14 +13,7 @@ import com.facebook.react.bridge.ReadableMap
 class SettingsModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
     private val TAG = "FocusZenSettings"
-    private val prefs: SharedPreferences = run {
-        val safeContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            reactContext.createDeviceProtectedStorageContext()
-        } else {
-            reactContext
-        }
-        safeContext.getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
-    }
+    private val prefs: SharedPreferences = reactContext.getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
 
     override fun getName(): String {
         return "FocusZenSettings"
@@ -123,9 +116,18 @@ class SettingsModule(reactContext: ReactApplicationContext) :
     private fun isServiceEnabled(): Boolean {
         val am = reactApplicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
         val enabledServices = am.getEnabledAccessibilityServiceList(android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_GENERIC)
-        return enabledServices.any {
+        val isEnabled = enabledServices.any {
             it.resolveInfo.serviceInfo.packageName == reactApplicationContext.packageName &&
             it.resolveInfo.serviceInfo.name == FocusAccessibilityService::class.java.name
         }
+        if (isEnabled) return true
+
+        val serviceName1 = "${reactApplicationContext.packageName}/${FocusAccessibilityService::class.java.name}"
+        val serviceName2 = "${reactApplicationContext.packageName}/.FocusAccessibilityService"
+        val settingValue = android.provider.Settings.Secure.getString(
+            reactApplicationContext.contentResolver,
+            android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        )
+        return settingValue?.contains(serviceName1) == true || settingValue?.contains(serviceName2) == true
     }
 }

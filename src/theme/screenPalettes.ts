@@ -496,7 +496,6 @@ export function getScreenPalette(
         accentPurple: '#a78bfa',
         accentBlue: '#38bdf8',
         green: '#10b981',
-        primary: '#10b981',
         screenGlow: 'rgba(16, 185, 129, 0.25)',
       },
       light: {
@@ -516,7 +515,6 @@ export function getScreenPalette(
         accentPurple: '#8b5cf6',
         accentBlue: '#0ea5e9',
         green: '#059669',
-        primary: '#059669',
         screenGlow: 'rgba(5, 150, 105, 0.08)',
       },
     },

@@ -317,7 +317,7 @@ export function FocusScreen() {
                 valueLabel=" "
                 caption=" "
                 trackColor={palette.ringTrack}
-                progressGradientColors={[palette.green, mode === 'dark' ? '#38bdf8' : '#3b82f6']}
+                progressGradientColors={[palette.green || '#10b981', mode === 'dark' ? '#38bdf8' : '#3b82f6']}
                 valueColor={palette.text}
                 captionColor={palette.textMuted}
               />

@@ -112,7 +112,7 @@ export function BodyCareScreen() {
     }, 1000);
   };
 
-  const handleLogWater = (ml: number, type: DrinkType = 'water') => {
+  const handleLogWater = (ml: number, type: DrinkType = 'Water') => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     logWater(ml, type);
   };
@@ -123,9 +123,9 @@ export function BodyCareScreen() {
       <AnimatedThemeBackdrop
         colors={[palette.backgroundTop, palette.backgroundBottom]}
         mode={mode}
-        primaryGlow={palette.primaryGlow}
-        secondaryGlow={palette.secondaryGlow}
-        accentGlow={palette.accentGlow}
+        primaryGlow={palette.screenGlow}
+        secondaryGlow={palette.screenGlowSoft}
+        accentGlow={palette.screenGlowAccent}
       >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Top bar */}
@@ -141,7 +141,7 @@ export function BodyCareScreen() {
 
           {/* Mascot & Greeting */}
           <View style={styles.bubbleContainer}>
-             <WaterMascot color={palette.blue} />
+             <WaterMascot color={palette.blue || '#0ea5e9'} />
              <View style={styles.speechBubble}>
                 <Text style={styles.bubbleText}>Let's drink some water!</Text>
              </View>
@@ -242,20 +242,20 @@ export function BodyCareScreen() {
              {waterEntries.slice(0, 4).map((entry, idx) => {
                 const drink = DRINK_TYPES.find(d => d.type === entry.type) || DRINK_TYPES[0];
                 return (
-                  <View key={entry.id} style={styles.timelineItem}>
-                     <View style={styles.timelineLeft}>
-                        <View style={[styles.timelineIcon, { backgroundColor: `${drink.color}20` }]}>
-                           <Ionicons name={drink.icon as any} size={16} color={drink.color} />
-                        </View>
-                        {idx !== 3 && <View style={styles.timelineLine} />}
-                     </View>
-                     <View style={styles.timelineContent}>
-                        <Text style={styles.timelineTime}>
-                           {new Date(entry.loggedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </Text>
-                        <Text style={styles.timelineAmount}>{entry.amountMl}ml {drink.label}</Text>
-                     </View>
-                  </View>
+                   <View key={entry.id} style={styles.bcTimelineItem}>
+                      <View style={styles.bcTimelineLeft}>
+                         <View style={[styles.timelineIcon, { backgroundColor: `${drink.color}20` }]}>
+                            <Ionicons name={drink.icon as any} size={16} color={drink.color} />
+                         </View>
+                         {idx !== 3 && <View style={styles.timelineLine} />}
+                      </View>
+                      <View style={styles.bcTimelineContent}>
+                         <Text style={styles.bcTimelineTime}>
+                            {new Date(entry.loggedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </Text>
+                         <Text style={styles.timelineAmount}>{entry.amountMl}ml {drink.label}</Text>
+                      </View>
+                   </View>
                 );
              })}
           </View>

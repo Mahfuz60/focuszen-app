@@ -22,7 +22,7 @@ export function WaveProgress({ progress, size, color, mode }: { progress: number
   const translateX = waveAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -size],
-  });
+  }) as any;
 
   const bottomColor = mode === 'dark' ? '#0c4a6e' : '#bae6fd';
 

@@ -105,7 +105,7 @@ export function InsightsScreen() {
   const [nowIso, setNowIso] = useState(() => new Date().toISOString());
 
   const controls = useControlStore((state) => state.controls);
-  const strictModeEnabled = useControlStore((state) => state.strictModeEnabled);
+  const strictModeEnabled = useSettingsStore((state) => state.settings?.strictModeEnabled ?? false);
   const focusSessions = useFocusStore((state) => state.sessions);
   const purify = usePurifyStore((state) => state.purify);
   const refreshPurify = usePurifyStore((state) => state.refreshPurify);
@@ -493,7 +493,9 @@ export function InsightsScreen() {
         <View style={[styles.sectionCardInner, { backgroundColor: palette.surface }]}>
           <View style={styles.purifyHeader}>
             <Text style={styles.sectionTitle}>Control snapshot</Text>
-            <Text style={[styles.sectionTitle, { color: palette.green }]}>{controlOverview.metrics.protected.percent}%</Text>
+            <Text style={[styles.sectionTitle, { color: palette.green }]}>
+              {Math.round((Number(controlOverview.metrics.protected.value || 0) / Math.max(controls.length || 1, 1)) * 100)}%
+            </Text>
           </View>
 
           <View style={styles.tripletGrid}>
@@ -531,6 +533,14 @@ export function InsightsScreen() {
   }
 
   function renderPurifyOverhaul() {
+    const nextMilestone = purifyInsights.milestones.find(m => m.state === 'next') || purifyInsights.milestones.find(m => m.state === 'locked');
+    const nextMilestoneLabel = nextMilestone 
+      ? `Next: ${nextMilestone.days} Days`
+      : 'Fully Purified';
+    const stageProgressText = purifyStatus.active 
+      ? `Stage: ${purifyInsights.activeStage.title}`
+      : 'Purify inactive';
+
     return (
       <LinearGradient
         colors={mode === 'dark' ? [`${palette.purple}40`, `${palette.blue}40`] : [`${palette.purple}15`, `${palette.blue}15`]}
@@ -619,11 +629,11 @@ export function InsightsScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#8b5cf6' }} />
                     <Text style={{ fontSize: 12, fontWeight: '800', color: mode === 'dark' ? '#cbd5e1' : '#475569' }}>
-                      {purifyStatus.stageProgressText}
+                      {stageProgressText}
                     </Text>
                   </View>
                   <Text style={{ fontSize: 11, fontWeight: '900', color: palette.purple, textTransform: 'uppercase' }}>
-                    {purifyStatus.nextMilestoneLabel}
+                    {nextMilestoneLabel}
                   </Text>
                 </View>
              </View>

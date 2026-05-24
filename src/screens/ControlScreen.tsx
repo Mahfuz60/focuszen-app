@@ -613,7 +613,7 @@ export function ControlScreen() {
 
                       <ToggleTrack
                         value={Boolean(value)}
-                        onPress={() => toggleSafeBrowsing(row.key as keyof typeof safeBrowsing)}
+                        onPress={() => toggleSafeBrowsing(row.key as any)}
                         disabled={controlsLocked}
                         onDisabledPress={handlePermissionRequired}
                         palette={palette}

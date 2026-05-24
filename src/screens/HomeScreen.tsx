@@ -404,21 +404,11 @@ export function HomeScreen() {
                 <GradientBorderCard 
                   colors={[action.color + '40', 'rgba(148, 163, 184, 0.1)']} 
                   borderRadius={24}
-                  innerStyle={[styles.qaCard, { backgroundColor: mode === 'dark' ? 'rgba(15, 23, 42, 0.8)' : '#fff' }]}
+                  innerStyle={{ ...styles.qaCard, backgroundColor: mode === 'dark' ? 'rgba(15, 23, 42, 0.8)' : '#fff' }}
                 >
                   <View style={styles.qaIconContainer}>
-                    <View style={styles.qaIconWrap}>
-                      {action.key === 'focus' ? (
-                        <View style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: 'rgba(16, 185, 129, 0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                          <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#10b981', alignItems: 'center', justifyContent: 'center', shadowColor: '#10b981', shadowOpacity: 0.5, shadowRadius: 10, elevation: 5 }}>
-                            <Ionicons name="play" size={20} color="#fff" style={{ marginLeft: 2 }} />
-                          </View>
-                        </View>
-                      ) : (
-                        <View style={[styles.qaIconWrap, { backgroundColor: `${action.color}15` }]}>
-                           <Image source={action.image} style={styles.qaImage} />
-                        </View>
-                      )}
+                    <View style={[styles.qaIconWrap, { backgroundColor: `${action.color}15` }]}>
+                       <Image source={action.image} style={styles.qaImage} />
                     </View>
                     <View style={styles.qaArrowHint}>
                       <Feather name="arrow-up-right" size={14} color={action.color} />
@@ -445,7 +435,7 @@ export function HomeScreen() {
             <GradientBorderCard
               colors={['rgba(59, 130, 246, 0.4)', 'rgba(59, 130, 246, 0.1)']}
               borderRadius={28}
-              innerStyle={[styles.usageMasterCard, { backgroundColor: mode === 'dark' ? 'rgba(10, 16, 26, 0.98)' : '#fff' }]}
+              innerStyle={{ ...styles.usageMasterCard, backgroundColor: mode === 'dark' ? 'rgba(10, 16, 26, 0.98)' : '#fff' }}
             >
               <View style={styles.usageHeroRow}>
                 <View>

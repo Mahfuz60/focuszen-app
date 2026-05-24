@@ -123,7 +123,7 @@ export function EyeWellnessScreen() {
   }, [todayLogs]);
 
   const backdropColors = useMemo(() => 
-    [palette.background, mode === 'dark' ? '#080d1a' : '#f0f9ff'] as const, 
+    [palette.background || '#04070f', mode === 'dark' ? '#080d1a' : '#f0f9ff'] as const, 
   [palette.background, mode]);
 
   return (
@@ -132,14 +132,14 @@ export function EyeWellnessScreen() {
       <AnimatedThemeBackdrop
         colors={backdropColors}
         mode={mode}
-        primaryGlow={palette.primaryGlow}
-        secondaryGlow={palette.primaryGlow}
+        primaryGlow={palette.screenGlow}
+        secondaryGlow={palette.screenGlow}
       >
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-              <Pressable onPress={() => navigation.goBack()} style={styles.topIconButton}>
+              <Pressable onPress={() => navigation.goBack()} style={styles.closeIconButton}>
                 <Ionicons name="arrow-back" size={24} color={palette.text} />
               </Pressable>
               <View>
@@ -150,7 +150,7 @@ export function EyeWellnessScreen() {
               </View>
             </View>
           </View>
-
+ 
           {/* Hero Timer Area */}
           <View style={styles.heroArea}>
              <View style={styles.timerRing}>
@@ -158,7 +158,7 @@ export function EyeWellnessScreen() {
                   <Circle cx="50" cy="50" r="45" stroke={palette.stroke} strokeWidth="1" fill="none" />
                   <Circle
                     cx="50" cy="50" r="45"
-                    stroke={palette.accentGreen}
+                    stroke={palette.accentGreen || '#10b981'}
                     strokeWidth="3"
                     fill="none"
                     strokeDasharray={283}
@@ -173,7 +173,7 @@ export function EyeWellnessScreen() {
                    <Text style={styles.timerValue}>{formatTime(nextBreakSeconds)}</Text>
                    <Text style={styles.timerUnit}>min</Text>
                    <View style={styles.eyeIconContainer}>
-                      <EyeIcon color={palette.accentGreen} />
+                      <EyeIcon color={palette.accentGreen || '#10b981'} />
                    </View>
                 </View>
              </View>
@@ -317,8 +317,8 @@ export function EyeWellnessScreen() {
             <AnimatedThemeBackdrop
               colors={backdropColors}
               mode={mode}
-              primaryGlow={palette.primaryGlow}
-              secondaryGlow={palette.accentBlue + '20'}
+              primaryGlow={palette.screenGlow}
+              secondaryGlow={(palette.accentBlue || '#38bdf8') + '20'}
             >
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <View style={styles.timerBigRing}>
@@ -361,7 +361,7 @@ export function EyeWellnessScreen() {
       {showActivityModal && (
         <View style={[StyleSheet.absoluteFillObject, { zIndex: 2000 }]}>
            <Pressable style={styles.modalOverlay} onPress={() => setShowActivityModal(false)}>
-              <AnimatedThemeBackdrop colors={backdropColors} mode={mode} primaryGlow={palette.primaryGlow} secondaryGlow={palette.primaryGlow}>
+              <AnimatedThemeBackdrop colors={backdropColors} mode={mode} primaryGlow={palette.screenGlow} secondaryGlow={palette.screenGlow}>
                  <View style={styles.modalContent}>
                     <View style={styles.modalHeader}>
                        <Text style={styles.modalTitle}>Activity History</Text>
@@ -385,7 +385,7 @@ export function EyeWellnessScreen() {
                                       <Text style={styles.listTitle}>{ex.title}</Text>
                                       <Text style={styles.listSub}>{new Date(log.completedAt).toLocaleString()}</Text>
                                    </View>
-                                   <Ionicons name="checkmark-done" size={20} color={palette.accentGreen} />
+                                   <Ionicons name="checkmark-done" size={20} color={palette.accentGreen || '#10b981'} />
                                 </View>
                              );
                           })

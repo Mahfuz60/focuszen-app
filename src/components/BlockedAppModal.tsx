@@ -1,7 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import { ScreenPalette } from '../theme/screenPalettes';
 
 const { width } = Dimensions.get('window');
@@ -18,11 +17,11 @@ export function BlockedAppModal({ visible, appName, reason, onClose, palette }: 
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
-        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.85)' }]} />
         
         <View style={[styles.card, { backgroundColor: palette.surface, borderColor: 'rgba(255,255,255,0.1)' }]}>
           <View style={[styles.iconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
-            <Ionicons name="shield-alert" size={48} color="#ef4444" />
+            <Ionicons name="warning" size={48} color="#ef4444" />
           </View>
           
           <Text style={[styles.title, { color: palette.text }]}>Focus Protected</Text>

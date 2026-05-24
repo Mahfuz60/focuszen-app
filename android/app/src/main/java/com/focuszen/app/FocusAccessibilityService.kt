@@ -13,10 +13,15 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Toast
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
+import android.widget.TextView
+import android.widget.LinearLayout
 import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
@@ -51,24 +56,26 @@ class FocusAccessibilityService : AccessibilityService() {
         "com.x.android" to "X"
     )
 
+    private var lastPackageName: String = ""
+
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (
-        event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
-        event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
-        event.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED &&
-        event.eventType != AccessibilityEvent.TYPE_VIEW_CLICKED &&
-        event.eventType != AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED &&
-        event.eventType != AccessibilityEvent.TYPE_VIEW_FOCUSED
-    ) return
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED &&
+            event.eventType != AccessibilityEvent.TYPE_VIEW_CLICKED &&
+            event.eventType != AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_VIEW_FOCUSED
+        ) return
 
-    val packageName = event.packageName?.toString() ?: return
+        val packageName = event.packageName?.toString() ?: return
 
-       if (
-        event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
-        event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED ||
-        event.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED
-        ) {
-        lastActivityClass = event.className?.toString() ?: lastActivityClass
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            val className = event.className?.toString() ?: ""
+            if (className.isNotEmpty() && !className.contains("widget.") && !className.contains("view.") && !className.endsWith("Layout") && !className.endsWith("View") && !className.endsWith("Button") && !className.endsWith("RecyclerView") && !className.endsWith("ViewGroup")) {
+                lastActivityClass = className
+                Log.d(TAG, "Active Activity changed: $lastActivityClass")
+            }
         }
 
         // Ignore our own app
@@ -76,13 +83,35 @@ class FocusAccessibilityService : AccessibilityService() {
 
         val prefs = getSafePrefs()
 
+        // Bypass cooldown on package change
+        val now = System.currentTimeMillis()
+        if (packageName != lastPackageName) {
+            lastPackageName = packageName
+        } else {
+            if (now - lastTreeScanAt < SCAN_COOLDOWN_MS) return
+        }
+        lastTreeScanAt = now
+
+        val rootNode = rootInActiveWindow
+        val isRootNode = rootNode != null
+        val nodeToUse = rootNode ?: event.source ?: return
+
+        try {
+            checkAndBlock(nodeToUse, packageName, prefs)
+        } finally {
+            if (isRootNode) {
+                rootNode?.recycle()
+            }
+        }
+    }
+
+    private fun checkAndBlock(node: AccessibilityNodeInfo, packageName: String, prefs: android.content.SharedPreferences) {
         // ── Check Strict Mode ───────────────────────────────────────────────
         if (prefs.getBoolean("strict_mode", false)) {
             if (packageName == "com.android.settings" || packageName == "com.miui.securitycenter") {
-                val rootNodeCheck = rootInActiveWindow ?: event.source
-                if (hasNodeByText(rootNodeCheck, "Accessibility") ||
-                    hasNodeByText(rootNodeCheck, "FocusZen") ||
-                    hasNodeByText(rootNodeCheck, "Device admin")
+                if (hasNodeByText(node, "Accessibility") ||
+                    hasNodeByText(node, "FocusZen") ||
+                    hasNodeByText(node, "Device admin")
                 ) {
                     triggerBlockAction("Strict mode active - Settings blocked", isFullBlock = true, appName = "Settings")
                     return
@@ -99,25 +128,18 @@ class FocusAccessibilityService : AccessibilityService() {
             }
         }
 
-        // Throttle deep tree scanning to prevent ANR and silent service unbinding
-        val now = System.currentTimeMillis()
-        if (now - lastTreeScanAt < SCAN_COOLDOWN_MS) return
-        lastTreeScanAt = now
-
         // ── Per-app feature blocking ─────────────────────────────────────────
-        val rootNode = rootInActiveWindow ?: event.source ?: return
-
         when (packageName) {
-            "com.google.android.youtube"                          -> handleYouTube(rootNode)
-            "com.facebook.katana"                                 -> handleFacebook(rootNode)
-            "com.instagram.android"                               -> handleInstagram(rootNode)
-            "com.zhiliaoapp.musically", "com.ss.android.ugc.trill" -> handleTikTok(rootNode)
-            "com.snapchat.android"                                -> handleSnapchat(rootNode)
-            "com.whatsapp"                                        -> handleWhatsApp(rootNode)
-            "com.twitter.android", "com.x.android"               -> handleX(rootNode)
-            "org.telegram.messenger"                              -> handleTelegram(rootNode)
-            "com.facebook.orca", "com.facebook.mlite"            -> handleMessenger(rootNode)
-            "jp.naver.line.android"                              -> handleLine(rootNode)
+            "com.google.android.youtube"                          -> handleYouTube(node)
+            "com.facebook.katana"                                 -> handleFacebook(node)
+            "com.instagram.android"                               -> handleInstagram(node)
+            "com.zhiliaoapp.musically", "com.ss.android.ugc.trill" -> handleTikTok(node)
+            "com.snapchat.android"                                -> handleSnapchat(node)
+            "com.whatsapp"                                        -> handleWhatsApp(node)
+            "com.twitter.android", "com.x.android"               -> handleX(node)
+            "org.telegram.messenger"                              -> handleTelegram(node)
+            "com.facebook.orca", "com.facebook.mlite"            -> handleMessenger(node)
+            "jp.naver.line.android"                              -> handleLine(node)
             // Browsers
             "com.android.chrome",
             "com.sec.android.app.sbrowser",
@@ -125,12 +147,11 @@ class FocusAccessibilityService : AccessibilityService() {
             "com.microsoft.emmx",
             "com.opera.browser",
             "com.brave.browser",
-            "com.duckduckgo.mobile.android"                       -> handleBrowser(rootNode, packageName)
+            "com.duckduckgo.mobile.android"                       -> handleBrowser(node, packageName)
         }
     }
 
     // ─── App Handlers ─────────────────────────────────────────────────────────
-
 
     private fun handleYouTube(node: AccessibilityNodeInfo?) {
         if (isFeatureEnabled("YouTube", "blockApp")) {
@@ -144,8 +165,15 @@ class FocusAccessibilityService : AccessibilityService() {
                 || hasNodeByContentDesc(node, "Like this Short")
                 || hasNodeByContentDesc(node, "Dislike this Short")
                 || hasNodeByContentDesc(node, "Remix this Short")
-                || hasNodeWithIdLike(node, "shorts_player_container")
-                || hasNodeWithIdLike(node, "reel_player_page_container")
+                || hasNodeWithIdLike(node, "shorts_player")
+                || hasNodeWithIdLike(node, "reel_player")
+                || hasNodeWithIdLike(node, "reel_watch")
+                || hasNodeWithIdLike(node, "shorts_tombstone")
+                || hasNodeWithIdLike(node, "shorts_title")
+                || hasNodeWithIdLike(node, "shorts_comment")
+                || hasNodeWithIdLike(node, "shorts_share")
+                || hasNodeWithIdLike(node, "shorts_like")
+                || hasNodeWithIdLike(node, "shorts_dislike")
             if (inShorts) { triggerBlockAction("YouTube Shorts blocked"); return }
         }
 
@@ -181,8 +209,13 @@ class FocusAccessibilityService : AccessibilityService() {
                 || hasNodeByContentDesc(node, "Like this reel")
                 || hasNodeByContentDesc(node, "Comment on this reel")
                 || hasNodeByContentDesc(node, "Share this reel")
-                || hasNodeWithIdLike(node, "reels_video_container")
-                || hasNodeWithIdLike(node, "reel_player_element_container")
+                || hasNodeByContentDesc(node, "Reels video")
+                || hasNodeWithIdLike(node, "reels_video")
+                || hasNodeWithIdLike(node, "reel_player")
+                || hasNodeWithIdLike(node, "fb_shorts")
+                || hasNodeWithIdLike(node, "reel_viewer")
+                || hasNodeWithIdLike(node, "reels_viewer")
+                || hasNodeWithIdLike(node, "reels_feed")
             if (inReels) { triggerBlockAction("Facebook Reels blocked"); return }
         }
 
@@ -215,8 +248,13 @@ class FocusAccessibilityService : AccessibilityService() {
                 || hasNodeByContentDesc(node, "Like this reel")
                 || hasNodeByContentDesc(node, "Comment on this reel")
                 || hasNodeByContentDesc(node, "Share this reel")
-                || hasNodeWithIdLike(node, "clips_player_container")
-                || hasNodeWithIdLike(node, "reels_tray_container")
+                || hasNodeByContentDesc(node, "Reel of")
+                || hasNodeWithIdLike(node, "clips_player")
+                || hasNodeWithIdLike(node, "reels_tray")
+                || hasNodeWithIdLike(node, "clips_video")
+                || hasNodeWithIdLike(node, "clips_play")
+                || hasNodeWithIdLike(node, "reel_viewer")
+                || hasNodeWithIdLike(node, "instagram_reels")
             if (inReels) { triggerBlockAction("Instagram Reels blocked"); return }
         }
 
@@ -224,12 +262,14 @@ class FocusAccessibilityService : AccessibilityService() {
             val inStories = lastActivityClass.contains("story", ignoreCase = true)
                 || hasNodeWithIdLike(node, "reel_viewer_root")
                 || hasNodeWithIdLike(node, "story_viewer_container")
+                || hasNodeWithIdLike(node, "story_viewer")
             if (inStories) { triggerBlockAction("Instagram Stories blocked"); return }
         }
 
         if (isFeatureEnabled("Instagram", "blockExplore")) {
             val inExplore = lastActivityClass.contains("explore", ignoreCase = true)
                 || hasNodeWithIdLike(node, "explore_fragment_container")
+                || hasNodeWithIdLike(node, "explore_search")
                 || hasNodeByText(node, "Search")
             if (inExplore) { triggerBlockAction("Instagram Explore blocked"); return }
         }
@@ -242,12 +282,17 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("TikTok", "blockReels")) {
             // TikTok IS essentially a reels feed — block main feed view
-            val inFeed = hasNodeWithIdLike(node, "id/feed") || hasNodeWithIdLike(node, "vertical_view_pager")
+            val inFeed = hasNodeWithIdLike(node, "id/feed") 
+                || hasNodeWithIdLike(node, "vertical_view_pager")
+                || hasNodeWithIdLike(node, "feed_view_pager")
+                || hasNodeWithIdLike(node, "aweme_video")
+                || lastActivityClass.contains("MainActivity", ignoreCase = true) && hasNodeWithIdLike(node, "viewpager")
             if (inFeed) { triggerBlockAction("TikTok Feed blocked"); return }
         }
 
         if (isFeatureEnabled("TikTok", "blockSearch")) {
             val inSearch = hasNodeWithIdLike(node, "search_input")
+                || hasNodeWithIdLike(node, "search_box")
                 || lastActivityClass.contains("search", ignoreCase = true)
             if (inSearch) { triggerBlockAction("TikTok Search blocked"); return }
         }
@@ -255,6 +300,7 @@ class FocusAccessibilityService : AccessibilityService() {
         if (isFeatureEnabled("TikTok", "blockComments")) {
             val inComments = lastActivityClass.contains("comment", ignoreCase = true)
                 || hasNodeWithIdLike(node, "comment_input")
+                || hasNodeWithIdLike(node, "comment_list")
                 || hasNodeByText(node, "Add comment")
             if (inComments) { triggerBlockAction("TikTok Comments blocked"); return }
         }
@@ -266,13 +312,16 @@ class FocusAccessibilityService : AccessibilityService() {
         }
 
         if (isFeatureEnabled("Snapchat", "blockSpotlight")) {
-            val inSpotlight = hasNodeWithIdLike(node, "spotlight_header")
+            val inSpotlight = hasNodeWithIdLike(node, "spotlight")
+                || hasNodeWithIdLike(node, "spotlight_header")
                 || lastActivityClass.contains("spotlight", ignoreCase = true)
             if (inSpotlight) { triggerBlockAction("Snapchat Spotlight blocked"); return }
         }
 
         if (isFeatureEnabled("Snapchat", "blockStories")) {
             val inStories = lastActivityClass.contains("story", ignoreCase = true)
+                || hasNodeWithIdLike(node, "story_player")
+                || hasNodeWithIdLike(node, "snap_viewer")
             if (inStories) { triggerBlockAction("Snapchat Stories blocked"); return }
         }
     }
@@ -284,11 +333,15 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("WhatsApp", "blockStatus")) {
             val inStatus = lastActivityClass.contains("status", ignoreCase = true)
+                || hasNodeWithIdLike(node, "status_shared")
+                || hasNodeWithIdLike(node, "tab_status")
             if (inStatus) { triggerBlockAction("WhatsApp Status blocked"); return }
         }
 
         if (isFeatureEnabled("WhatsApp", "blockChannels")) {
             val inChannels = lastActivityClass.contains("channel", ignoreCase = true)
+                || hasNodeWithIdLike(node, "tab_channels")
+                || hasNodeWithIdLike(node, "channel_view")
             if (inChannels) { triggerBlockAction("WhatsApp Channels blocked"); return }
         }
     }
@@ -300,6 +353,8 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("X", "blockExplore")) {
             val inExplore = lastActivityClass.contains("explore", ignoreCase = true)
+                || hasNodeWithIdLike(node, "explore_tab")
+                || hasNodeWithIdLike(node, "search_results")
             if (inExplore) { triggerBlockAction("X Explore blocked"); return }
         }
     }
@@ -311,6 +366,7 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("Telegram", "blockChannels")) {
             val inChannels = lastActivityClass.contains("channel", ignoreCase = true)
+                || hasNodeWithIdLike(node, "channel_chat")
             if (inChannels) { triggerBlockAction("Telegram Channels blocked"); return }
         }
     }
@@ -322,6 +378,8 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("Messenger", "blockStories")) {
             val inStories = lastActivityClass.contains("story", ignoreCase = true)
+                || hasNodeWithIdLike(node, "stories_viewer")
+                || hasNodeWithIdLike(node, "story_viewer")
             if (inStories) { triggerBlockAction("Messenger Stories blocked"); return }
         }
     }
@@ -333,6 +391,8 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFeatureEnabled("Line", "blockVoom")) {
             val inVoom = lastActivityClass.contains("voom", ignoreCase = true)
+                || hasNodeWithIdLike(node, "voom_feed")
+                || hasNodeWithIdLike(node, "voom_player")
             if (inVoom) { triggerBlockAction("Line VOOM blocked"); return }
         }
     }
@@ -388,7 +448,11 @@ class FocusAccessibilityService : AccessibilityService() {
 
         for (id in knownIds) {
             val urlNode = findNodeById(node, id)
-            if (urlNode?.text != null) return urlNode.text.toString().lowercase()
+            if (urlNode != null) {
+                val text = urlNode.text?.toString()?.lowercase()
+                urlNode.recycle()
+                if (text != null && text.isNotEmpty()) return text
+            }
         }
 
         // Fallback: full tree traversal for any node whose text looks like a URL
@@ -400,8 +464,12 @@ class FocusAccessibilityService : AccessibilityService() {
         val text = node.text?.toString() ?: ""
         if (looksLikeUrl(text)) return text.lowercase()
         for (i in 0 until node.childCount) {
-            val result = extractUrlFromTree(node.getChild(i))
-            if (result != null) return result
+            val child = node.getChild(i)
+            if (child != null) {
+                val result = extractUrlFromTree(child)
+                child.recycle()
+                if (result != null) return result
+            }
         }
         return null
     }
@@ -479,12 +547,7 @@ class FocusAccessibilityService : AccessibilityService() {
     }
 
     private fun getSafePrefs(): android.content.SharedPreferences {
-        val safeContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            createDeviceProtectedStorageContext()
-        } else {
-            this
-        }
-        return safeContext.getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
+        return getSharedPreferences("FocusZenSettings", Context.MODE_PRIVATE)
     }
 
     private fun isFeatureEnabled(appName: String, feature: String): Boolean {
@@ -519,40 +582,9 @@ class FocusAccessibilityService : AccessibilityService() {
 
         if (isFullBlock) {
             try {
-                // 1. Send the blocked app away first so enforcement works even if activity launch is restricted.
-                sendHome()
-
-                // 2. Draw Native Blackout Overlay instantly to hide the distracting app
-                showBlackoutOverlay()
-
-                // 3. Launch the React Native Block Screen using an Explicit PendingIntent
-                // This bypasses Background Activity Start restrictions on most Android devices.
-                val blockIntent = Intent(this, MainActivity::class.java).apply {
-                    action = Intent.ACTION_VIEW
-                    data = Uri.parse("focuszen://blocked/${appName ?: "App"}")
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
-                            Intent.FLAG_ACTIVITY_CLEAR_TOP or 
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                
-                val pendingIntent = PendingIntent.getActivity(
-                    this,
-                    0,
-                    blockIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                
-                pendingIntent.send()
-
-                // 4. Remove the blackout overlay after the React Native app has had time to load
-                Handler(Looper.getMainLooper()).postDelayed({
-                    removeBlackoutOverlay()
-                }, 1200) // Slightly faster transition
-
+                showBlackoutOverlay(appName ?: "App")
             } catch (e: Exception) {
-                Log.e(TAG, "Block Intent failed: ${e.message}")
-                removeBlackoutOverlay()
-                // Absolute Fallback: Go to Home Screen
+                Log.e(TAG, "Failed to block: ${e.message}")
                 sendHome()
             }
         } else {
@@ -573,36 +605,164 @@ class FocusAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun showBlackoutOverlay() {
+    private fun dpToPx(dp: Int): Int {
+        val density = resources.displayMetrics.density
+        return (dp * density).toInt()
+    }
+
+    private fun showBlackoutOverlay(appName: String) {
         if (isBlackoutActive) return
         Handler(Looper.getMainLooper()).post {
             try {
                 val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-                blackoutView = FrameLayout(this).apply {
-                    setBackgroundColor(Color.parseColor("#0f172a")) // Slate 900 (FocusZen Dark Theme)
+                
+                val rootLayout = object : FrameLayout(this) {
+                    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+                        if (event.keyCode == KeyEvent.KEYCODE_BACK) {
+                            sendHome()
+                            removeBlackoutOverlay()
+                            return true
+                        }
+                        return super.dispatchKeyEvent(event)
+                    }
+                }.apply {
+                    val gd = GradientDrawable(
+                        GradientDrawable.Orientation.TOP_BOTTOM,
+                        intArrayOf(Color.parseColor("#0f172a"), Color.parseColor("#0b0f19"))
+                    )
+                    background = gd
+                    isClickable = true
+                    isFocusable = true
                 }
+
+                val contentLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.WRAP_CONTENT,
+                        Gravity.CENTER
+                    )
+                }
+
+                val iconContainer = FrameLayout(this).apply {
+                    val circleGd = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(Color.parseColor("#1e293b"))
+                        setStroke(4, Color.parseColor("#6366f1"))
+                    }
+                    background = circleGd
+                    val size = dpToPx(100)
+                    layoutParams = LinearLayout.LayoutParams(size, size).apply {
+                        gravity = Gravity.CENTER_HORIZONTAL
+                        bottomMargin = dpToPx(24)
+                    }
+                }
+
+                val shieldEmoji = TextView(this).apply {
+                    text = "🛡️"
+                    textSize = 40f
+                    gravity = Gravity.CENTER
+                    layoutParams = FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                    )
+                }
+                iconContainer.addView(shieldEmoji)
+                contentLayout.addView(iconContainer)
+
+                val titleView = TextView(this).apply {
+                    text = "Time to Focus"
+                    textSize = 28f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.DEFAULT_BOLD
+                    gravity = Gravity.CENTER
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        bottomMargin = dpToPx(12)
+                    }
+                }
+                contentLayout.addView(titleView)
+
+                val subtitleView = TextView(this).apply {
+                    text = "$appName is blocked right now to help you stay productive."
+                    textSize = 16f
+                    setTextColor(Color.parseColor("#94a3b8"))
+                    gravity = Gravity.CENTER
+                    setLineSpacing(4f, 1.1f)
+                    val padding = dpToPx(32)
+                    setPadding(padding, 0, padding, 0)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        bottomMargin = dpToPx(40)
+                    }
+                }
+                contentLayout.addView(subtitleView)
+
+                val buttonView = TextView(this).apply {
+                    text = "Got It, Close App"
+                    textSize = 16f
+                    setTextColor(Color.WHITE)
+                    typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                    gravity = Gravity.CENTER
+                    
+                    val btnGd = GradientDrawable().apply {
+                        shape = GradientDrawable.RECTANGLE
+                        cornerRadius = dpToPx(14).toFloat()
+                        setColor(Color.parseColor("#6366f1"))
+                    }
+                    background = btnGd
+                    
+                    val verticalPadding = dpToPx(16)
+                    val horizontalPadding = dpToPx(32)
+                    setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+                    
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        val margin = dpToPx(48)
+                        leftMargin = margin
+                        rightMargin = margin
+                    }
+                    
+                    setOnClickListener {
+                        sendHome()
+                        removeBlackoutOverlay()
+                    }
+                }
+                contentLayout.addView(buttonView)
+
+                rootLayout.addView(contentLayout)
 
                 val params = WindowManager.LayoutParams(
                     WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.MATCH_PARENT,
-                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
+                    } else {
+                        @Suppress("DEPRECATION")
+                        WindowManager.LayoutParams.TYPE_PHONE
+                    },
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     PixelFormat.TRANSLUCENT
                 ).apply {
                     gravity = Gravity.CENTER
-                    // Ensure the overlay is truly full screen and covers everything (status bar, etc.)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                         layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
                     }
                 }
 
-                windowManager.addView(blackoutView, params)
+                windowManager.addView(rootLayout, params)
+                blackoutView = rootLayout
                 isBlackoutActive = true
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to show blackout overlay: ${e.message}")
+                Log.e(TAG, "Failed to show block overlay: ${e.message}")
             }
         }
     }
@@ -624,13 +784,17 @@ class FocusAccessibilityService : AccessibilityService() {
     private fun hasNodeByText(node: AccessibilityNodeInfo?, text: String): Boolean {
         if (node == null) return false
         val results = node.findAccessibilityNodeInfosByText(text)
-        return results != null && results.isNotEmpty()
+        val found = results != null && results.isNotEmpty()
+        results?.forEach { it.recycle() }
+        return found
     }
 
     private fun hasNodeById(node: AccessibilityNodeInfo?, id: String): Boolean {
         if (node == null) return false
         val results = node.findAccessibilityNodeInfosByViewId(id)
-        return results != null && results.isNotEmpty()
+        val found = results != null && results.isNotEmpty()
+        results?.forEach { it.recycle() }
+        return found
     }
 
     private fun hasNodeWithIdLike(node: AccessibilityNodeInfo?, idContains: String): Boolean {
@@ -640,7 +804,12 @@ class FocusAccessibilityService : AccessibilityService() {
         if (shortId.contains(idContains.lowercase())) return true
         
         for (i in 0 until node.childCount) {
-            if (hasNodeWithIdLike(node.getChild(i), idContains)) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = hasNodeWithIdLike(child, idContains)
+                child.recycle()
+                if (found) return true
+            }
         }
         return false
     }
@@ -649,7 +818,12 @@ class FocusAccessibilityService : AccessibilityService() {
         if (node == null) return false
         if (node.contentDescription?.toString()?.contains(desc, ignoreCase = true) == true) return true
         for (i in 0 until node.childCount) {
-            if (hasNodeByContentDesc(node.getChild(i), desc)) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = hasNodeByContentDesc(child, desc)
+                child.recycle()
+                if (found) return true
+            }
         }
         return false
     }
@@ -657,7 +831,14 @@ class FocusAccessibilityService : AccessibilityService() {
     private fun findNodeById(node: AccessibilityNodeInfo?, id: String): AccessibilityNodeInfo? {
         if (node == null) return null
         val results = node.findAccessibilityNodeInfosByViewId(id)
-        return if (results != null && results.isNotEmpty()) results[0] else null
+        if (results != null && results.isNotEmpty()) {
+            val first = results[0]
+            for (i in 1 until results.size) {
+                results[i].recycle()
+            }
+            return first
+        }
+        return null
     }
 
     override fun onInterrupt() {}

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Modal, Text, View, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '../hooks/useAppTheme';
-import { createFocusCompleteModalStyles } from '../styles/FocusCompleteModal.styles.ts';
+import { createFocusCompleteModalStyles } from '../styles/FocusCompleteModal.styles';
 
 const MOTIVATIONAL_MESSAGES = [
   "Great job! You stayed focused and productive.",

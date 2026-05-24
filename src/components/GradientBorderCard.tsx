@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 type GradientBorderCardProps = {
   children: ReactNode;
-  colors?: string[];
+  colors?: readonly [string, string, ...string[]];
   borderRadius?: number;
   style?: ViewStyle;
   innerStyle?: ViewStyle;
