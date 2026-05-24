@@ -65,7 +65,8 @@ export function HydrationAddModal({ visible, initialType, onClose, onAdd, palett
     { 
       useNativeDriver: false,
       listener: (event: any) => {
-        const x = event.nativeEvent.contentOffset.x;
+        const x = event?.nativeEvent?.contentOffset?.x;
+        if (typeof x !== 'number') return;
         const index = Math.round(x / 10);
         const newVolume = 100 + index * 10;
         if (newVolume !== volume && newVolume >= 100 && newVolume <= 1000) {

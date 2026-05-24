@@ -88,11 +88,19 @@ export function HydrationScreen() {
   const visualProgress = Math.max(Number.isFinite(visibleProgress) ? visibleProgress : 0, 0.05);
 
   useEffect(() => {
-    const listenerId = animatedProgress.addListener(({ value }) => {
+    const sub = animatedProgress.addListener(({ value }) => {
       setVisibleProgress(value);
     });
 
-    return () => animatedProgress.removeListener(listenerId);
+    return () => {
+      if (sub && typeof sub === 'object' && typeof (sub as any).remove === 'function') {
+        (sub as any).remove();
+      } else if (typeof animatedProgress.removeListener === 'function') {
+        animatedProgress.removeListener(sub as any);
+      } else {
+        animatedProgress.removeAllListeners();
+      }
+    };
   }, [animatedProgress]);
 
   useEffect(() => {

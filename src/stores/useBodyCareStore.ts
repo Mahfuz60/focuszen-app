@@ -46,8 +46,8 @@ export function computeTodayWater(entries: WaterEntry[]): number {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   return (entries || [])
-    .filter((e) => new Date(e.loggedAt) >= todayStart)
-    .reduce((sum, e) => sum + e.amountMl, 0);
+    .filter((e) => e && e.loggedAt && new Date(e.loggedAt) >= todayStart)
+    .reduce((sum, e) => sum + (e.amountMl || 0), 0);
 }
 
 export const useBodyCareStore = create<BodyCareStore>()(
