@@ -8,6 +8,7 @@ import { seedControlSettings } from '../data/seed';
 import { STORAGE_KEYS } from '../storage/storage';
 import { AppControlSettings, AppControlTarget, AppFeatureKey, SafeBrowsingSettings, ScheduleRule } from '../types/models';
 import { getControlOptionDescriptors } from '../utils/controlOptions';
+import { syncRulesToNative } from '../modules/AppBlockerModule';
 
 const seedSafeBrowsing: SafeBrowsingSettings = {
   adultContentBlock: true,
@@ -89,6 +90,7 @@ export const useControlStore = create<ControlState>()(
             FocusZenSettings.setCustomBlockedDomains(state.safeBrowsing.customDomains);
           }
         }
+        syncRulesToNative(state.controls);
       },
       toggleAppBlocked: (appName) => {
         const state = get();
@@ -107,17 +109,18 @@ export const useControlStore = create<ControlState>()(
             )
           : { ...control.features, blockApp: false };
 
-        set((s) => ({
-          controls: s.controls.map((c) =>
-            c.appName === appName
-              ? { ...c, blocked: nextBlocked, features: nextFeatures }
-              : c
-          ),
-        }));
+        const nextControls = state.controls.map((c) =>
+          c.appName === appName
+            ? { ...c, blocked: nextBlocked, features: nextFeatures }
+            : c
+        );
+
+        set({ controls: nextControls });
 
         if (FocusZenSettings) {
           FocusZenSettings.updateAppFeatures(appName, nextFeatures);
         }
+        syncRulesToNative(nextControls);
       },
       toggleFeature: (appName, feature) => {
         const state = get();
@@ -131,33 +134,36 @@ export const useControlStore = create<ControlState>()(
           [feature]: nextValue,
         };
 
-        set((s) => ({
-          controls: s.controls.map((c) => {
-            if (c.appName !== appName) return c;
-            return {
-              ...c,
-              blocked: feature === 'blockApp' ? nextValue : c.blocked,
-              features: nextFeatures,
-            };
-          }),
-        }));
+        const nextControls = state.controls.map((c) => {
+          if (c.appName !== appName) return c;
+          return {
+            ...c,
+            blocked: feature === 'blockApp' ? nextValue : c.blocked,
+            features: nextFeatures,
+          };
+        });
+
+        set({ controls: nextControls });
 
         if (FocusZenSettings) {
           FocusZenSettings.updateAppFeatures(appName, nextFeatures);
         }
+        syncRulesToNative(nextControls);
       },
-      setTimeLimit: (appName, minutes) =>
-        set((state) => ({
-          controls: (state.controls || []).map((control) =>
-            control.appName === appName ? { ...control, timeLimitMinutes: minutes } : control
-          ),
-        })),
-      setScheduleRule: (appName, rule) =>
-        set((state) => ({
-          controls: (state.controls || []).map((control) =>
-            control.appName === appName ? { ...control, scheduleRule: rule } : control
-          ),
-        })),
+      setTimeLimit: (appName, minutes) => {
+        const nextControls = (get().controls || []).map((control) =>
+          control.appName === appName ? { ...control, timeLimitMinutes: minutes } : control
+        );
+        set({ controls: nextControls });
+        syncRulesToNative(nextControls);
+      },
+      setScheduleRule: (appName, rule) => {
+        const nextControls = (get().controls || []).map((control) =>
+          control.appName === appName ? { ...control, scheduleRule: rule } : control
+        );
+        set({ controls: nextControls });
+        syncRulesToNative(nextControls);
+      },
       toggleSafeBrowsing: (key) =>
         set((state) => {
           const updated = {

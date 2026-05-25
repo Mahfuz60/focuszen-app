@@ -23,9 +23,10 @@ class MainApplication : Application(), ReactApplication {
       object : DefaultReactNativeHost(this) {
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
-            add(PermissionCheckerPackage())
-             add(SettingsPackage())
-        }
+              add(PermissionCheckerPackage())
+              add(SettingsPackage())
+              add(AppBlockerPackage())
+            }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
 
