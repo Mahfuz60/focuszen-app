@@ -40,11 +40,6 @@ class MainActivity : ReactActivity() {
           ){})
   }
 
-  override fun onNewIntent(intent: android.content.Intent) {
-    super.onNewIntent(intent)
-    setIntent(intent)
-  }
-
   /**
     * Align the back button behavior with Android S
     * where moving root activities to background instead of finishing activities.

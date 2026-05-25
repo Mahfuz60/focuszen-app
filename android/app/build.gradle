@@ -113,14 +113,15 @@ android {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
+            def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
+            shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
-            shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             def enablePngCrunchInRelease = findProperty('android.enablePngCrunchInReleaseBuilds') ?: 'true'
             crunchPngs enablePngCrunchInRelease.toBoolean()
         }
     }
-    packaging {
+    packagingOptions {
         jniLibs {
             def enableLegacyPackaging = findProperty('expo.useLegacyPackaging') ?: 'false'
             useLegacyPackaging enableLegacyPackaging.toBoolean()
@@ -131,22 +132,22 @@ android {
     }
 }
 
-// Apply static values from `gradle.properties` to the `android.packaging`
+// Apply static values from `gradle.properties` to the `android.packagingOptions`
 // Accepts values in comma delimited lists, example:
-// android.packaging.pickFirsts=/LICENSE,**/picasa.ini
+// android.packagingOptions.pickFirsts=/LICENSE,**/picasa.ini
 ["pickFirsts", "excludes", "merges", "doNotStrip"].each { prop ->
     // Split option: 'foo,bar' -> ['foo', 'bar']
-    def options = (findProperty("android.packaging.$prop") ?: "").split(",");
+    def options = (findProperty("android.packagingOptions.$prop") ?: "").split(",");
     // Trim all elements in place.
     for (i in 0..<options.size()) options[i] = options[i].trim();
     // `[] - ""` is essentially `[""].filter(Boolean)` removing all empty strings.
     options -= ""
 
     if (options.length > 0) {
-        println "android.packaging.$prop += $options ($options.length)"
-        // Ex: android.packaging.pickFirsts += '**/SCCS/**'
+        println "android.packagingOptions.$prop += $options ($options.length)"
+        // Ex: android.packagingOptions.pickFirsts += '**/SCCS/**'
         options.each {
-            android.packaging[prop] += it
+            android.packagingOptions[prop] += it
         }
     }
 }
