@@ -12,24 +12,32 @@ class FocusZenSettingsModule(reactContext: ReactApplicationContext) :
         return "FocusZenSettings"
     }
 
-    @ReactMethod
+   @ReactMethod
     fun isAccessibilityServiceEnabled(promise: Promise) {
-        val enabled = Settings.Secure.getString(
+        val expectedService =
+            "${reactApplicationContext.packageName}/${FocusZenAccessibilityService::class.java.name}"
+
+        val enabledServices = Settings.Secure.getString(
             reactApplicationContext.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        )
-        val isEnabled = enabled?.contains(reactApplicationContext.packageName) == true
+        ) ?: ""
+
+        val isEnabled = enabledServices
+            .split(":")
+            .any { it.equals(expectedService, ignoreCase = true) }
+
         promise.resolve(isEnabled)
     }
 
     @ReactMethod
     fun startService() {
-        // No-op or trigger background monitoring service if needed
-    }
+       
+       // AccessibilityService is controlled by Android settings.
+    } 
 
     @ReactMethod
     fun stopService() {
-        // No-op or stop background monitoring service if needed
+        // AccessibilityService is controlled by Android settings.
     }
 
     @ReactMethod

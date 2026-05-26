@@ -35,9 +35,6 @@ class FocusZenAccessibilityService : AccessibilityService() {
 
     private fun shouldBlock(packageName: String): Boolean {
         val globalPrefs = getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
-        val isFocusActive = globalPrefs.getBoolean("focusSessionActive", false)
-        if (!isFocusActive) return false
-
         val appName = AppPackageMap.appNameFor(packageName) ?: return false
 
         val blockApp = globalPrefs.getBoolean("feature_${appName}_blockApp", false)

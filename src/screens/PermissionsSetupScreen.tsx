@@ -42,13 +42,15 @@ export function PermissionsSetupScreen() {
 
   const checkAllPermissions = useCallback(async () => {
   if (Platform.OS !== 'android') {
-    setCompleted({ usage: true, accessibility: true, overlay: true, battery: true });
-    return;
+   const next = { usage: true, accessibility: true, overlay: true, battery: true };
+    setCompleted(next);
+    return next;
   }
 
   if (!PermissionChecker) {
-    setCompleted({ usage: false, accessibility: false, overlay: false, battery: false });
-    return;
+   const next = { usage: false, accessibility: false, overlay: false, battery: false };
+   setCompleted(next);
+   return next;
   }
 
   try {
@@ -59,10 +61,13 @@ export function PermissionsSetupScreen() {
       PermissionChecker.checkBatteryOptimization(),
     ]);
 
-    setCompleted({ usage, accessibility, overlay, battery });
+    const next = { usage, accessibility, overlay, battery };
+    setCompleted(next);
+    return next;
   } catch (error) {
-    console.warn('Permission check failed', error);
-    setCompleted({ usage: false, accessibility: false, overlay: false, battery: false });
+    const next = { usage: false, accessibility: false, overlay: false, battery: false };
+    setCompleted(next);
+    return next;
   }
 }, []);
 
@@ -96,14 +101,13 @@ export function PermissionsSetupScreen() {
 // const allCompleted=true;
 
   const handleFinish = async () => {
-  await checkAllPermissions();
-
-  if (!Object.values(completed).every(Boolean)) return;
+  const latest = await checkAllPermissions();
+  if (!latest || !Object.values(latest).every(Boolean)) return;
 
   completePermissionsSetup();
-  syncAllSettings();
-  await checkPermissions();
-  navigation.replace('MainTabs');
+   syncAllSettings();
+   await checkPermissions();
+   navigation.replace('MainTabs');
 };
 
   const appPackageName =
