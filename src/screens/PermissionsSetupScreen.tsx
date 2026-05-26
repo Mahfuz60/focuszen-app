@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { AnimatedThemeBackdrop } from '../components/AnimatedThemeBackdrop';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -40,15 +41,30 @@ export function PermissionsSetupScreen() {
   });
 
   const checkAllPermissions = useCallback(async () => {
-    if (Platform.OS !== 'android' || !PermissionChecker) return;
+  if (Platform.OS !== 'android') {
+    setCompleted({ usage: true, accessibility: true, overlay: true, battery: true });
+    return;
+  }
 
-    const usage = await PermissionChecker.checkUsageAccess();
-    const accessibility = await PermissionChecker.checkAccessibility();
-    const overlay = await PermissionChecker.checkOverlay();
-    const battery = await PermissionChecker.checkBatteryOptimization();
+  if (!PermissionChecker) {
+    setCompleted({ usage: false, accessibility: false, overlay: false, battery: false });
+    return;
+  }
+
+  try {
+    const [usage, accessibility, overlay, battery] = await Promise.all([
+      PermissionChecker.checkUsageAccess(),
+      PermissionChecker.checkAccessibility(),
+      PermissionChecker.checkOverlay(),
+      PermissionChecker.checkBatteryOptimization(),
+    ]);
 
     setCompleted({ usage, accessibility, overlay, battery });
-  }, []);
+  } catch (error) {
+    console.warn('Permission check failed', error);
+    setCompleted({ usage: false, accessibility: false, overlay: false, battery: false });
+  }
+}, []);
 
   useEffect(() => {
     checkAllPermissions();
@@ -79,47 +95,52 @@ export function PermissionsSetupScreen() {
   const allCompleted = Object.values(completed).every((v) => v === true);
 // const allCompleted=true;
 
-  const handleFinish = () => {
-    if (!allCompleted) return;
-    completePermissionsSetup();
-    // Sync all JS store settings to native SharedPreferences now that permissions are granted
-    syncAllSettings();
-    checkPermissions();
-    navigation.replace('MainTabs');
-  
-  };
+  const handleFinish = async () => {
+  await checkAllPermissions();
 
-  const permissions = [
-    {
-      id: 'usage',
-      title: 'Usage Access',
-      description: 'Track app usage time accurately to help you focus.',
-      icon: 'stats-chart',
-      action: 'android.settings.USAGE_ACCESS_SETTINGS',
-    },
-    {
-      id: 'accessibility',
-      title: 'Accessibility',
-      description: 'Detect when distracting apps are opened and block them.',
-      icon: 'shield-checkmark',
-      action: 'android.settings.ACCESSIBILITY_SETTINGS',
-    },
-    {
-      id: 'overlay',
-      title: 'Display Over Apps',
-      description: 'Show the block screen overlay over distracting apps.',
-      icon: 'layers',
-      action: 'android.settings.action.MANAGE_OVERLAY_PERMISSION',
-    },
-    {
-      id: 'battery',
-      title: 'Ignore Battery Restrictions',
-      description: 'Keep the app running in the background for accurate tracking.',
-      icon: 'battery-charging',
-      action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
-      dataUri: 'package:com.focuszen.app',
-    },
-  ];
+  if (!Object.values(completed).every(Boolean)) return;
+
+  completePermissionsSetup();
+  syncAllSettings();
+  await checkPermissions();
+  navigation.replace('MainTabs');
+};
+
+  const appPackageName =
+  Constants.expoConfig?.android?.package ?? 'com.focuszen.app';
+
+const permissions = [
+  {
+    id: 'usage',
+    title: 'Usage Access',
+    description: 'Track app usage time accurately to help you focus.',
+    icon: 'stats-chart',
+    action: 'android.settings.USAGE_ACCESS_SETTINGS',
+  },
+  {
+    id: 'accessibility',
+    title: 'Accessibility',
+    description: 'Detect when distracting apps are opened and block them.',
+    icon: 'shield-checkmark',
+    action: 'android.settings.ACCESSIBILITY_SETTINGS',
+  },
+  {
+    id: 'overlay',
+    title: 'Display Over Apps',
+    description: 'Show the block screen overlay over distracting apps.',
+    icon: 'layers',
+    action: 'android.settings.action.MANAGE_OVERLAY_PERMISSION',
+    dataUri: `package:${appPackageName}`,
+  },
+  {
+    id: 'battery',
+    title: 'Ignore Battery Restrictions',
+    description: 'Keep the app running in the background for accurate tracking.',
+    icon: 'battery-charging',
+    action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+    dataUri: `package:${appPackageName}`,
+  },
+];
 
   return (
     <SafeAreaView style={styles.safeArea}>

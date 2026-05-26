@@ -42,30 +42,27 @@ export const useControlStore = create<ControlState>()(
       permissionsGranted: false,
 
       // NEW: Check if accessibility service is enabled
-      checkPermissions: async () => {
-        if (!FocusZenSettings?.isAccessibilityServiceEnabled) {
-          return;
-        }
-        
-        try {
-          const enabled = await FocusZenSettings.isAccessibilityServiceEnabled();
-          set({ permissionsGranted: enabled });
-          
-          // Auto-sync settings if permissions just got granted
-          if (enabled) {
-            get().syncAllSettings();
-            if (FocusZenSettings.startService) {
-              FocusZenSettings.startService();
-            }
-          } else {
-            if (FocusZenSettings.stopService) {
-              FocusZenSettings.stopService();
-            }
-          }
-        } catch (error) {
-          console.error('Failed to check permissions:', error);
-        }
-      },
+    checkPermissions: async () => {
+  if (!FocusZenSettings?.isAccessibilityServiceEnabled) {
+    set({ permissionsGranted: false });
+    return;
+  }
+
+  try {
+    const enabled = await FocusZenSettings.isAccessibilityServiceEnabled();
+    set({ permissionsGranted: enabled });
+
+    if (enabled) {
+      get().syncAllSettings();
+      FocusZenSettings.startService?.();
+    } else {
+      FocusZenSettings.stopService?.();
+    }
+  } catch (error) {
+    console.error('Failed to check permissions:', error);
+    set({ permissionsGranted: false });
+  }
+},
 
       // NEW: Open accessibility settings
       requestPermissions: () => {

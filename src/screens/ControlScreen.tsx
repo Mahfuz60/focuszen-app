@@ -236,22 +236,22 @@ export function ControlScreen() {
   }
 
   function handlePermissionRequired() {
-    Alert.alert(
-      "Device access required",
-      "Enable Accessibility Service to activate app blocking.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Open Settings", 
-          onPress: () => {
-            requestPermissions();
-            // Check again after a delay (user might enable it)
-            setTimeout(() => checkPermissions(), 1000);
-          }
-        },
-      ],
-    );
-  }
+  Alert.alert(
+    "Device access required",
+    "Enable Accessibility Service to activate app blocking.",
+    [
+      { text: "Cancel", style: "cancel" },
+      { 
+        text: "Open Settings", 
+        onPress: () => {
+          requestPermissions();
+          // Check again after a delay (user might enable it)
+          setTimeout(() => checkPermissions(), 1000);
+        }
+      },
+    ],
+  );
+}
 
   return (
     <SafeAreaView style={styles.safeArea}>
