@@ -81,6 +81,21 @@ class FocusZenSettingsModule(
     }
 
     @ReactMethod
+    fun setBlockedPackages(packages: ReadableArray) {
+        val values = mutableSetOf<String>()
+
+        for (index in 0 until packages.size()) {
+            packages.getString(index)?.let(values::add)
+        }
+
+        val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
+
+        prefs.edit()
+            .putStringSet("blockedPackages", values)
+            .apply()
+    }
+
+    @ReactMethod
     fun setSafeBrowsing(adultContentBlock: Boolean, gamblingBlock: Boolean) {
         val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
 
@@ -112,6 +127,21 @@ class FocusZenSettingsModule(
         prefs.edit()
             .putBoolean("focusSessionActive", isActive)
             .putBoolean("deepWorkEnabled", deepWorkEnabled)
+        .apply()
+   }
+
+    @ReactMethod
+    fun setBlockedPackages(packages: ReadableArray) {
+        val values = mutableSetOf<String>()
+
+        for (index in 0 until packages.size()) {
+            packages.getString(index)?.let(values::add)
+        }
+
+        val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
+
+        prefs.edit()
+            .putStringSet("blockedPackages", values)
             .apply()
     }
 }
