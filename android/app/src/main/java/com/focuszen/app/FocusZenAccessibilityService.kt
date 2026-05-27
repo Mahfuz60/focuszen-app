@@ -28,14 +28,23 @@ class FocusZenAccessibilityService : AccessibilityService() {
 
         val appName = AppPackageMap.appNameFor(packageName) ?: return
         val prefs = getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
-        
+
+        val focusActive = prefs.getBoolean("focusSessionActive", false)
+        if (!focusActive) {
+            return
+        }
+
         val blockShorts = prefs.getBoolean("feature_${appName}_blockShorts", false)
         val blockReels = prefs.getBoolean("feature_${appName}_blockReels", false)
 
         if (blockShorts || blockReels) {
             val text = rootInActiveWindow?.let { collectText(it) } ?: ""
             val lowerText = text.lowercase()
-            if ((blockShorts && lowerText.contains("shorts")) || (blockReels && lowerText.contains("reels"))) {
+
+            if (
+                (blockShorts && lowerText.contains("shorts")) ||
+                (blockReels && lowerText.contains("reels"))
+            ) {
                 blockPackage(packageName)
             }
         }
@@ -85,14 +94,21 @@ class FocusZenAccessibilityService : AccessibilityService() {
 
     private fun collectText(node: AccessibilityNodeInfo): String {
         val text = java.lang.StringBuilder()
-        if (node.text != null) text.append(node.text).append(" ")
-        if (node.contentDescription != null) text.append(node.contentDescription).append(" ")
+
+        node.text?.let {
+            text.append(it).append(" ")
+        }
+
+        node.contentDescription?.let {
+            text.append(it).append(" ")
+        }
+
         for (i in 0 until node.childCount) {
             node.getChild(i)?.let { child ->
                 text.append(collectText(child))
-                child.recycle()
             }
         }
+
         return text.toString()
     }
 }
