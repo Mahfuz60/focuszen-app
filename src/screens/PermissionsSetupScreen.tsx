@@ -40,7 +40,7 @@ export function PermissionsSetupScreen() {
     battery: false,
   });
 
-  const requiredPermissionIds = ['usage', 'accessibility', 'overlay'];
+  const requiredPermissionIds = ['usage', 'accessibility', 'overlay'] as const;
 
   const checkAllPermissions = useCallback(async () => {
   if (Platform.OS !== 'android') {
@@ -105,7 +105,7 @@ const allCompleted = requiredPermissionIds.every((id) => completed[id]);
 
   const handleFinish = async () => {
     const latest = await checkAllPermissions();
-    if (!latest || !requiredPermissionIds.every((id) => latest[id as keyof typeof latest])) return;
+   if (!latest || !requiredPermissionIds.every((id) => latest[id])) return;
 
     completePermissionsSetup();
     syncAllSettings();
