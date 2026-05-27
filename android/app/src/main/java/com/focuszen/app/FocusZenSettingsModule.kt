@@ -62,7 +62,10 @@ class FocusZenSettingsModule(
 
     @ReactMethod
     fun updateAppFeatures(appName: String, features: ReadableMap) {
-        val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
+        val prefs = reactApplicationContext.getSharedPreferences(
+            "FocusZenPrefs",
+            Context.MODE_PRIVATE
+        )
         val editor = prefs.edit()
         val keys = features.keySetIterator()
 
@@ -88,7 +91,10 @@ class FocusZenSettingsModule(
             packages.getString(index)?.let(values::add)
         }
 
-        val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
+        val prefs = reactApplicationContext.getSharedPreferences(
+            "FocusZenPrefs",
+            Context.MODE_PRIVATE
+        )
 
         prefs.edit()
             .putStringSet("blockedPackages", values)
@@ -97,7 +103,10 @@ class FocusZenSettingsModule(
 
     @ReactMethod
     fun setSafeBrowsing(adultContentBlock: Boolean, gamblingBlock: Boolean) {
-        val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
+        val prefs = reactApplicationContext.getSharedPreferences(
+            "FocusZenPrefs",
+            Context.MODE_PRIVATE
+        )
 
         prefs.edit()
             .putBoolean("adultContentBlock", adultContentBlock)
@@ -113,7 +122,10 @@ class FocusZenSettingsModule(
             domains.getString(index)?.let(values::add)
         }
 
-        val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
+        val prefs = reactApplicationContext.getSharedPreferences(
+            "FocusZenPrefs",
+            Context.MODE_PRIVATE
+        )
 
         prefs.edit()
             .putStringSet("customBlockedDomains", values.toSet())
@@ -122,26 +134,14 @@ class FocusZenSettingsModule(
 
     @ReactMethod
     fun setFocusSession(isActive: Boolean, deepWorkEnabled: Boolean) {
-        val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
+        val prefs = reactApplicationContext.getSharedPreferences(
+            "FocusZenPrefs",
+            Context.MODE_PRIVATE
+        )
 
         prefs.edit()
             .putBoolean("focusSessionActive", isActive)
             .putBoolean("deepWorkEnabled", deepWorkEnabled)
-        .apply()
-   }
-
-    @ReactMethod
-    fun setBlockedPackages(packages: ReadableArray) {
-        val values = mutableSetOf<String>()
-
-        for (index in 0 until packages.size()) {
-            packages.getString(index)?.let(values::add)
-        }
-
-        val prefs = reactApplicationContext.getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
-
-        prefs.edit()
-            .putStringSet("blockedPackages", values)
             .apply()
     }
 }
