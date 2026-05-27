@@ -40,6 +40,8 @@ export function PermissionsSetupScreen() {
     battery: false,
   });
 
+  const requiredPermissionIds = ['usage', 'accessibility', 'overlay'];
+
   const checkAllPermissions = useCallback(async () => {
   if (Platform.OS !== 'android') {
    const next = { usage: true, accessibility: true, overlay: true, battery: true };
@@ -97,18 +99,19 @@ export function PermissionsSetupScreen() {
     }
   };
 
-  const allCompleted = Object.values(completed).every((v) => v === true);
+
+const allCompleted = requiredPermissionIds.every((id) => completed[id]);
 // const allCompleted=true;
 
   const handleFinish = async () => {
-  const latest = await checkAllPermissions();
-  if (!latest || !Object.values(latest).every(Boolean)) return;
+    const latest = await checkAllPermissions();
+    if (!latest || !requiredPermissionIds.every((id) => latest[id as keyof typeof latest])) return;
 
-  completePermissionsSetup();
-   syncAllSettings();
-   await checkPermissions();
-   navigation.replace('MainTabs');
-};
+    completePermissionsSetup();
+    syncAllSettings();
+    await checkPermissions();
+    navigation.replace('MainTabs');
+  };
 
   const appPackageName =
   Constants.expoConfig?.android?.package ?? 'com.focuszen.app';
@@ -139,7 +142,7 @@ const permissions = [
   {
     id: 'battery',
     title: 'Ignore Battery Restrictions',
-    description: 'Keep the app running in the background for accurate tracking.',
+    description: 'Optional: keep the app running in the background for accurate tracking.',
     icon: 'battery-charging',
     action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
     dataUri: `package:${appPackageName}`,

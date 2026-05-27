@@ -13,21 +13,21 @@ class FocusZenSettingsModule(reactContext: ReactApplicationContext) :
     }
 
    @ReactMethod
-    fun isAccessibilityServiceEnabled(promise: Promise) {
+   fun isAccessibilityServiceEnabled(promise: Promise) {
         val expectedService =
             "${reactApplicationContext.packageName}/${FocusZenAccessibilityService::class.java.name}"
 
-        val enabledServices = Settings.Secure.getString(
+        val enabled = Settings.Secure.getString(
             reactApplicationContext.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ) ?: ""
+        )
 
-        val isEnabled = enabledServices
-            .split(":")
-            .any { it.equals(expectedService, ignoreCase = true) }
+        val isEnabled = enabled
+            ?.split(":")
+            ?.any { it.equals(expectedService, ignoreCase = true) } == true
 
         promise.resolve(isEnabled)
-    }
+  }
 
     @ReactMethod
     fun startService() {
