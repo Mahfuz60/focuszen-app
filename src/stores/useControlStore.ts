@@ -118,11 +118,12 @@ export const useControlStore = create<ControlState>()(
 
         set({ controls: nextControls });
 
-        FocusZenSettings?.setBlockedPackages?.(
-          nextControls
-            .filter((control) => control.blocked || control.features.blockApp)
-            .map((control) => control.packageName),
-        );
+       const blockedPackages = nextControls
+        .filter((control) => control.blocked || control.features.blockApp)
+        .map((control) => control.packageName);
+
+        FocusZenSettings?.setBlockedPackages?.(blockedPackages);
+        
 
         if (FocusZenSettings) {
           FocusZenSettings.updateAppFeatures(appName, nextFeatures);
@@ -152,11 +153,10 @@ export const useControlStore = create<ControlState>()(
 
         set({ controls: nextControls });
 
-        FocusZenSettings?.setBlockedPackages?.(
-          nextControls
-            .filter((control) => control.blocked || control.features.blockApp)
-            .map((control) => control.packageName),
-        );
+       const blockedPackages = nextControls
+       .filter((control) => control.blocked || control.features.blockApp)
+       .map((control) => control.packageName);
+        FocusZenSettings?.setBlockedPackages?.(blockedPackages);
 
         if (FocusZenSettings) {
           FocusZenSettings.updateAppFeatures(appName, nextFeatures);

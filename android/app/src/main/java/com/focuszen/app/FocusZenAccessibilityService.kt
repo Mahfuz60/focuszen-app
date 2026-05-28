@@ -310,23 +310,31 @@ class FocusZenAccessibilityService : AccessibilityService() {
     }
 
     private fun openBlockScreen(appName: String, reason: String) {
-        val uri = Uri.parse(
-            "focuszen://blocked/${Uri.encode(appName)}?reason=${Uri.encode(reason)}"
-        )
+    val uri = Uri.parse(
+        "focuszen://blocked/${Uri.encode(appName)}?reason=${Uri.encode(reason)}"
+    )
 
-        val intent = Intent(Intent.ACTION_VIEW, uri)
-        intent.setPackage(applicationContext.packageName)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+    val intent = Intent(Intent.ACTION_VIEW, uri)
+    intent.setPackage(applicationContext.packageName)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
-        try {
-            startActivity(intent)
-        } catch (error: Exception) {
-            Log.e(TAG, "failed to open block screen", error)
+    try {
+        startActivity(intent)
+    } catch (error: Exception) {
+        Log.e(TAG, "failed to open deep link block screen", error)
+
+        val launchIntent =
+            packageManager.getLaunchIntentForPackage(applicationContext.packageName)
+
+        if (launchIntent != null) {
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(launchIntent)
         }
     }
-
+}
     private fun collectScreenText(
         event: AccessibilityEvent?,
         root: AccessibilityNodeInfo?
