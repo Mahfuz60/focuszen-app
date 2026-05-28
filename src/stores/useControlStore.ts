@@ -83,6 +83,7 @@ export const useControlStore = create<ControlState>()(
             .map((control) => control.packageName);
 
           FocusZenSettings.setBlockedPackages?.(blockedPackages);
+          console.log('FocusZen blockedPackages synced:', blockedPackages);
 
           if (FocusZenSettings.setSafeBrowsing) {
             FocusZenSettings.setSafeBrowsing(
