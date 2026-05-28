@@ -104,14 +104,10 @@ export const useControlStore = create<ControlState>()(
 
         const nextBlocked = !control.blocked;
 
-        // When blocking: set blockApp + all feature flags to true
-        // When unblocking: clear blockApp flag only, keep other features as-is
-        const nextFeatures: Partial<Record<AppFeatureKey, boolean>> = nextBlocked
-          ? (getControlOptionDescriptors(appName) || []).reduce(
-              (acc, opt) => { acc[opt.key] = true; return acc; },
-              { ...control.features, blockApp: true } as Partial<Record<AppFeatureKey, boolean>>
-            )
-          : { ...control.features, blockApp: false };
+        const nextFeatures: Partial<Record<AppFeatureKey, boolean>> = {
+            ...control.features,
+            blockApp: nextBlocked,
+        };
 
         const nextControls = state.controls.map((c) =>
           c.appName === appName

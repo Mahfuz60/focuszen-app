@@ -5,11 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.SystemClock
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
 class FocusZenAccessibilityService : AccessibilityService() {
-    private var lastBlockedPackage: String? = null
+    private var lastBlockedKey: String? = null
     private var lastBlockedAt: Long = 0L
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -21,59 +22,126 @@ class FocusZenAccessibilityService : AccessibilityService() {
             return
         }
 
-        if (shouldBlockPackage(packageName)) {
-            blockPackage(packageName)
-            return
-        }
-
         val appName = AppPackageMap.appNameFor(packageName) ?: return
         val prefs = getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
 
-        val focusActive = prefs.getBoolean("focusSessionActive", false)
-        if (!focusActive) {
+        if (isFullAppBlocked(prefs, packageName)) {
+            blockPackage(packageName, "full_app")
             return
         }
 
-        val blockShorts = prefs.getBoolean("feature_${appName}_blockShorts", false)
-        val blockReels = prefs.getBoolean("feature_${appName}_blockReels", false)
+        val screenText = collectEventAndScreenText(event).lowercase()
+        val reason = getFeatureBlockReason(appName, prefs, screenText)
 
-        if (blockShorts || blockReels) {
-            val text = rootInActiveWindow?.let { collectText(it) } ?: ""
-            val lowerText = text.lowercase()
-
-            if (
-                (blockShorts && lowerText.contains("shorts")) ||
-                (blockReels && lowerText.contains("reels"))
-            ) {
-                blockPackage(packageName)
-            }
+        if (reason != null) {
+            blockPackage(packageName, reason)
         }
     }
 
     override fun onInterrupt() = Unit
 
-    private fun shouldBlockPackage(packageName: String): Boolean {
-        val prefs = getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
-
-        val focusActive = prefs.getBoolean("focusSessionActive", false)
-        if (!focusActive) {
-            return false
-        }
-
+    private fun isFullAppBlocked(
+        prefs: android.content.SharedPreferences,
+        packageName: String
+    ): Boolean {
         val blockedPackages = prefs.getStringSet("blockedPackages", emptySet()) ?: emptySet()
-
         return blockedPackages.contains(packageName)
     }
 
-    private fun blockPackage(packageName: String) {
-        val now = SystemClock.elapsedRealtime()
+    private fun getFeatureBlockReason(
+        appName: String,
+        prefs: android.content.SharedPreferences,
+        screenText: String
+    ): String? {
+        val blockShorts = prefs.getBoolean("feature_${appName}_blockShorts", false)
+        val blockReels = prefs.getBoolean("feature_${appName}_blockReels", false)
+        val blockStories = prefs.getBoolean("feature_${appName}_blockStories", false)
+        val blockFeed = prefs.getBoolean("feature_${appName}_blockFeed", false)
+        val blockSearch = prefs.getBoolean("feature_${appName}_blockSearch", false)
+        val blockComments = prefs.getBoolean("feature_${appName}_blockComments", false)
+        val blockExplore = prefs.getBoolean("feature_${appName}_blockExplore", false)
+        val blockSpotlight = prefs.getBoolean("feature_${appName}_blockSpotlight", false)
+        val blockChannels = prefs.getBoolean("feature_${appName}_blockChannels", false)
+        val blockStatus = prefs.getBoolean("feature_${appName}_blockStatus", false)
+        val blockVoom = prefs.getBoolean("feature_${appName}_blockVoom", false)
 
-        if (lastBlockedPackage == packageName && now - lastBlockedAt < 1500L) {
+        return when (appName) {
+            "YouTube" -> when {
+                blockShorts && containsAny(screenText, listOf("shorts", "youtube shorts")) -> "shorts"
+                blockSearch && containsAny(screenText, listOf("search youtube", "search")) -> "search"
+                blockComments && containsAny(screenText, listOf("comments", "comment")) -> "comments"
+                else -> null
+            }
+
+            "Facebook" -> when {
+                blockReels && containsAny(screenText, listOf("reels", "reel")) -> "reels"
+                blockStories && containsAny(screenText, listOf("stories", "story")) -> "stories"
+                blockFeed && containsAny(screenText, listOf("feed", "news feed")) -> "feed"
+                else -> null
+            }
+
+            "Instagram" -> when {
+                blockReels && containsAny(screenText, listOf("reels", "reel")) -> "reels"
+                blockStories && containsAny(screenText, listOf("stories", "story")) -> "stories"
+                blockExplore && containsAny(screenText, listOf("explore", "search")) -> "explore"
+                else -> null
+            }
+
+            "TikTok" -> when {
+                blockReels && containsAny(screenText, listOf("for you", "following", "tiktok")) -> "reels"
+                blockSearch && screenText.contains("search") -> "search"
+                blockComments && containsAny(screenText, listOf("comments", "comment")) -> "comments"
+                else -> null
+            }
+
+            "Snapchat" -> when {
+                blockSpotlight && screenText.contains("spotlight") -> "spotlight"
+                blockStories && containsAny(screenText, listOf("stories", "story")) -> "stories"
+                else -> null
+            }
+
+            "Telegram" -> when {
+                blockChannels && containsAny(screenText, listOf("channel", "channels")) -> "channels"
+                else -> null
+            }
+
+            "Line" -> when {
+                blockVoom && screenText.contains("voom") -> "voom"
+                else -> null
+            }
+
+            "Messenger" -> when {
+                blockStories && containsAny(screenText, listOf("stories", "story")) -> "stories"
+                else -> null
+            }
+
+            "WhatsApp" -> when {
+                blockStatus && screenText.contains("status") -> "status"
+                blockChannels && containsAny(screenText, listOf("channel", "channels")) -> "channels"
+                else -> null
+            }
+
+            "X" -> when {
+                blockExplore && containsAny(screenText, listOf("explore", "search")) -> "explore"
+                else -> null
+            }
+
+            else -> null
+        }
+    }
+
+    private fun blockPackage(packageName: String, reason: String) {
+        val now = SystemClock.elapsedRealtime()
+        val key = "$packageName:$reason"
+
+        if (lastBlockedKey == key && now - lastBlockedAt < 1500L) {
             return
         }
 
-        lastBlockedPackage = packageName
+        lastBlockedKey = key
         lastBlockedAt = now
+
+        Log.d("FocusZenBlocker", "Blocking package=$packageName reason=$reason")
 
         performGlobalAction(GLOBAL_ACTION_BACK)
 
@@ -92,23 +160,65 @@ class FocusZenAccessibilityService : AccessibilityService() {
         startActivity(intent)
     }
 
-    private fun collectText(node: AccessibilityNodeInfo): String {
-        val text = java.lang.StringBuilder()
+    private fun collectEventAndScreenText(event: AccessibilityEvent): String {
+        val values = mutableListOf<String>()
 
-        node.text?.let {
-            text.append(it).append(" ")
-        }
-
-        node.contentDescription?.let {
-            text.append(it).append(" ")
-        }
-
-        for (i in 0 until node.childCount) {
-            node.getChild(i)?.let { child ->
-                text.append(collectText(child))
+        event.text?.forEach { value ->
+            if (!value.isNullOrBlank()) {
+                values.add(value.toString())
             }
         }
 
-        return text.toString()
+        event.contentDescription?.let { value ->
+            if (value.isNotBlank()) {
+                values.add(value.toString())
+            }
+        }
+
+        rootInActiveWindow?.let { root ->
+            collectNodeText(root, values, 0)
+        }
+
+        val result = values.joinToString(" ")
+        Log.d("FocusZenBlocker", "screenText=$result")
+        return result
+    }
+
+    private fun collectNodeText(
+        node: AccessibilityNodeInfo,
+        values: MutableList<String>,
+        depth: Int
+    ) {
+        if (depth > 8) {
+            return
+        }
+
+        node.text?.let { value ->
+            if (value.isNotBlank()) {
+                values.add(value.toString())
+            }
+        }
+
+        node.contentDescription?.let { value ->
+            if (value.isNotBlank()) {
+                values.add(value.toString())
+            }
+        }
+
+        node.viewIdResourceName?.let { value ->
+            if (value.isNotBlank()) {
+                values.add(value)
+            }
+        }
+
+        for (index in 0 until node.childCount) {
+            node.getChild(index)?.let { child ->
+                collectNodeText(child, values, depth + 1)
+            }
+        }
+    }
+
+    private fun containsAny(text: String, values: List<String>): Boolean {
+        return values.any { text.contains(it) }
     }
 }
