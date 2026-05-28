@@ -17,19 +17,22 @@ class FocusZenAccessibilityService : AccessibilityService() {
         event ?: return
 
         val packageName = event.packageName?.toString() ?: return
+        if (packageName == applicationContext.packageName) return
 
-        if (packageName == applicationContext.packageName) {
-            return
-        }
-
-        val appName = AppPackageMap.appNameFor(packageName) ?: return
         val prefs = getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
+        val blockedPackages = prefs.getStringSet("blockedPackages", emptySet()) ?: emptySet()
 
-        if (isFullAppBlocked(prefs, packageName)) {
+        Log.d(
+            "FocusZenBlocker",
+            "event=${event.eventType} package=$packageName blockedPackages=$blockedPackages"
+        )
+
+        if (blockedPackages.contains(packageName)) {
             blockPackage(packageName, "full_app")
             return
         }
 
+        val appName = AppPackageMap.appNameFor(packageName) ?: return
         val screenText = collectEventAndScreenText(event).lowercase()
         val reason = getFeatureBlockReason(appName, prefs, screenText)
 
@@ -39,14 +42,6 @@ class FocusZenAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() = Unit
-
-    private fun isFullAppBlocked(
-        prefs: android.content.SharedPreferences,
-        packageName: String
-    ): Boolean {
-        val blockedPackages = prefs.getStringSet("blockedPackages", emptySet()) ?: emptySet()
-        return blockedPackages.contains(packageName)
-    }
 
     private fun getFeatureBlockReason(
         appName: String,
@@ -88,7 +83,7 @@ class FocusZenAccessibilityService : AccessibilityService() {
             }
 
             "TikTok" -> when {
-                blockReels && containsAny(screenText, listOf("for you", "following", "tiktok")) -> "reels"
+                blockReels && containsAny(screenText, listOf("for you", "following", "tiktok")) -> "feed"
                 blockSearch && screenText.contains("search") -> "search"
                 blockComments && containsAny(screenText, listOf("comments", "comment")) -> "comments"
                 else -> null
@@ -141,7 +136,7 @@ class FocusZenAccessibilityService : AccessibilityService() {
         lastBlockedKey = key
         lastBlockedAt = now
 
-        Log.d("FocusZenBlocker", "Blocking package=$packageName reason=$reason")
+        Log.d("FocusZenBlocker", "BLOCK package=$packageName reason=$reason")
 
         performGlobalAction(GLOBAL_ACTION_BACK)
 
@@ -164,15 +159,11 @@ class FocusZenAccessibilityService : AccessibilityService() {
         val values = mutableListOf<String>()
 
         event.text?.forEach { value ->
-            if (!value.isNullOrBlank()) {
-                values.add(value.toString())
-            }
+            if (!value.isNullOrBlank()) values.add(value.toString())
         }
 
         event.contentDescription?.let { value ->
-            if (value.isNotBlank()) {
-                values.add(value.toString())
-            }
+            if (value.isNotBlank()) values.add(value.toString())
         }
 
         rootInActiveWindow?.let { root ->
@@ -189,26 +180,18 @@ class FocusZenAccessibilityService : AccessibilityService() {
         values: MutableList<String>,
         depth: Int
     ) {
-        if (depth > 8) {
-            return
-        }
+        if (depth > 8) return
 
         node.text?.let { value ->
-            if (value.isNotBlank()) {
-                values.add(value.toString())
-            }
+            if (value.isNotBlank()) values.add(value.toString())
         }
 
         node.contentDescription?.let { value ->
-            if (value.isNotBlank()) {
-                values.add(value.toString())
-            }
+            if (value.isNotBlank()) values.add(value.toString())
         }
 
         node.viewIdResourceName?.let { value ->
-            if (value.isNotBlank()) {
-                values.add(value)
-            }
+            if (value.isNotBlank()) values.add(value)
         }
 
         for (index in 0 until node.childCount) {
