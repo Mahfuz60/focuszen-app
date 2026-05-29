@@ -71,11 +71,22 @@ class FocusZenAccessibilityService : AccessibilityService() {
 
         val prefs = getSharedPreferences("FocusZenPrefs", Context.MODE_PRIVATE)
         val blockedPackages = prefs.getStringSet("blockedPackages", emptySet()) ?: emptySet()
+        val focusActive = prefs.getBoolean("focusSessionActive", false)
+        val focusBlockedPackages =
+            prefs.getStringSet("focusBlockedPackages", emptySet()) ?: emptySet()
 
-        Log.d(TAG, "source=$source package=$packageName blockedPackages=$blockedPackages")
+        Log.d(
+            TAG,
+            "source=$source package=$packageName blockedPackages=$blockedPackages focusActive=$focusActive focusBlockedPackages=$focusBlockedPackages"
+        )
 
         if (blockedPackages.contains(packageName)) {
             blockPackage(packageName, "full_app")
+            return
+        }
+
+        if (focusActive && focusBlockedPackages.contains(packageName)) {
+            blockPackage(packageName, "focus_mode")
             return
         }
 

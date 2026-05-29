@@ -3,11 +3,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-const { FocusZenSettings } = NativeModules;
+import { APP_PACKAGE_NAMES, SOCIAL_APPS } from '../constants/apps';
+import { seedFocusSessions } from '../data/seed';
 import { STORAGE_KEYS } from '../storage/storage';
 import { FocusSession } from '../types/models';
-import { seedFocusSessions } from '../data/seed';
 import { extendActiveFocusSession, setActiveFocusSessionTotalMinutes } from '../utils/focusSession';
+
+const { FocusZenSettings } = NativeModules;
+
+const focusBlockedPackages = SOCIAL_APPS
+  .map((appName) => APP_PACKAGE_NAMES[appName])
+  .filter(Boolean);
 
 type ActiveFocusSession = {
   startedAt: string;
@@ -44,11 +50,14 @@ export const useFocusStore = create<FocusState>()(
       activeSession: null,
       selectedPreset: 30,
       deepWorkEnabled: true,
+
       startSession: (presetMinutes, linkedTaskId) =>
         set((state) => {
           if (FocusZenSettings) {
+            FocusZenSettings.setFocusBlockedPackages?.(focusBlockedPackages);
             FocusZenSettings.setFocusSession(true, state.deepWorkEnabled);
           }
+
           return {
             selectedPreset: presetMinutes,
             activeSession: {
@@ -62,31 +71,46 @@ export const useFocusStore = create<FocusState>()(
             },
           };
         }),
+
       pauseSession: () =>
         set((state) => {
           if (FocusZenSettings) {
             FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
+            FocusZenSettings.setFocusBlockedPackages?.([]);
           }
+
           return {
-            activeSession: state.activeSession ? { ...state.activeSession, paused: true } : null,
+            activeSession: state.activeSession
+              ? { ...state.activeSession, paused: true }
+              : null,
           };
         }),
+
       resumeSession: () =>
         set((state) => {
           if (FocusZenSettings) {
+            FocusZenSettings.setFocusBlockedPackages?.(focusBlockedPackages);
             FocusZenSettings.setFocusSession(true, state.deepWorkEnabled);
           }
+
           return {
-            activeSession: state.activeSession ? { ...state.activeSession, paused: false } : null,
+            activeSession: state.activeSession
+              ? { ...state.activeSession, paused: false }
+              : null,
           };
         }),
+
       tick: () =>
         set((state) => {
           if (!state.activeSession || state.activeSession.paused) {
             return state;
           }
 
-          const remainingSeconds = Math.max(0, state.activeSession.remainingSeconds - 1);
+          const remainingSeconds = Math.max(
+            0,
+            state.activeSession.remainingSeconds - 1,
+          );
+
           const elapsedSeconds = state.activeSession.elapsedSeconds + 1;
 
           return {
@@ -97,6 +121,7 @@ export const useFocusStore = create<FocusState>()(
             },
           };
         }),
+
       resetSession: () =>
         set((state) => ({
           activeSession: state.activeSession
@@ -108,38 +133,59 @@ export const useFocusStore = create<FocusState>()(
               }
             : null,
         })),
+
       addSessionMinutes: (extraMinutes) =>
         set((state) => ({
-          activeSession: extendActiveFocusSession(state.activeSession, extraMinutes),
+          activeSession: extendActiveFocusSession(
+            state.activeSession,
+            extraMinutes,
+          ),
         })),
+
       setSessionTotalMinutes: (minutes) =>
         set((state) => ({
           selectedPreset: Math.max(15, Math.round(minutes)),
-          activeSession: setActiveFocusSessionTotalMinutes(state.activeSession, minutes),
+          activeSession: setActiveFocusSessionTotalMinutes(
+            state.activeSession,
+            minutes,
+          ),
         })),
-      cancelSession: () => set((state) => {
-        if (FocusZenSettings) {
-          FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
-        }
-        return { activeSession: null, selectedPreset: 30 };
-      }),
+
+      cancelSession: () =>
+        set((state) => {
+          if (FocusZenSettings) {
+            FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
+            FocusZenSettings.setFocusBlockedPackages?.([]);
+          }
+
+          return {
+            activeSession: null,
+            selectedPreset: 30,
+          };
+        }),
+
       completeSession: () => {
         const state = get();
+
         if (!state.activeSession) {
           return null;
         }
 
         if (FocusZenSettings) {
           FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
+          FocusZenSettings.setFocusBlockedPackages?.([]);
         }
 
         const nowIso = new Date().toISOString();
+
         const completed: FocusSession = {
           id: `focus-${nowIso}`,
           startedAt: state.activeSession.startedAt,
           endedAt: nowIso,
           durationMinutes: state.activeSession.presetMinutes,
-          completedMinutes: Math.round(state.activeSession.elapsedSeconds / 60) || state.activeSession.presetMinutes,
+          completedMinutes:
+            Math.round(state.activeSession.elapsedSeconds / 60) ||
+            state.activeSession.presetMinutes,
           deepWork: state.activeSession.deepWork,
           linkedTaskId: state.activeSession.linkedTaskId,
           status: 'completed',
@@ -154,17 +200,30 @@ export const useFocusStore = create<FocusState>()(
 
         return completed;
       },
-      setDeepWorkEnabled: (enabled) => set((state) => {
-        if (state.activeSession && FocusZenSettings) {
-          FocusZenSettings.setFocusSession(!state.activeSession.paused, enabled);
-        }
-        return { deepWorkEnabled: enabled };
-      }),
+
+      setDeepWorkEnabled: (enabled) =>
+        set((state) => {
+          if (state.activeSession && FocusZenSettings) {
+            if (!state.activeSession.paused) {
+              FocusZenSettings.setFocusBlockedPackages?.(focusBlockedPackages);
+            }
+
+            FocusZenSettings.setFocusSession(
+              !state.activeSession.paused,
+              enabled,
+            );
+          }
+
+          return { deepWorkEnabled: enabled };
+        }),
+
       setSelectedPreset: (minutes) =>
         set((state) => {
           if (FocusZenSettings) {
             FocusZenSettings.setFocusSession(false, state.deepWorkEnabled);
+            FocusZenSettings.setFocusBlockedPackages?.([]);
           }
+
           return {
             selectedPreset: minutes,
             activeSession: state.activeSession
@@ -189,6 +248,6 @@ export const useFocusStore = create<FocusState>()(
         selectedPreset: state.selectedPreset,
         deepWorkEnabled: state.deepWorkEnabled,
       }),
-    }
-  )
+    },
+  ),
 );

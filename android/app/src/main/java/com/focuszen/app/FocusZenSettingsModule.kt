@@ -132,6 +132,24 @@ class FocusZenSettingsModule(
             .apply()
     }
 
+        @ReactMethod
+        fun setFocusBlockedPackages(packages: ReadableArray) {
+        val values = mutableSetOf<String>()
+
+        for (index in 0 until packages.size()) {
+            packages.getString(index)?.let(values::add)
+        }
+
+        val prefs = reactApplicationContext.getSharedPreferences(
+            "FocusZenPrefs",
+            Context.MODE_PRIVATE
+        )
+
+        prefs.edit()
+            .putStringSet("focusBlockedPackages", values)
+            .apply()
+    }
+
     @ReactMethod
     fun setFocusSession(isActive: Boolean, deepWorkEnabled: Boolean) {
         val prefs = reactApplicationContext.getSharedPreferences(
